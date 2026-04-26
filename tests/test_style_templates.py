@@ -93,6 +93,14 @@ class StyleTemplateLoaderTest(unittest.TestCase):
         self.assertIn("motifs", motifs)
         self.assertGreaterEqual(len(motifs["motifs"]), 6)
 
+        rhythm = json.loads((package_dir / "rhythm_rules.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(rhythm["timeline_model_60s"]), 5)
+        self.assertEqual(rhythm["timeline_model_60s"][0]["editing_logic"], "concept montage")
+
+        director_notes = (package_dir / "director_notes.md").read_text(encoding="utf-8")
+        self.assertIn("五段时间线情绪动线", director_notes)
+        self.assertIn("极动转极静", director_notes)
+
     def test_lists_templates_with_status_and_name(self):
         templates = list_templates()
 

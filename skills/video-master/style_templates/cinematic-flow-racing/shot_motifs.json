@@ -87,6 +87,62 @@
       "visual_prompt_seed": "wide negative-space final image, subject small but centered in a vast abstract path, ring, corridor, cloud layer, or horizon",
       "video_prompt_seed": "calm glide or locked-off hold, no subtitles, no logo, no explanatory text",
       "sfx": "subtle wind, fading machine resonance, calm breath"
+    },
+    {
+      "id": "M11",
+      "name": "仪式感逆光背影",
+      "function": "作为视觉起幅，建立孤胆英雄、宿命和进入系统前的静默。",
+      "visual_prompt_seed": "backlit solitary figure in a vast dark environment, rim light, near-monochrome, ceremonial stillness",
+      "video_prompt_seed": "slow push toward the silhouette, almost no body movement, heavy negative space",
+      "sfx": "distant room tone, low air pressure, faint crowd or machine bed"
+    },
+    {
+      "id": "M12",
+      "name": "奇迹与毁灭并置",
+      "function": "用概念蒙太奇同时交代荣光和代价。",
+      "visual_prompt_seed": "intercut-compatible images of trophy-like glory, fire, fragments, crowd, cold protagonist, wreckage-like abstract debris; no real brands",
+      "video_prompt_seed": "steady montage rhythm, each image feels like a memory shard rather than continuous action",
+      "sfx": "distant cheering cut with fire crackle, metal debris, low thud"
+    },
+    {
+      "id": "M13",
+      "name": "物理开关",
+      "function": "作为节奏突变点，把宏观叙事切入微观体感。",
+      "visual_prompt_seed": "helmet buckle, cockpit latch, glove tightening strap, surgical mask snap, piano lid closing, server switch locking; extreme close-up",
+      "video_prompt_seed": "one decisive click or lock action, hard cut immediately after contact",
+      "sfx": "sharp click, latch snap, short mechanical lock"
+    },
+    {
+      "id": "M14",
+      "name": "主客观冲撞组",
+      "function": "把系统暴走和人物情绪崩溃交叉剪辑到同一临界压力。",
+      "visual_prompt_seed": "POV speed streak, tense face extreme close-up, blurred lights, mirror static, ground tracking, red threshold signal",
+      "video_prompt_seed": "cross-cut subjective fear and objective machine overload, increasing flash frequency",
+      "sfx": "rising engine or machine tone, heartbeat-like sub pulse, breath breaks"
+    },
+    {
+      "id": "M15",
+      "name": "红线阈值",
+      "function": "把抽象的临界点具象化，作为跃迁前的汇聚镜头。",
+      "visual_prompt_seed": "needle, waveform, countdown, warning bar, red LED, or pressure gauge reaching maximum threshold; rare red accent in monochrome image",
+      "video_prompt_seed": "indicator slams or creeps into red zone, cut at the exact peak",
+      "sfx": "warning tone peaks, short impact hit, abrupt drop to silence"
+    },
+    {
+      "id": "M16",
+      "name": "光束与几何编队",
+      "function": "用抽象运动替代真实碰撞，宣告物理法则瓦解。",
+      "visual_prompt_seed": "abstract energy streaks, three-object geometric formation, motion trails through dark space, storm-center composition",
+      "video_prompt_seed": "slow-motion streaks align into a calm formation, camera feels suspended",
+      "sfx": "filtered rush, tonal smear, sudden quiet center"
+    },
+    {
+      "id": "M17",
+      "name": "虚空控制姿态",
+      "function": "剥离实体工具，只保留人物的控制意念，表现绝对掌控。",
+      "visual_prompt_seed": "human hands holding an implied invisible control in a black void, body isolated, minimal highlights, no literal vehicle required",
+      "video_prompt_seed": "hands barely move in empty space, environment responds subtly as if controlled by intention",
+      "sfx": "quiet breath, soft fabric, distant resonance"
     }
   ]
 }

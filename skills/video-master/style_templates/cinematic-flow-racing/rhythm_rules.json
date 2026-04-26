@@ -27,6 +27,48 @@
       "camera_energy": ["wide negative space", "slow drift", "locked-off calm"]
     }
   ],
+  "timeline_model_60s": [
+    {
+      "phase": "宿命与反差",
+      "time_window": "00:00-00:10",
+      "editing_logic": "concept montage",
+      "shot_sequence_logic": ["ritual silhouette", "destruction insert", "cold hero wide", "slow-motion fragment", "glory insert", "crowd or system pressure"],
+      "purpose": "Juxtapose miracle and destruction before the main action starts.",
+      "duration_guidance": "1.2-3.0s, steady enough to establish mythic pressure"
+    },
+    {
+      "phase": "感官压缩与物理失控",
+      "time_window": "00:11-00:22",
+      "editing_logic": "space-breaking jump cuts",
+      "shot_sequence_logic": ["physical switch", "enclosed face close-up", "low-angle launch", "POV acceleration", "vibrating surface", "macro texture"],
+      "purpose": "Drag the viewer from macro narrative into claustrophobic body sensation.",
+      "duration_guidance": "0.8-2.0s with at least one tactile rapid insert"
+    },
+    {
+      "phase": "意识拉扯与临界点",
+      "time_window": "00:23-00:37",
+      "editing_logic": "subjective/objective cross-cutting",
+      "shot_sequence_logic": ["POV streak", "face or eye extreme close-up", "light smear", "mirror or reflection ghost", "low tracking surface", "redline threshold"],
+      "purpose": "Collide mechanical overload with subjective fear until all images converge on a concrete threshold.",
+      "duration_guidance": "0.6-1.2s rapid-cut cluster, then one threshold insert"
+    },
+    {
+      "phase": "跃迁",
+      "time_window": "00:38-00:44",
+      "editing_logic": "hard cut from extreme motion to extreme stillness",
+      "shot_sequence_logic": ["slow-motion head lift", "abstract energy streak", "geometric formation", "storm-eye wide"],
+      "purpose": "Break expectation after the threshold and open the flow-state dimension.",
+      "duration_guidance": "1.2-3.0s, slower than the pressure cluster"
+    },
+    {
+      "phase": "神性与心流",
+      "time_window": "00:45-01:00",
+      "editing_logic": "surreal long takes with negative space",
+      "shot_sequence_logic": ["sky or void path", "driver/control gesture without literal vehicle", "orbital or ring-like final wide"],
+      "purpose": "Let the subject merge with a larger order; end with calm control rather than explanation.",
+      "duration_guidance": "4-8s, smooth and sparse"
+    }
+  ],
   "minimum_requirements": {
     "rapid_cut_clusters": 1,
     "rapid_cut_cluster_min_shots": 3,
