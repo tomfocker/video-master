@@ -16,9 +16,13 @@ video-master/
         make_storyboard_overview.py
         make_animatic.py
         render_title_packaging.py
+        project_state.py
+        serve_webui.py
         generate_voiceover_tts.py
         export_production_workbook.py
         validate_video_project.py
+      webui/
+        index.html
       style_templates/
         cinematic-flow-racing/
       references/
@@ -41,6 +45,8 @@ video-master/
 ## 当前能力
 
 - 判断用户输入是纯想法、半成品素材，还是已经锁定的品牌/文案资料。
+- 入口支持 `autopilot` 全委托模式和 `guided` 协作导演模式；前者自动推进并记录假设，后者逐阶段确认和头脑风暴。
+- 提供只读本地 WebUI，用于浏览项目入口模式、流程节点、分镜图、提示词片段、包装状态和最终交付状态。
 - 在写剧本前确认视频类型，例如广告 TVC、产品宣传短视频、故事短片、动画、教程讲解、品牌片或电商转化短视频。
 - 分开确认提示词语言、口播语言、字幕语言和字幕渲染策略，避免视频模型误生成内嵌字幕。
 - 设计非均匀镜头节奏，不再默认平均分配时长；高速、运动、竞速类主题会加入快切组、冲击镜头和呼吸镜头。
@@ -53,6 +59,7 @@ video-master/
 - 生成分镜总览 HTML 和 PNG 总览图。
 - 生成 MP4 分镜预览视频，包含片头/片尾卡、镜头信息、字幕和可选配音。默认 `draft` 预览为 12fps，并自动匹配项目画面比例；如果不需要预览，可使用 `--preview-profile off`。
 - 在生成分镜图前锁定视觉风格预设，例如 `imax_70mm_realism`、`photoreal_commercial`、`eastern_fantasy_3d`、`anime_cinematic_light`、`future_tech_clean`，并把画风、调色、光线、质感和镜头语言写入每条分镜图提示词。
+- 如果项目涉及固定人物、主持人、创始人、访谈对象或虚拟角色，会在分镜图生成前先锁定人物设定图和角色描述，后续分镜图与视频提示词只引用已锁定的角色 ID，避免脸型、年龄、发型、服装漂移。
 - 可选生成商业标题包装旁路资产，包括大标题、章节标题、人名条、关键数据/数字包装和 CTA/end card。默认交付透明 PNG；只有明确需要真实动画叠加时才生成 ProRes 4444 透明通道 MOV。MOV 模板支持 `brush_reveal`、`route_light_trail`、`odometer`、`marker_annotation` 等，并可把原生生图清理出的透明设计稿作为 `design_asset` 继续动画化。这个分支不会改写原有视频提示词。
 - 外部画外音不会直接写进最终视频提示词；每个视频片段提示词会要求不要生成背景音乐，并保留逐镜头 SFX 音效说明。
 - 支持基于 `tts_lines.json` 生成或打包 TTS 配音。
@@ -130,7 +137,14 @@ python3 skills/video-master/scripts/export_production_workbook.py video_projects
 python3 skills/video-master/scripts/generate_voiceover_tts.py video_projects/<project>
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project>
 python3 skills/video-master/scripts/render_title_packaging.py video_projects/<project>
+python3 skills/video-master/scripts/project_state.py video_projects/<project> --write
 python3 skills/video-master/scripts/validate_video_project.py video_projects/<project>
+```
+
+本地 WebUI：
+
+```bash
+python3 skills/video-master/scripts/serve_webui.py --host 127.0.0.1 --port 8765
 ```
 
 分镜预览视频模式：

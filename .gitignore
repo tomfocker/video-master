@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 node_modules/
 tmp/
+.tmp-tests/
 video_projects/
 商业标题参考模板/
 

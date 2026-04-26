@@ -30,6 +30,7 @@ Recommended dependencies enable:
 - Follow the serial pipeline. Do not write later-phase deliverables before the current phase's gate is satisfied.
 - Treat `brief/spec_lock.md` as the execution contract. Re-read it before writing each shot prompt, generating each storyboard frame, or assembling final deliverables.
 - Use native image generation for storyboard frames when the user asks for images, 分镜图, storyboard frames, keyframes, or visual boards. Do not substitute SVG boxes or text-only placeholders.
+- Treat fixed characters as a continuity lock before storyboard generation. When a project includes recurring people, hosts, founders, interviewees, actors, or mascots, create/confirm character design anchors first and reference them from storyboard image prompts and video prompts.
 - Treat title packaging as an optional sidecar branch only. It must never change the normal storyboard, script, audio, or video-prompt generation flow.
 - When the user asks for commercial title cards, lower thirds, number animations, alpha overlays, or packaging text, create separate title-packaging deliverables; do not add packaging notes, title-packaging file paths, or alpha-MOV instructions to copy-ready video prompts.
 - During the Production Lock, explicitly ask whether the user needs title-packaging images: main title, chapter/section cards, lower thirds/name tags, key data/counter callouts, CTA/end cards, or none. Default to `title_packaging_enabled: false` only when the user does not need packaging or asks to keep the package lean.
@@ -57,6 +58,23 @@ Recommended dependencies enable:
 - A style template transfers creative rules such as rhythm, palette, camera language, sound policy, and prompt structure; it never authorizes copying reference subjects, exact shots, dialogue, branding, subtitles, watermarks, or creator identity.
 
 ## Pipeline
+
+### Step 0: Workflow Entry Mode
+
+Gate: the user starts a new video-master project or opens an existing project for major changes.
+
+Offer two entry modes:
+
+- `autopilot`: full delegation. The user gives the brief and assets, then Codex makes reasonable assumptions, logs them, and only asks when blocked by missing rights, unsafe claims, missing core assets, or irreversible creative choices.
+- `guided`: collaborative director mode. Codex confirms key information, offers visual/style/rhythm options, brainstorms with the user, then implements after confirmation.
+
+Record the decision in `brief/spec_lock.md`:
+
+- `workflow_mode: autopilot | guided`
+- `confirmation_policy: ask_only_blockers | confirm_each_phase`
+- `assumption_policy: auto_fill_with_log | require_user_confirmation`
+
+When the user says to proceed quickly, default to `autopilot`. When the user wants brainstorming, comparison, or creative control, default to `guided`.
 
 ### Step 1: Input Readiness Check
 
@@ -133,6 +151,10 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
   storyboard/frames/
   prompts/
   audio/
+  characters/
+    character_bible.md
+    character_manifest.json
+    reference_images/
   packaging/
     title_packaging_plan.json
     title_packaging_prompts.md
@@ -153,23 +175,24 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
 
 Present the Production Lock as a bundled recommendation and wait for confirmation unless the user has supplied the decisions or explicitly allowed assumptions:
 
-1. Input mode and asset authority
-2. Video mode
-3. Objective and CTA
-4. Audience and platform
-5. Aspect ratio and target duration
-6. Prompt language and target video model/profile
-7. Copy/VO language, caption language, and subtitle rendering policy (`post-production-only` by default)
-8. Narrative style, visual style, and pacing style
-9. Visual style preset: choose one preset from `references/visual_style_presets.json`, custom, or reference-derived. Present 2-4 relevant cards with a recommended default instead of an unstructured open-ended style question.
-10. Character/product/brand continuity rules
-11. Claims/compliance boundaries
-12. Storyboard image coverage: every shot, key shots, or selected scenes
-13. Reference style usage: mimic color grading, camera language, edit rhythm, typography/packaging, or only general mood
-14. Style route: `original`, `use_style_template`, or `create_style_template_from_reference`
-15. Style template fields when applicable: `template_id`, `allow_draft_template`, and `template_user_overrides`
-16. Template application summary: what is inherited from the template, what is overridden by the user's ideas, and what must not be copied
-17. Optional title packaging: ask whether to generate `main_title`, `chapter_card`, `lower_third`/`name_tag`, `data_callout`/`counter`, `cta_card`/`end_card`, or none. Capture exact copy, style references, PNG-only vs real animated overlay need, and `title_packaging_enabled`. This is a sidecar branch and does not modify video prompts.
+1. Workflow mode: `autopilot` or `guided`, with confirmation and assumption policy
+2. Input mode and asset authority
+3. Video mode
+4. Objective and CTA
+5. Audience and platform
+6. Aspect ratio and target duration
+7. Prompt language and target video model/profile
+8. Copy/VO language, caption language, and subtitle rendering policy (`post-production-only` by default)
+9. Narrative style, visual style, and pacing style
+10. Visual style preset: choose one preset from `references/visual_style_presets.json`, custom, or reference-derived. Present 2-4 relevant cards with a recommended default instead of an unstructured open-ended style question.
+11. Character/product/brand continuity rules, including whether fixed people need a character-design lock before storyboard generation
+12. Claims/compliance boundaries
+13. Storyboard image coverage: every shot, key shots, or selected scenes
+14. Reference style usage: mimic color grading, camera language, edit rhythm, typography/packaging, or only general mood
+15. Style route: `original`, `use_style_template`, or `create_style_template_from_reference`
+16. Style template fields when applicable: `template_id`, `allow_draft_template`, and `template_user_overrides`
+17. Template application summary: what is inherited from the template, what is overridden by the user's ideas, and what must not be copied
+18. Optional title packaging: ask whether to generate `main_title`, `chapter_card`, `lower_third`/`name_tag`, `data_callout`/`counter`, `cta_card`/`end_card`, or none. Capture exact copy, style references, PNG-only vs real animated overlay need, and `title_packaging_enabled`. This is a sidecar branch and does not modify video prompts.
 
 Write:
 
@@ -228,9 +251,35 @@ When recommending, present 2-4 relevant cards, name the recommended one, and exp
 
 If a full `template_id` is also selected, the template's prompt rules remain the larger director method, while the visual style preset supplies the exact look card unless the user overrides it. Do not ask for exact living-artist or studio imitation; convert those requests into descriptive traits.
 
+### Step 3.7: Character Design Lock
+
+Gate: Production Lock and Visual Style Preset Lock are complete, and the project has recurring characters or the user requests fixed人物/主持人/创始人/采访对象/演员/虚拟角色 continuity.
+
+Ask or confirm whether the project needs fixed-character continuity. If not, record `character_lock_enabled: false` and continue. If yes, lock the visual identity before writing storyboard image prompts:
+
+- Define stable character IDs such as `host_a`, `founder_b`, or `guest_c`.
+- Record each character's role, age range, face/hairstyle/body-shape descriptors, wardrobe rules, temperament, forbidden changes, and allowed variations.
+- Generate or collect reference images when available: face/front, half-body or full-body, and any required wardrobe or expression references.
+- Store the character bible and manifest in `characters/`.
+- Record prompt rules that require downstream storyboard and video prompts to reference the locked character IDs instead of reinventing the person.
+
+Write when enabled:
+
+- `characters/character_bible.md`
+- `characters/character_manifest.json`
+- `characters/reference_images/`
+
+Record the selected policy in `brief/spec_lock.md` under `character_design`:
+
+- `character_lock_enabled`
+- `character_lock_status`
+- `fixed_characters`
+- `character_reference_dir`
+- `character_prompt_rules`
+
 ### Step 4: Creative Strategy And Rhythm Map
 
-Gate: `creative_brief.md` and `spec_lock.md` exist.
+Gate: `creative_brief.md` and `spec_lock.md` exist, and character design is locked or explicitly skipped.
 
 Write:
 
@@ -283,12 +332,13 @@ If `template_id` is present, read `style_templates/<template_id>/template.md`, `
 
 Gate: `shot_list.md` exists and storyboard coverage is known.
 
-Read `brief/spec_lock.md`, `references/storyboard-and-video-prompts.md`, `references/visual-style-presets.md`, and any `references/style_analysis.md`.
+Read `brief/spec_lock.md`, `references/storyboard-and-video-prompts.md`, `references/visual-style-presets.md`, `characters/character_bible.md` when present, and any `references/style_analysis.md`.
 If `template_id` is present, also read `style_templates/<template_id>/prompt_rules.md` and carry the template's safe prompt rules as defaults. User ideas and approved assets override template defaults when they conflict.
 
 Write `prompts/storyboard_image_prompts.md` before generating images. Generate storyboard frames with native image generation:
 
 - Every storyboard image prompt must carry the locked visual style preset fields from `brief/spec_lock.md`: `visual_style_preset_id`, medium, realism level, art direction, color palette, lighting, texture, camera language, and storyboard prompt rules.
+- If `character_lock_enabled` is true, every storyboard image prompt involving a fixed character must reference the stable character ID and the locked character bible. Do not vary face, age, hairstyle, body type, or signature wardrobe unless `character_bible.md` allows it.
 - If shot count is manageable and the user requested detailed storyboard images, generate one frame per shot.
 - If shot count is high, generate key frames unless the user explicitly asks for every shot.
 - If `reference_style` assets exist, inject the distilled style rules and safe reference keyframe paths into every storyboard image prompt. Use native image generation with reference images when the available tool supports it; otherwise include the keyframe paths and style rules in the prompt text. Never ask the model to reproduce the exact source video or image.
@@ -393,6 +443,20 @@ python3 ${SKILL_DIR}/scripts/make_animatic.py <project_path>
 
 The default preview profile is `draft`: 12fps and an output size inferred from `brief/spec_lock.md` `aspect_ratio` such as `1280x720` for `16:9` or `720x1280` for `9:16`. Use `--preview-profile smooth` when the user prioritizes playback polish, or `--preview-profile off` when the user only wants the core storyboard and prompt package. The default motion style is `none` so storyboard frames stay stable; use `--motion-style center-zoom` or `--motion-style pan-zoom` only when movement is intentionally desired. The animatic preview should include an opening card, ending card, shot overlays, burned-in captions when available, and any provided or generated voiceover. Music and sound-effect mixing is intentionally not part of this step yet; keep those as planning cues for now.
 
+Generate the local WebUI state snapshot:
+
+```bash
+python3 ${SKILL_DIR}/scripts/project_state.py <project_path> --write
+```
+
+The first WebUI is a read-only control surface for project inspection. It displays the entry mode, workflow nodes, storyboard frames, prompt snippets, title-packaging status, and deliverables from canonical project files. To inspect a local project visually, run:
+
+```bash
+python3 ${SKILL_DIR}/scripts/serve_webui.py --host 127.0.0.1 --port 8765
+```
+
+Future UI edit requests should be recorded as workflow events before Codex reconciles them into canonical files. Do not treat `qa/metadata/project_state.json` as the source of truth.
+
 The `最终交付/` folder is the user-facing package. Work-in-progress files stay in `brief/`, `strategy/`, `script/`, `storyboard/`, `prompts/`, and `audio/`. Internal machine records such as manifests and fallback HTML belong in `qa/metadata/`, not the user-facing package.
 
 ### Step 10: QA
@@ -416,3 +480,4 @@ Fix issues before finishing. Final response should list the output folder, the u
 - `references/visual-style-presets.md` and `references/visual_style_presets.json`: lightweight visual look cards for storyboard image prompts and video prompts.
 - `references/storyboard-and-video-prompts.md`: image and video prompt patterns.
 - `references/quality-check.md`: final QA checklist and validator use.
+- `scripts/project_state.py` and `scripts/serve_webui.py`: local read-only project state and WebUI helpers.

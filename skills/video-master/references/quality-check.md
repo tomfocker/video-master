@@ -7,7 +7,8 @@ Run this checklist before final delivery.
 - `strategy/input_readiness.md` exists.
 - `strategy/video_mode.md` exists.
 - `brief/creative_brief.md` exists.
-- `brief/spec_lock.md` exists and contains format, production mode, story, rhythm, visual style, visual style preset lock, continuity, audio, and safety sections.
+- `brief/spec_lock.md` exists and contains workflow, format, production mode, story, rhythm, visual style, visual style preset lock, character design policy, continuity, audio, and safety sections.
+- `qa/metadata/project_state.json` can be generated with `scripts/project_state.py` for WebUI inspection.
 - `strategy/creative_strategy.md` exists.
 - `strategy/rhythm_map.md` exists.
 - `script/script.md` exists and matches the target duration.
@@ -25,6 +26,14 @@ Run this checklist before final delivery.
 - `最终交付/02_提示词/视频生成提示词.md` exists.
 - `最终交付/01_分镜图/` contains final storyboard frames.
 - If title packaging is requested, `packaging/title_packaging_plan.json`, `qa/metadata/title_packaging_manifest.json`, and `最终交付/07_title_packaging/` exist.
+- If fixed characters are requested, `characters/character_bible.md`, `characters/character_manifest.json`, and any reference images exist before storyboard prompts are finalized.
+
+## Workflow State And WebUI
+
+- `scripts/project_state.py <project_path> --write` succeeds and writes `qa/metadata/project_state.json`.
+- `project_state.json` reports the selected `workflow_mode`, visual style lock, character-design lock, storyboard shot count, prompt file status, title-packaging status, and deliverables from canonical files.
+- The WebUI remains read-only for project files; visual edit requests should be captured as workflow events before Codex applies them to canonical files.
+- `scripts/serve_webui.py` can serve `/api/projects`, `/api/project`, and `/api/file` for local inspection.
 
 ## Rhythm
 
@@ -51,6 +60,8 @@ Run this checklist before final delivery.
 ## Continuity
 
 - Character names, appearance, wardrobe, and props stay consistent.
+- If fixed characters are enabled, `character_design` in `spec_lock.md` records stable character IDs, reference directory, lock status, and prompt rules before storyboard generation.
+- If fixed characters are enabled, storyboard image prompts and video prompts reference the locked character IDs and do not reinvent face, age, hairstyle, body type, or signature wardrobe.
 - Product and brand details stay consistent.
 - Locations and time of day do not drift accidentally.
 - Visual style matches `spec_lock.md` across all prompts.
@@ -114,6 +125,7 @@ Run this checklist before final delivery.
 When project files exist locally, run:
 
 ```bash
+python3 ${SKILL_DIR}/scripts/project_state.py <project_path> --write
 python3 ${SKILL_DIR}/scripts/validate_video_project.py <project_path>
 ```
 
