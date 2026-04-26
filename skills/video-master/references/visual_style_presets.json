@@ -1,0 +1,231 @@
+{
+  "version": 1,
+  "usage": "Visual style presets are lightweight look cards for storyboard image prompts and video prompts. They are not full director templates.",
+  "presets": [
+    {
+      "id": "imax_70mm_realism",
+      "display_name": "IMAX 70mm Cinematic Realism",
+      "status": "official",
+      "short_description": "Large-format cinema realism with broad dynamic range, tactile detail, and majestic lens presence.",
+      "best_for": ["brand-film", "product-promo-short", "travel", "automotive", "premium documentary"],
+      "not_for": ["flat UI explainers", "cute animation", "low-budget social sketch"],
+      "medium": "large-format live-action cinematography",
+      "realism_level": "photoreal",
+      "art_direction": "epic but restrained, premium, emotionally grounded",
+      "color_palette": "natural color with controlled contrast, clean highlights, deep but readable shadows",
+      "lighting": "motivated cinematic light, strong depth cues, atmospheric backlight when appropriate",
+      "texture": "fine film grain, lens falloff, tactile surfaces, realistic skin and material response",
+      "camera_language": "70mm large-format feel, composed wides, confident push-ins, shallow depth when motivated",
+      "storyboard_prompt_rules": [
+        "Use large-format cinematic realism and physically plausible light.",
+        "Keep compositions premium, spacious, and legible.",
+        "Favor lens depth, atmospheric scale, and tactile production design."
+      ],
+      "video_prompt_rules": [
+        "Describe camera movement as grounded and cinematic, not chaotic.",
+        "Keep motion physically plausible and preserve the locked lighting and lens language."
+      ],
+      "avoid": ["cartoon shading", "plastic CGI", "overly glossy stock-photo lighting", "random text or logos"]
+    },
+    {
+      "id": "photoreal_commercial",
+      "display_name": "Photoreal Commercial",
+      "status": "official",
+      "short_description": "Clean premium advertising realism for products, lifestyle, food, beauty, and conversion-led films.",
+      "best_for": ["product-promo-short", "ecommerce-conversion-short", "beauty", "food", "consumer tech"],
+      "not_for": ["gritty documentary", "abstract art film", "heavy fantasy"],
+      "medium": "photoreal commercial photography and video",
+      "realism_level": "photoreal",
+      "art_direction": "clean, aspirational, polished, product-led",
+      "color_palette": "brand-friendly palette, clear product color, gentle contrast, controlled whites",
+      "lighting": "softbox, rim light, specular product highlights, clean shadow control",
+      "texture": "high-resolution product materials, skin, fabric, condensation, glass, metal, food texture",
+      "camera_language": "macro inserts, hero product angles, smooth slider moves, controlled depth of field",
+      "storyboard_prompt_rules": [
+        "Prioritize product readability, clean surfaces, and premium commercial lighting.",
+        "Use macro detail shots and hero compositions when the product is the memory anchor.",
+        "Keep the image uncluttered enough for quick scanning."
+      ],
+      "video_prompt_rules": [
+        "Describe smooth camera moves and product-safe continuity.",
+        "Keep the product shape, color, material, label policy, and scale consistent."
+      ],
+      "avoid": ["busy backgrounds", "unapproved logos", "illegible product text", "muddy color"]
+    },
+    {
+      "id": "eastern_fantasy_3d",
+      "display_name": "Eastern Fantasy 3D",
+      "status": "official",
+      "short_description": "Mythic Chinese-inspired fantasy realism with mist, jade light, silk, mountains, and spiritual scale.",
+      "best_for": ["narrative-short", "brand-film", "tourism", "cultural story", "fantasy product launch"],
+      "not_for": ["strict documentary", "minimal SaaS explainer", "hard industrial realism"],
+      "medium": "stylized 3D fantasy realism",
+      "realism_level": "semi-real to photoreal fantasy",
+      "art_direction": "elegant, mythic, poetic, atmospheric",
+      "color_palette": "jade, ink black, moon white, warm gold accents, restrained saturation",
+      "lighting": "misty volumetric light, lantern glow, moonlight, layered atmospheric depth",
+      "texture": "silk, stone, mist, water, carved metal, lacquer, ancient paper",
+      "camera_language": "floating crane moves, slow reveals, layered depth, painterly wides",
+      "storyboard_prompt_rules": [
+        "Use Chinese-inspired fantasy atmosphere without copying protected characters or existing IP.",
+        "Emphasize mist layers, ceremonial texture, and elegant scale.",
+        "Keep costumes, architecture, and symbols original to the project."
+      ],
+      "video_prompt_rules": [
+        "Use graceful camera motion, reveal structure, and atmospheric transitions.",
+        "Avoid overcrowding the frame with random symbols."
+      ],
+      "avoid": ["recognizable fantasy IP", "random pseudo-Chinese text", "costume clutter", "over-saturated magic effects"]
+    },
+    {
+      "id": "hyperreal_3d_render",
+      "display_name": "Hyperreal 3D Render",
+      "status": "official",
+      "short_description": "Ultra-clean 3D render realism for premium objects, architecture, technology, and impossible camera moves.",
+      "best_for": ["consumer tech", "architecture", "product launch", "industrial design", "medical device with safe claims"],
+      "not_for": ["human drama", "gritty handheld documentary", "organic food closeups"],
+      "medium": "high-end 3D rendering",
+      "realism_level": "hyperreal 3D",
+      "art_direction": "precise, sculptural, premium, engineered",
+      "color_palette": "controlled neutrals with brand accent color, high clarity, clean gradients",
+      "lighting": "global illumination, soft reflections, precise rim lights, studio environment",
+      "texture": "glass, anodized metal, ceramic, carbon fiber, micro-scratches, product finishes",
+      "camera_language": "smooth orbit, exploded view, macro glide, impossible but elegant product moves",
+      "storyboard_prompt_rules": [
+        "Use high-end 3D rendering language with believable materials and reflections.",
+        "Keep object geometry clean and consistent across frames.",
+        "Use negative space and controlled highlights for premium product reading."
+      ],
+      "video_prompt_rules": [
+        "Use smooth product motion and precise mechanical reveals.",
+        "Avoid physically confusing transformations unless the concept explicitly calls for them."
+      ],
+      "avoid": ["cheap plastic CGI", "messy reflections", "warped product geometry", "random UI text"]
+    },
+    {
+      "id": "graphic_2d_editorial",
+      "display_name": "Graphic 2D Editorial",
+      "status": "official",
+      "short_description": "Flat but sophisticated 2D editorial graphics with bold composition and readable visual hierarchy.",
+      "best_for": ["explainer", "education", "brand manifesto", "social carousel-like video", "data story"],
+      "not_for": ["photoreal product proof", "luxury cinematic drama", "naturalistic travel"],
+      "medium": "2D editorial illustration and motion graphics",
+      "realism_level": "stylized 2D",
+      "art_direction": "graphic, clear, editorial, intelligent",
+      "color_palette": "limited palette, confident contrast, clean background fields",
+      "lighting": "flat design lighting with selective shadow or paper depth",
+      "texture": "paper grain, vector shapes, subtle print texture, clean iconography",
+      "camera_language": "layout transitions, panel reveals, clean graphic motion, readable hierarchy",
+      "storyboard_prompt_rules": [
+        "Use a coherent 2D editorial visual system with clear hierarchy.",
+        "Keep shapes, symbols, and visual metaphors simple enough to read quickly.",
+        "Avoid faux UI clutter unless the project is actually interface-driven."
+      ],
+      "video_prompt_rules": [
+        "Use concise graphic motion and readable transitions.",
+        "Keep generated text out unless exact on-screen text is explicitly approved."
+      ],
+      "avoid": ["random tiny text", "messy infographics", "too many colors", "clipart feel"]
+    },
+    {
+      "id": "soft_storybook_2d",
+      "display_name": "Soft Storybook 2D",
+      "status": "official",
+      "short_description": "Warm illustrated storybook mood with handmade texture, gentle emotion, and soft cinematic framing.",
+      "best_for": ["family brand", "children-safe story", "public welfare", "gentle travel", "emotional short"],
+      "not_for": ["hard tech launch", "luxury product macro proof", "dark thriller"],
+      "medium": "handmade 2D illustration",
+      "realism_level": "stylized 2D",
+      "art_direction": "warm, sincere, textured, human",
+      "color_palette": "soft warm palette with natural greens, sky blues, muted reds, and creamy highlights",
+      "lighting": "gentle daylight, sunset glow, soft window light",
+      "texture": "watercolor wash, pencil edge, paper grain, hand-painted imperfections",
+      "camera_language": "gentle pans, simple reveals, cozy wide-to-medium compositions",
+      "storyboard_prompt_rules": [
+        "Use original storybook illustration traits without naming or copying a specific artist or studio.",
+        "Keep characters appealing but not franchise-like.",
+        "Emphasize readable emotion and soft atmosphere."
+      ],
+      "video_prompt_rules": [
+        "Use gentle motion, simple staging, and emotionally clear actions.",
+        "Preserve character silhouettes and palette continuity."
+      ],
+      "avoid": ["specific studio imitation", "recognizable characters", "overly glossy 3D", "complex crowd scenes"]
+    },
+    {
+      "id": "anime_cinematic_light",
+      "display_name": "Anime Cinematic Light",
+      "status": "official",
+      "short_description": "Original cinematic anime look with luminous skies, emotional lighting, and crisp environmental detail.",
+      "best_for": ["youth story", "music video", "romantic travel", "campus brand", "emotional short"],
+      "not_for": ["strict corporate proof", "real product macro", "legal or medical explanation"],
+      "medium": "original cinematic anime illustration",
+      "realism_level": "stylized anime",
+      "art_direction": "lyrical, emotional, luminous, detailed",
+      "color_palette": "clear sky color, luminous highlights, warm-cool contrast, restrained bloom",
+      "lighting": "sunset, rain reflection, window light, sky glow, rim-lit silhouettes",
+      "texture": "clean linework, detailed backgrounds, atmospheric particles, reflective ground",
+      "camera_language": "wide emotional establishing shots, stillness-to-motion, parallax depth",
+      "storyboard_prompt_rules": [
+        "Use original cinematic anime traits without naming or copying a specific living artist or studio.",
+        "Emphasize light, weather, emotional distance, and detailed environments.",
+        "Keep character designs original and consistent."
+      ],
+      "video_prompt_rules": [
+        "Use graceful camera motion, weather detail, and emotional timing.",
+        "Avoid accidental captions, lyrics, school names, or brand marks."
+      ],
+      "avoid": ["specific artist imitation", "existing anime characters", "overdone lens flare", "random Japanese text"]
+    },
+    {
+      "id": "noir_gothic",
+      "display_name": "Noir Gothic",
+      "status": "official",
+      "short_description": "Dark high-contrast noir mood with sculptural shadows, rain, metal, glass, and moral tension.",
+      "best_for": ["thriller", "fashion", "premium nightlife", "mystery brand film", "dramatic teaser"],
+      "not_for": ["children-safe content", "bright ecommerce", "medical wellness"],
+      "medium": "cinematic noir live-action or stylized realism",
+      "realism_level": "photoreal or stylized realistic",
+      "art_direction": "moody, elegant, tense, shadow-led",
+      "color_palette": "black, charcoal, silver, cold blue, occasional red or gold accent",
+      "lighting": "hard key light, venetian shadows, rain reflections, silhouette, low-key contrast",
+      "texture": "wet pavement, smoke, glass, leather, metal, old stone",
+      "camera_language": "slow tracking, tight closeups, diagonal compositions, negative space",
+      "storyboard_prompt_rules": [
+        "Use contrast and shadow as the main visual language.",
+        "Keep accent colors rare and intentional.",
+        "Preserve readable faces or products despite low-key lighting."
+      ],
+      "video_prompt_rules": [
+        "Use deliberate camera moves and slow tension-building action.",
+        "Avoid making the image so dark that the subject becomes unreadable."
+      ],
+      "avoid": ["muddy black image", "horror gore", "random neon clutter", "illegible subject"]
+    },
+    {
+      "id": "future_tech_clean",
+      "display_name": "Future Tech Clean",
+      "status": "official",
+      "short_description": "Clean future-tech realism with luminous interfaces, precision materials, and restrained sci-fi polish.",
+      "best_for": ["software", "AI product", "consumer electronics", "enterprise tech", "launch film"],
+      "not_for": ["rustic lifestyle", "period drama", "handmade craft"],
+      "medium": "clean sci-fi commercial realism",
+      "realism_level": "semi-real to photoreal",
+      "art_direction": "precise, calm, intelligent, luminous",
+      "color_palette": "deep neutral base, white light, cyan or electric accent, controlled gradients",
+      "lighting": "soft luminous panels, rim light, dark-mode clarity, glass reflections",
+      "texture": "glass, holographic surfaces, brushed metal, clean polymer, UI glow",
+      "camera_language": "smooth dolly, macro interface detail, elegant reveal, controlled parallax",
+      "storyboard_prompt_rules": [
+        "Use future-tech polish without cluttering the frame with unreadable UI.",
+        "Keep interface text absent unless exact approved text is provided.",
+        "Use luminous accents and precision materials to communicate intelligence."
+      ],
+      "video_prompt_rules": [
+        "Use smooth motion, clean reveals, and controlled light animation.",
+        "Do not generate fake dashboards, random numbers, or accidental brand marks."
+      ],
+      "avoid": ["busy sci-fi UI noise", "unreadable fake text", "purple-only gradients", "generic cyberpunk clutter"]
+    }
+  ]
+}

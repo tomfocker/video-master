@@ -13,9 +13,13 @@ Copy language: <zh-CN / en / bilingual / user-supplied>
 Voiceover language: <zh-CN / en / bilingual / none>
 Subtitle rendering policy: <post-production only by default; model-generated text only if explicitly approved>
 Video mode: <mode>
+Visual style preset: <visual_style_preset_id and display name, or custom/reference-derived>
 Visual style: <medium, realism, art direction>
 Color and lighting: <palette, contrast, time of day, mood>
 Camera language: <lens feel, framing tendencies, movement style>
+Texture/material rules: <grain, material response, surface, illustration texture, render qualities>
+Storyboard prompt rules: <locked rules from visual style preset>
+Video prompt rules: <locked rules from visual style preset>
 Continuity: <characters, product, wardrobe, locations, props>
 Reference frames/assets: <paths when available>
 Reference style source: <references/style_analysis.md and references/reference_keyframes/* when available>
@@ -37,8 +41,11 @@ Subject: <characters/product/objects with continuity details>
 Composition/framing: <wide/medium/close-up, rule of thirds, foreground/background>
 Camera: <angle, lens feel, depth of field>
 Lighting/mood: <specific lighting and emotional tone>
+Visual style preset: <locked preset id/name from spec_lock.md>
 Style/medium: <locked visual style>
 Color palette: <locked palette>
+Texture/material: <locked texture and material response>
+Preset prompt rules: <storyboard_prompt_rules from spec_lock.md>
 Constraints: consistent character/product design; no watermark; no accidental logos
 Style transfer rules: <if reference_style assets exist, mimic only the approved color grading, lighting, framing, lens language, texture, and visual packaging rules from references/style_analysis.md; use safe reference keyframes with native image generation when supported>
 Avoid: distorted anatomy, extra fingers, illegible text, random UI, captions, subtitles, duplicate subjects
@@ -80,6 +87,17 @@ Style transfer rules:
 - Do not copy subjects, plot, branding, or protected style from the reference.
 - Do not ask for an exact remake, frame-by-frame match, identifiable creator style, celebrity likeness, copyrighted character, real brand mark, or recognizable scene from the reference.
 - If the uploaded reference is a user-owned brand asset, preserve only the specific brand elements the user authorizes in `brief/spec_lock.md`.
+
+## Visual Style Preset Application
+
+Use this section before writing `prompts/storyboard_image_prompts.md`. Read `references/visual-style-presets.md`, `references/visual_style_presets.json`, and the locked `visual_style` section in `brief/spec_lock.md`.
+
+- Every storyboard image prompt must include the selected `visual_style_preset_id`, medium, realism level, art direction, palette, lighting, texture/material rules, camera language, and `storyboard_prompt_rules`.
+- Every video prompt should preserve the same look through `video_prompt_rules`, camera language, lighting, and texture descriptions.
+- If the user selected `custom`, write a compact custom style bible with the same fields as a preset.
+- If the user selected `reference-derived`, use `references/style_analysis.md` and safe keyframes as the source of the same fields.
+- If a full style template is also selected, apply the template as the director method and the visual preset as the look card unless the user explicitly overrides it.
+- Do not ask for a specific living artist, exact studio look, existing character, exact frame remake, brand mark, or protected source scene.
 
 ## Title Packaging Prompt Sidecar
 

@@ -39,6 +39,7 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
     title_cards/
     alpha_mov/
   references/
+    visual_style_presets.json
     style_analysis.md
     color_style.md
     editing_style.md
@@ -203,6 +204,9 @@ Keep this short and data-oriented. Downstream phases re-read it before writing e
 - cta_seconds:
 
 ## visual_style
+- visual_style_lock: confirmed | assumed | reference-derived | custom
+- visual_style_preset_id: imax_70mm_realism | photoreal_commercial | eastern_fantasy_3d | hyperreal_3d_render | graphic_2d_editorial | soft_storybook_2d | anime_cinematic_light | noir_gothic | future_tech_clean | custom
+- visual_style_preset_name:
 - medium:
 - realism_level:
 - art_direction:
@@ -210,6 +214,9 @@ Keep this short and data-oriented. Downstream phases re-read it before writing e
 - lighting:
 - texture:
 - camera_language:
+- storyboard_prompt_rules:
+- video_prompt_rules:
+- visual_style_overrides:
 
 ## reference_style
 - source_assets:
@@ -258,6 +265,31 @@ Keep this short and data-oriented. Downstream phases re-read it before writing e
 - title_packaging_reference_assets:
 - title_packaging_alpha_mov_required: false
 - title_packaging_motion_need: none | stroke_reveal | route_draw | counter_tick | mask_wipe | glow_sweep | custom
+```
+
+## Visual Style Preset Lock
+
+Before writing `prompts/storyboard_image_prompts.md`, lock one visual style preset, a custom look, or a reference-derived look. Use `references/visual-style-presets.md` and `references/visual_style_presets.json`.
+
+The preset lock belongs in `brief/spec_lock.md` under `visual_style`. It is lightweight: it controls storyboard image and video-prompt look fields, but it does not replace `style_templates/<template_id>/` when a full director template is selected.
+
+Example:
+
+```markdown
+## visual_style
+- visual_style_lock: confirmed
+- visual_style_preset_id: photoreal_commercial
+- visual_style_preset_name: Photoreal Commercial
+- medium: photoreal commercial photography and video
+- realism_level: photoreal
+- art_direction: clean, aspirational, polished, product-led
+- color_palette: brand-friendly palette, clear product color, gentle contrast, controlled whites
+- lighting: softbox, rim light, specular product highlights, clean shadow control
+- texture: high-resolution product materials, skin, fabric, condensation, glass, metal, food texture
+- camera_language: macro inserts, hero product angles, smooth slider moves, controlled depth of field
+- storyboard_prompt_rules: Prioritize product readability, clean surfaces, and premium commercial lighting; use macro detail shots and hero compositions when the product is the memory anchor.
+- video_prompt_rules: Describe smooth camera moves and product-safe continuity; keep product shape, color, material, label policy, and scale consistent.
+- visual_style_overrides:
 ```
 
 ## Reference Style Files

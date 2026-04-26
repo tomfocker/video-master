@@ -49,6 +49,7 @@ Recommended dependencies enable:
 - Avoid unlicensed celebrity likenesses, copyrighted characters, trademark-heavy style imitation, or deceptive real-person depictions unless the user provides rights and the request is allowed. Convert risky requests into original characters, original brands, or generic style language.
 - If the user provides reference images or videos for style, treat them as `reference_style` assets: extract transferable color, lighting, camera, pacing, framing, and packaging rules, but do not copy subjects, plot, branding, protected characters, creator identity, or a living artist/director's protected style. Use the distilled rules and safe reference frames to guide native image generation and final video prompts.
 - When a user wants a reusable style approach, offer three project style modes: `original`, `use_style_template`, or `create_style_template_from_reference`.
+- Treat `visual_style_preset_id` as a lightweight look card for storyboard frames and video prompts. It is separate from `template_id`: presets lock image look, color, light, texture, and camera feel; templates lock a full director method including rhythm, editing, sound, and prompt structure.
 - Official style templates live in `style_templates/<template_id>/` and are applied as a complete director archive through `template_id`; do not ask for or write a template strength.
 - When a style template is selected, user ideas override template defaults: explicit user ideas, supplied assets, brand/copy constraints, and project-specific creative directions come first. Capture these as `template_user_overrides` and make the output follow the user first.
 - Do not maintain `light` / `medium` / `high` variants for official templates. If the user wants a variation, treat it as a project-specific override rather than a new template strength.
@@ -74,6 +75,12 @@ Before video-mode confirmation, classify the style route:
 - `create_style_template_from_reference`: analyze reference assets and produce a draft template package for user confirmation.
 
 If using a template, capture `template_id`, whether draft templates are allowed, and `template_user_overrides` from any user-supplied ideas or constraints.
+
+Before storyboard work, classify the visual style preset route:
+
+- `preset`: use one visual style card from `references/visual_style_presets.json`.
+- `custom`: user supplies a custom look in natural language.
+- `reference-derived`: derive the look from user-provided reference assets and record safe transfer rules.
 
 If the mode is unclear, ask one concise question. Otherwise proceed with explicit assumptions.
 
@@ -154,14 +161,15 @@ Present the Production Lock as a bundled recommendation and wait for confirmatio
 6. Prompt language and target video model/profile
 7. Copy/VO language, caption language, and subtitle rendering policy (`post-production-only` by default)
 8. Narrative style, visual style, and pacing style
-9. Character/product/brand continuity rules
-10. Claims/compliance boundaries
-11. Storyboard image coverage: every shot, key shots, or selected scenes
-12. Reference style usage: mimic color grading, camera language, edit rhythm, typography/packaging, or only general mood
-13. Style route: `original`, `use_style_template`, or `create_style_template_from_reference`
-14. Style template fields when applicable: `template_id`, `allow_draft_template`, and `template_user_overrides`
-15. Template application summary: what is inherited from the template, what is overridden by the user's ideas, and what must not be copied
-16. Optional title packaging: ask whether to generate `main_title`, `chapter_card`, `lower_third`/`name_tag`, `data_callout`/`counter`, `cta_card`/`end_card`, or none. Capture exact copy, style references, PNG-only vs real animated overlay need, and `title_packaging_enabled`. This is a sidecar branch and does not modify video prompts.
+9. Visual style preset: choose one preset from `references/visual_style_presets.json`, custom, or reference-derived. Present 2-4 relevant cards with a recommended default instead of an unstructured open-ended style question.
+10. Character/product/brand continuity rules
+11. Claims/compliance boundaries
+12. Storyboard image coverage: every shot, key shots, or selected scenes
+13. Reference style usage: mimic color grading, camera language, edit rhythm, typography/packaging, or only general mood
+14. Style route: `original`, `use_style_template`, or `create_style_template_from_reference`
+15. Style template fields when applicable: `template_id`, `allow_draft_template`, and `template_user_overrides`
+16. Template application summary: what is inherited from the template, what is overridden by the user's ideas, and what must not be copied
+17. Optional title packaging: ask whether to generate `main_title`, `chapter_card`, `lower_third`/`name_tag`, `data_callout`/`counter`, `cta_card`/`end_card`, or none. Capture exact copy, style references, PNG-only vs real animated overlay need, and `title_packaging_enabled`. This is a sidecar branch and does not modify video prompts.
 
 Write:
 
@@ -189,6 +197,36 @@ The final style rules must answer:
 - What should be mimicked: palette, contrast, lighting, lens language, shot duration pattern, camera movement, transitions, and packaging. Subtitle behavior may be recorded as an analysis-only/post-production observation, not as a generation instruction unless the subtitle policy explicitly allows generated text.
 - What must not be copied: people, brand marks, exact scenes, plot, dialogue, slogans, copyrighted characters, or protected creator style.
 - How the rules affect storyboard image prompts and video prompts.
+
+### Step 3.6: Visual Style Preset Lock
+
+Gate: Production Lock is confirmed, and reference-style analysis is complete when reference assets are used.
+
+Use `references/visual-style-presets.md` and `references/visual_style_presets.json`. This step must be complete before `prompts/storyboard_image_prompts.md` is written.
+
+Ask or confirm one of:
+
+- One preset card, such as `imax_70mm_realism`, `photoreal_commercial`, `eastern_fantasy_3d`, `hyperreal_3d_render`, `graphic_2d_editorial`, `soft_storybook_2d`, `anime_cinematic_light`, `noir_gothic`, or `future_tech_clean`.
+- `custom`, when the user describes a look that does not fit a preset.
+- `reference-derived`, when reference assets define the look.
+
+When recommending, present 2-4 relevant cards, name the recommended one, and explain the tradeoff in one sentence. Record the selected preset in `brief/spec_lock.md` under `visual_style`:
+
+- `visual_style_lock`
+- `visual_style_preset_id`
+- `visual_style_preset_name`
+- `medium`
+- `realism_level`
+- `art_direction`
+- `color_palette`
+- `lighting`
+- `texture`
+- `camera_language`
+- `storyboard_prompt_rules`
+- `video_prompt_rules`
+- `visual_style_overrides`
+
+If a full `template_id` is also selected, the template's prompt rules remain the larger director method, while the visual style preset supplies the exact look card unless the user overrides it. Do not ask for exact living-artist or studio imitation; convert those requests into descriptive traits.
 
 ### Step 4: Creative Strategy And Rhythm Map
 
@@ -245,11 +283,12 @@ If `template_id` is present, read `style_templates/<template_id>/template.md`, `
 
 Gate: `shot_list.md` exists and storyboard coverage is known.
 
-Read `brief/spec_lock.md`, `references/storyboard-and-video-prompts.md`, and any `references/style_analysis.md`.
+Read `brief/spec_lock.md`, `references/storyboard-and-video-prompts.md`, `references/visual-style-presets.md`, and any `references/style_analysis.md`.
 If `template_id` is present, also read `style_templates/<template_id>/prompt_rules.md` and carry the template's safe prompt rules as defaults. User ideas and approved assets override template defaults when they conflict.
 
 Write `prompts/storyboard_image_prompts.md` before generating images. Generate storyboard frames with native image generation:
 
+- Every storyboard image prompt must carry the locked visual style preset fields from `brief/spec_lock.md`: `visual_style_preset_id`, medium, realism level, art direction, color palette, lighting, texture, camera language, and storyboard prompt rules.
 - If shot count is manageable and the user requested detailed storyboard images, generate one frame per shot.
 - If shot count is high, generate key frames unless the user explicitly asks for every shot.
 - If `reference_style` assets exist, inject the distilled style rules and safe reference keyframe paths into every storyboard image prompt. Use native image generation with reference images when the available tool supports it; otherwise include the keyframe paths and style rules in the prompt text. Never ask the model to reproduce the exact source video or image.
@@ -374,5 +413,6 @@ Fix issues before finishing. Final response should list the output folder, the u
 - `references/video-modes.md`: mode routing and rhythm rules.
 - `references/platform-and-model-profiles.md`: platform/model prompt language and constraints.
 - `references/audio-and-copy.md`: VO, TTS, captions, SFX, and copy extraction.
+- `references/visual-style-presets.md` and `references/visual_style_presets.json`: lightweight visual look cards for storyboard image prompts and video prompts.
 - `references/storyboard-and-video-prompts.md`: image and video prompt patterns.
 - `references/quality-check.md`: final QA checklist and validator use.

@@ -7,7 +7,7 @@ Run this checklist before final delivery.
 - `strategy/input_readiness.md` exists.
 - `strategy/video_mode.md` exists.
 - `brief/creative_brief.md` exists.
-- `brief/spec_lock.md` exists and contains format, production mode, story, rhythm, visual style, continuity, audio, and safety sections.
+- `brief/spec_lock.md` exists and contains format, production mode, story, rhythm, visual style, visual style preset lock, continuity, audio, and safety sections.
 - `strategy/creative_strategy.md` exists.
 - `strategy/rhythm_map.md` exists.
 - `script/script.md` exists and matches the target duration.
@@ -54,6 +54,7 @@ Run this checklist before final delivery.
 - Product and brand details stay consistent.
 - Locations and time of day do not drift accidentally.
 - Visual style matches `spec_lock.md` across all prompts.
+- `spec_lock.md` records `visual_style_lock`, `visual_style_preset_id`, `visual_style_preset_name`, and preset prompt rules before storyboard image prompts are generated.
 - If `reference_style` assets exist, `references/style_analysis.md`, `references/color_style.md`, `references/editing_style.md`, and `references/reference_style_manifest.md` exist before prompts are finalized.
 - Reference style rules are abstracted into palette, lighting, camera language, pacing, transitions, and packaging; prompts do not copy source subjects, plot, branding, or protected style.
 - Recurring characters and products are visually consistent enough for storyboard use, or the manifest/package notes any drift.
@@ -65,6 +66,7 @@ Run this checklist before final delivery.
 - Generated frame paths are verified before being referenced.
 - Missing images have final prompts and clear reasons.
 - Image prompts describe still frames, not video clips.
+- Storyboard image prompts include the locked visual style preset, medium, realism level, art direction, palette, lighting, texture/material rules, and storyboard prompt rules.
 - If reference keyframes exist, storyboard image prompts cite safe style rules and reference paths, and native image generation uses reference images when available.
 - Final selected frames are copied into `最终交付/01_分镜图/`.
 - A storyboard overview has been generated with `scripts/make_storyboard_overview.py`.
@@ -77,6 +79,7 @@ Run this checklist before final delivery.
 
 - Every shot has visual, motion, camera, continuity, external audio policy, background music policy, SFX, on-screen text policy, and parameter/assumption fields.
 - If `reference_style` assets exist, every final video prompt includes the approved transferable style rules and avoids reproducing the source content.
+- Final video prompts preserve the selected visual style preset through camera language, lighting, texture, and `video_prompt_rules`.
 - Final copy-ready prompts are easy to paste into a model.
 - If `prompt_language` is `zh-CN`, final prompts are Chinese-first.
 - Final prompts separate external voiceover/audio from visual text using `声音/口播` or `Voiceover/audio`, plus `画面文字策略` or `On-screen text policy`.
