@@ -1,0 +1,41 @@
+{
+  "template_id": "cinematic-flow-racing",
+  "default_arc": [
+    {
+      "phase": "现实压迫",
+      "position": "0-35%",
+      "shot_duration_guidance": "0.8-4s",
+      "camera_energy": ["macro insert", "POV", "vehicle vibration", "impact push-in"]
+    },
+    {
+      "phase": "临界爆发",
+      "position": "35-55%",
+      "shot_duration_guidance": "0.6-1.2s rapid-cut cluster",
+      "camera_energy": ["whip pan", "hard cut", "gauge insert", "light flash"]
+    },
+    {
+      "phase": "暴风眼",
+      "position": "55-75%",
+      "shot_duration_guidance": "3-7s",
+      "camera_energy": ["stable", "floating", "slow push"]
+    },
+    {
+      "phase": "超现实心流",
+      "position": "75-100%",
+      "shot_duration_guidance": "3-8s",
+      "camera_energy": ["wide negative space", "slow drift", "locked-off calm"]
+    }
+  ],
+  "minimum_requirements": {
+    "rapid_cut_clusters": 1,
+    "rapid_cut_cluster_min_shots": 3,
+    "rapid_cut_max_duration_seconds": 1.2,
+    "breath_shots": 2,
+    "late_flow_state_turn": true
+  },
+  "transition_rules": [
+    "Use hard cuts in pressure clusters.",
+    "Use silence, visual expansion, or slowed motion at the flow-state turn.",
+    "Avoid decorative transitions that reduce the pressure."
+  ]
+}
