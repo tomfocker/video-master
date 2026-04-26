@@ -85,11 +85,12 @@ Style transfer rules:
 
 Use this section when applying a style template to storyboard image prompts and video prompts.
 
-When `brief/spec_lock.md` contains `template_id`, prompt writing must read `style_templates/<template_id>/prompt_rules.md`.
+When `brief/spec_lock.md` contains `template_id`, prompt writing must read `style_templates/<template_id>/prompt_rules.md`. For shot planning, also use `shot_motifs.json`, `editing_craft.md`, and `director_notes.md` when present.
 
-- `light`: inherit mood, palette, lighting, and broad atmosphere only.
-- `medium`: inherit mood, rhythm strategy, camera language, sound policy, and prompt fields while redesigning the subject.
-- `high`: inherit the template's narrative rhythm and camera grammar strongly, while still rewriting all subject matter and never copying exact reference content.
+- Apply the style template as a whole director method rather than choosing a strength tier.
+- Explicit user ideas override template defaults: subject, copy, brand rules, supplied assets, required scenes, and compliance constraints come first.
+- Use the template for transferable visual language, rhythm structure, camera grammar, edit strategy, sound policy, and prompt fields.
+- If user ideas conflict with the template, preserve the user's intent and adapt the template's method around it.
 
 Final video prompts must remain subject-specific and must not mention copying the reference video.
 

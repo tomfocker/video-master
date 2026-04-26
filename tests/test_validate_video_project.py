@@ -14,6 +14,10 @@ REQUIRED_TEMPLATE_FILES = [
     "rhythm_rules.json",
     "prompt_rules.md",
     "reference_notes.md",
+    "director_notes.md",
+    "shot_motifs.json",
+    "editing_craft.md",
+    "example_shot_list.md",
 ]
 
 
@@ -46,11 +50,7 @@ def write_template_package(root: Path, template_id="draft-template", status="dra
                 "supported_video_modes": ["fast-paced-tvc"],
                 "supported_aspect_ratios": ["9:16"],
                 "duration_range_seconds": {"min": 1, "max": 120},
-                "strengths": {
-                    "light": {"label": "Light", "behavior": "Light behavior"},
-                    "medium": {"label": "Medium", "behavior": "Medium behavior"},
-                    "high": {"label": "High", "behavior": "High behavior"},
-                },
+                "user_override_policy": ["User project ideas override template defaults."],
                 "visual_rules": ["visual"],
                 "rhythm_rules": ["rhythm"],
                 "camera_rules": ["camera"],
@@ -267,16 +267,25 @@ class ValidateVideoProjectTest(unittest.TestCase):
             result = self.run_validator(project)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_rejects_template_id_without_template_strength(self):
+    def test_rejects_deprecated_template_strength_field(self):
         with tempfile.TemporaryDirectory() as tmp:
             project = make_project(
                 Path(tmp),
                 durations=[3, 4, 4, 6, 5, 3, 5],
-                extra_spec_lines=["- style_route: use_style_template", "- template_id: cinematic-flow-racing"],
+                extra_spec_lines=[
+                    "- style_route: use_style_template",
+                    "- template_id: cinematic-flow-racing",
+                    "- template_strength: medium",
+                ],
+                rhythm_map_content=(
+                    "# Rhythm Map\n\n"
+                    "- template_id: cinematic-flow-racing\n"
+                    "- template_application: 套用完整模板方法，并按用户项目重写主体。\n"
+                ),
             )
             result = self.run_validator(project)
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("template_strength is required when template_id is set", result.stdout + result.stderr)
+            self.assertIn("template_strength is no longer supported", result.stdout + result.stderr)
 
     def test_rejects_style_template_route_without_template_id(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -300,7 +309,6 @@ class ValidateVideoProjectTest(unittest.TestCase):
                 extra_spec_lines=[
                     "- style_route: use_style_template",
                     "- template_id: missing-template",
-                    "- template_strength: medium",
                 ],
             )
             result = self.run_validator(project)
@@ -315,7 +323,6 @@ class ValidateVideoProjectTest(unittest.TestCase):
                 extra_spec_lines=[
                     "- style_route: use_style_template",
                     "- template_id: cinematic-flow-racing",
-                    "- template_strength: medium",
                 ],
                 shot_overrides={
                     "S02": {"movement": "车载震动，快切冲击"},
@@ -335,13 +342,11 @@ class ValidateVideoProjectTest(unittest.TestCase):
                 extra_spec_lines=[
                     "- style_route: use_style_template",
                     "- template_id: cinematic-flow-racing",
-                    "- template_strength: medium",
                 ],
                 rhythm_map_content=(
                     "# Rhythm Map\n\n"
                     "- template_id: cinematic-flow-racing\n"
-                    "- template_strength: medium\n"
-                    "- template_application: 中度套用心流结构。\n"
+                    "- template_application: 套用完整心流结构，并按用户项目重写主体。\n"
                 ),
                 shot_overrides={
                     "S02": {"movement": "车载震动，快切冲击"},
@@ -373,13 +378,11 @@ class ValidateVideoProjectTest(unittest.TestCase):
                 extra_spec_lines=[
                     "- style_route: use_style_template",
                     "- template_id: cinematic-flow-racing",
-                    "- template_strength: medium",
                 ],
                 rhythm_map_content=(
                     "# Rhythm Map\n\n"
                     "- template_id: cinematic-flow-racing\n"
-                    "- template_strength: medium\n"
-                    "- template_application: 中度套用现实压迫、快切压力组、暴风眼和超现实心流结构。\n"
+                    "- template_application: 套用完整模板方法：现实压迫、快切压力组、暴风眼和超现实心流结构；用户具体主题优先。\n"
                 ),
                 shot_overrides={
                     "S02": {"movement": "车载震动，快切冲击"},
@@ -410,12 +413,10 @@ class ValidateVideoProjectTest(unittest.TestCase):
                 extra_spec_lines=[
                     "- style_route: use_style_template",
                     "- template_id: draft-template",
-                    "- template_strength: medium",
                 ],
                 rhythm_map_content=(
                     "# Rhythm Map\n\n"
                     "- template_id: draft-template\n"
-                    "- template_strength: medium\n"
                 ),
             )
             result = self.run_validator(
@@ -439,13 +440,11 @@ class ValidateVideoProjectTest(unittest.TestCase):
                 extra_spec_lines=[
                     "- style_route: use_style_template",
                     "- template_id: draft-template",
-                    "- template_strength: medium",
                     "- allow_draft_template: true",
                 ],
                 rhythm_map_content=(
                     "# Rhythm Map\n\n"
                     "- template_id: draft-template\n"
-                    "- template_strength: medium\n"
                 ),
             )
             result = self.run_validator(

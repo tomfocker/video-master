@@ -20,6 +20,10 @@ REQUIRED_PACKAGE_FILES = [
     "rhythm_rules.json",
     "prompt_rules.md",
     "reference_notes.md",
+    "director_notes.md",
+    "shot_motifs.json",
+    "editing_craft.md",
+    "example_shot_list.md",
 ]
 
 
@@ -47,11 +51,7 @@ def write_package(root, template_id="fixture", required_files=None):
         "supported_video_modes": ["narrative-short"],
         "supported_aspect_ratios": ["16:9"],
         "duration_range_seconds": {"min": 1, "max": 2},
-        "strengths": {
-            "light": {"label": "Light", "behavior": "Light behavior"},
-            "medium": {"label": "Medium", "behavior": "Medium behavior"},
-            "high": {"label": "High", "behavior": "High behavior"},
-        },
+        "user_override_policy": ["User project ideas override template defaults."],
         "visual_rules": ["visual"],
         "rhythm_rules": ["rhythm"],
         "camera_rules": ["camera"],
@@ -78,7 +78,20 @@ class StyleTemplateLoaderTest(unittest.TestCase):
         self.assertEqual(template["status"], "official")
         self.assertIn("意识流", template["display_name"])
         self.assertIn("高压职业", template["tags"])
-        self.assertIn("medium", template["strengths"])
+        self.assertIn("user_override_policy", template)
+        self.assertNotIn("strengths", template)
+
+    def test_cinematic_flow_racing_includes_director_archive_files(self):
+        package_dir = ROOT / "skills" / "video-master" / "style_templates" / "cinematic-flow-racing"
+
+        for filename in REQUIRED_PACKAGE_FILES:
+            self.assertTrue((package_dir / filename).is_file(), filename)
+
+        import json
+
+        motifs = json.loads((package_dir / "shot_motifs.json").read_text(encoding="utf-8"))
+        self.assertIn("motifs", motifs)
+        self.assertGreaterEqual(len(motifs["motifs"]), 6)
 
     def test_lists_templates_with_status_and_name(self):
         templates = list_templates()
@@ -132,6 +145,20 @@ class StyleTemplateLoaderTest(unittest.TestCase):
 
             with self.assertRaisesRegex(TemplateError, "missing required metadata"):
                 load_template("broken", template_root=root)
+
+    def test_rejects_deprecated_strengths_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            package = write_package(root)
+            template_path = package / "template.json"
+            import json
+
+            data = json.loads(template_path.read_text(encoding="utf-8"))
+            data["strengths"] = {"medium": {"behavior": "deprecated"}}
+            template_path.write_text(json.dumps(data), encoding="utf-8")
+
+            with self.assertRaisesRegex(TemplateError, "strengths metadata is no longer supported"):
+                load_template("fixture", template_root=root)
 
     def test_rejects_invalid_required_file_entries(self):
         with tempfile.TemporaryDirectory() as tmp:

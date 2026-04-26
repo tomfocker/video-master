@@ -18,6 +18,8 @@ video-master/
         generate_voiceover_tts.py
         export_production_workbook.py
         validate_video_project.py
+      style_templates/
+        cinematic-flow-racing/
       references/
         audio-and-copy.md
         output-contract.md
@@ -59,12 +61,12 @@ video-master/
 项目正在设计可扩展的视频风格库。未来用户可以选择：
 
 - 完全原创：按新主题重新设计风格、剧本、分镜和提示词。
-- 使用正式模板：调用已经维护好的导演风格模板。
+- 使用正式模板：调用已经维护好的导演风格模板。模板不再拆分强度档位；用户明确提出的想法、素材、文案、品牌和镜头优先于模板默认规则。
 - 基于参考片创建模板：先由 AI 分析风格档案、节奏规则、分镜策略和提示词规则，再由用户补充设计思路、剪辑技巧和创作意图，确认后入库。
 
 当前内置的第一枚正式模板：
 
-- `cinematic-flow-racing`：意识流赛车压迫感短片。适合赛车手、极限运动员、拳击手、外科医生、钢琴家、交易员等高压职业心流主题。
+- `cinematic-flow-racing`：意识流赛车压迫感短片。适合赛车手、极限运动员、拳击手、外科医生、钢琴家、交易员等高压职业心流主题。模板包包含导演笔记、剪辑技巧、镜头母题库和 60 秒示范分镜。
 
 相关设计文档见：
 

@@ -18,6 +18,10 @@ REQUIRED_PACKAGE_FILES = [
     "rhythm_rules.json",
     "prompt_rules.md",
     "reference_notes.md",
+    "director_notes.md",
+    "shot_motifs.json",
+    "editing_craft.md",
+    "example_shot_list.md",
 ]
 
 REQUIRED_TEMPLATE_FIELDS = [
@@ -32,7 +36,7 @@ REQUIRED_TEMPLATE_FIELDS = [
     "supported_video_modes",
     "supported_aspect_ratios",
     "duration_range_seconds",
-    "strengths",
+    "user_override_policy",
     "visual_rules",
     "rhythm_rules",
     "camera_rules",
@@ -44,7 +48,6 @@ REQUIRED_TEMPLATE_FIELDS = [
 ]
 
 VALID_STATUSES = {"draft", "official"}
-VALID_STRENGTHS = {"light", "medium", "high"}
 REQUIRED_PACKAGE_FILE_SET = set(REQUIRED_PACKAGE_FILES)
 
 
@@ -67,12 +70,6 @@ def _read_json(path: Path) -> dict[str, Any]:
 def _as_list(value: Any, field: str) -> list[Any]:
     if not isinstance(value, list) or not value:
         raise TemplateError(f"{field} must be a non-empty list")
-    return value
-
-
-def _as_dict(value: Any, field: str) -> dict[str, Any]:
-    if not isinstance(value, dict) or not value:
-        raise TemplateError(f"{field} must be a non-empty object")
     return value
 
 
@@ -157,6 +154,9 @@ def _validate_prompt_validation(value: Any) -> None:
 
 
 def validate_template_metadata(data: dict[str, Any], package_dir: Path) -> dict[str, Any]:
+    if "strengths" in data:
+        raise TemplateError("strengths metadata is no longer supported; templates apply as complete director archives")
+
     missing = [field for field in REQUIRED_TEMPLATE_FIELDS if field not in data]
     if missing:
         raise TemplateError(f"missing required metadata: {', '.join(missing)}")
@@ -179,6 +179,7 @@ def validate_template_metadata(data: dict[str, Any], package_dir: Path) -> dict[
         "not_for",
         "supported_video_modes",
         "supported_aspect_ratios",
+        "user_override_policy",
         "visual_rules",
         "rhythm_rules",
         "camera_rules",
@@ -188,11 +189,6 @@ def validate_template_metadata(data: dict[str, Any], package_dir: Path) -> dict[
         "safety_boundaries",
     ]:
         _as_list(data[field], field)
-
-    strengths = _as_dict(data["strengths"], "strengths")
-    missing_strengths = sorted(VALID_STRENGTHS - set(strengths))
-    if missing_strengths:
-        raise TemplateError(f"strengths missing: {', '.join(missing_strengths)}")
 
     duration_range = data["duration_range_seconds"]
     if (

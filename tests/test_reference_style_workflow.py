@@ -19,7 +19,7 @@ class ReferenceStyleWorkflowTest(unittest.TestCase):
         self.assertIn("Style transfer rules", prompt_reference)
         self.assertIn("copy subjects, plot, branding, or protected style", prompt_reference)
 
-    def test_skill_documents_style_template_modes_and_strengths(self):
+    def test_skill_documents_style_template_modes_and_override_policy(self):
         skill = (ROOT / "skills" / "video-master" / "SKILL.md").read_text(encoding="utf-8")
         output_contract = (
             ROOT / "skills" / "video-master" / "references" / "output-contract.md"
@@ -30,13 +30,15 @@ class ReferenceStyleWorkflowTest(unittest.TestCase):
 
         self.assertIn("style_templates", skill)
         self.assertIn("template_id", skill)
-        self.assertIn("template_strength", skill)
-        self.assertIn("light", skill)
-        self.assertIn("medium", skill)
-        self.assertIn("high", skill)
+        self.assertIn("template_user_overrides", skill)
+        self.assertIn("user ideas override", skill)
+        self.assertNotIn("template_strength", skill)
         self.assertIn("template_id", output_contract)
-        self.assertIn("template_strength", output_contract)
+        self.assertIn("template_user_overrides", output_contract)
+        self.assertNotIn("template_strength", output_contract)
         self.assertIn("style template", prompt_reference)
+        self.assertIn("user ideas override", prompt_reference)
+        self.assertNotIn("template_strength", prompt_reference)
 
     def test_style_template_guardrails_are_documented(self):
         skill = (ROOT / "skills" / "video-master" / "SKILL.md").read_text(encoding="utf-8")
@@ -53,10 +55,6 @@ class ReferenceStyleWorkflowTest(unittest.TestCase):
         )
         self.assertIn("- template_id: <template_id when style_route is use_style_template>", output_contract)
         self.assertNotIn("- template_id: cinematic-flow-racing", output_contract)
-        self.assertIn(
-            "- template_strength: <light | medium | high when template_id is set>",
-            output_contract,
-        )
         self.assertIn("Do not use mixed labels such as `声音/字幕`", skill)
         self.assertIn("Do not include a `Negative prompt` or `负面提示词` field", output_contract)
         self.assertIn("Do not include a `负面提示词` section", skill)

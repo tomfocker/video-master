@@ -147,8 +147,6 @@ IMPACT_CAMERA_TERMS = [
     "impact",
     "whip",
 ]
-VALID_TEMPLATE_STRENGTHS = {"light", "medium", "high"}
-
 
 class Shot(BaseModel):
     shot_id: str
@@ -473,17 +471,13 @@ def validate_final_video_prompt_audio_contract(project: Path, errors: list[str])
 def validate_style_template(project: Path, spec: dict[str, str], errors: list[str]) -> None:
     template_id = spec.get("template_id", "").strip()
     style_route = spec.get("style_route", "").strip()
+    template_strength = spec.get("template_strength", "").strip()
+    if template_strength:
+        errors.append("template_strength is no longer supported; template rules apply as a whole and explicit user ideas override them")
+
     if not template_id:
         if style_route == "use_style_template":
             errors.append("template_id is required when style_route is use_style_template")
-        return
-
-    template_strength = spec.get("template_strength", "").strip()
-    if not template_strength:
-        errors.append("template_strength is required when template_id is set")
-        return
-    if template_strength not in VALID_TEMPLATE_STRENGTHS:
-        errors.append("template_strength must be one of: high, light, medium")
         return
 
     try:
@@ -500,8 +494,6 @@ def validate_style_template(project: Path, spec: dict[str, str], errors: list[st
     rhythm_text = read_text(rhythm_map) if rhythm_map.is_file() else ""
     if template_id not in rhythm_text:
         errors.append("rhythm_map must name selected template")
-    if template_strength not in rhythm_text:
-        errors.append("rhythm_map must name selected template_strength")
 
     prompt_validation = template.get("prompt_validation")
     if not prompt_validation:

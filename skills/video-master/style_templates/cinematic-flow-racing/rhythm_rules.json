@@ -1,5 +1,6 @@
 {
   "template_id": "cinematic-flow-racing",
+  "application_policy": "Apply the full template method as defaults. User project ideas, supplied assets, copy, brand constraints, and compliance requirements override these defaults.",
   "default_arc": [
     {
       "phase": "现实压迫",

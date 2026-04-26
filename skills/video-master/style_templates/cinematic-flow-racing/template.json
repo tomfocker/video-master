@@ -2,7 +2,7 @@
   "id": "cinematic-flow-racing",
   "display_name": "意识流赛车压迫感短片",
   "status": "official",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "updated_at": "2026-04-26",
   "tags": ["意识流", "赛车", "高压职业", "心流", "黑白", "压迫感", "极限运动", "电影感"],
   "best_for": ["赛车手独白", "极限运动员", "拳击手", "外科医生", "钢琴家", "交易员", "创业者", "高压职业心流短片"],
@@ -13,20 +13,11 @@
     "min": 30,
     "max": 120
   },
-  "strengths": {
-    "light": {
-      "label": "轻度参考",
-      "behavior": "只继承低饱和高反差、冷峻压迫气质、局部红色信号点和局部极近特写。"
-    },
-    "medium": {
-      "label": "中度套用",
-      "behavior": "继承现实压迫到心流释放的节奏弧线、快切压力组、呼吸镜头、外部画外音和逐镜头 SFX。"
-    },
-    "high": {
-      "label": "高度风格锁定",
-      "behavior": "强继承现实压迫、临界爆发、风暴眼、超现实升华的四段结构，但重写全部主体、场景、台词和具体画面。"
-    }
-  },
+  "user_override_policy": [
+    "用户在 brief/spec_lock.md 中写明的创意、题材、品牌、人物、镜头、口播、素材事实和合规要求优先于模板默认规则。",
+    "模板提供导演方法，不覆盖用户提供的素材事实、授权边界和核心表达。",
+    "当用户想法与模板冲突时，保留模板的可迁移原则，重写具体执行。"
+  ],
   "visual_rules": [
     "近黑白低饱和画面，高反差暗部，湿润银色高光。",
     "红色或橙色只作为信号灯、仪表、火花、尾灯等稀少强调色。",
@@ -77,6 +68,10 @@
     "template.json",
     "rhythm_rules.json",
     "prompt_rules.md",
-    "reference_notes.md"
+    "reference_notes.md",
+    "director_notes.md",
+    "shot_motifs.json",
+    "editing_craft.md",
+    "example_shot_list.md"
   ]
 }

@@ -1,0 +1,92 @@
+{
+  "template_id": "cinematic-flow-racing",
+  "description": "Reusable shot motifs for high-pressure flow-state shorts. Replace racing-specific objects with project-specific equivalents when user ideas require it.",
+  "motif_rules": [
+    "Use motifs as reusable shot grammar, not as mandatory literal racing shots.",
+    "When user-provided creative direction conflicts with a motif, keep the user's idea and translate the motif's function.",
+    "Each rapid-cut cluster should mix at least three tactile motifs rather than repeating the same object.",
+    "Do not copy reference subjects, brands, captions, watermarks, or exact compositions."
+  ],
+  "motifs": [
+    {
+      "id": "M01",
+      "name": "遮挡下的眼神极近特写",
+      "function": "把人物困在局部视野里，制造幽闭和专注。",
+      "visual_prompt_seed": "extreme close-up of one eye partly hidden by visor, glass, shadow, rain, or medical mask; near-monochrome high contrast, wet silver highlights",
+      "video_prompt_seed": "micro movement in the eye, tiny reflection flicker, shallow breathing, camera nearly locked but tense",
+      "sfx": "breath inside enclosed space, faint fabric creak, distant low rumble"
+    },
+    {
+      "id": "M02",
+      "name": "手部压力",
+      "function": "把心理压力转成触觉动作。",
+      "visual_prompt_seed": "gloved hand gripping wheel, instrument, scalpel, keyboard, rope, or piano key; compressed macro framing; tactile texture",
+      "video_prompt_seed": "fingers tighten almost imperceptibly, object trembles slightly, small vibration in frame",
+      "sfx": "leather strain, knuckle movement, object friction"
+    },
+    {
+      "id": "M03",
+      "name": "临界仪表",
+      "function": "用系统信号提示失控边缘。",
+      "visual_prompt_seed": "red signal light, gauge needle, warning LED, timer, monitor waveform, or countdown crossing threshold; mostly black and white with rare red accent",
+      "video_prompt_seed": "red light pulses, needle or value creeps toward limit, hard cut on signal peak",
+      "sfx": "electronic beep, mechanical tick, low sub pulse"
+    },
+    {
+      "id": "M04",
+      "name": "湿润机械细节",
+      "function": "提供工业现实感和冷峻材质。",
+      "visual_prompt_seed": "wet carbon fiber, metal seam, tire surface, surgical steel, piano wire, server rack, rain droplets; silver specular highlights",
+      "video_prompt_seed": "droplets tremble, highlight slides across surface, tiny vibration or airflow",
+      "sfx": "rain taps, metal vibration, low engine or machine bed"
+    },
+    {
+      "id": "M05",
+      "name": "后视镜残影",
+      "function": "表现恐惧、过去和杂念被抛在身后。",
+      "visual_prompt_seed": "blurred reflection in mirror, polished metal, glass, visor, monitor black screen; ghosted movement behind subject",
+      "video_prompt_seed": "reflection jitters or streaks backward while foreground stays tense",
+      "sfx": "whoosh tail, muffled impact, distant crowd or system noise"
+    },
+    {
+      "id": "M06",
+      "name": "黑场小人物",
+      "function": "用巨大负空间压小人物，建立孤独和宿命感。",
+      "visual_prompt_seed": "tiny human figure or object inside vast black negative space, rain haze, industrial geometry, single red signal point",
+      "video_prompt_seed": "slow push or locked-off hold, subject barely moves, space feels heavy",
+      "sfx": "room tone, low wind, far machinery"
+    },
+    {
+      "id": "M07",
+      "name": "快切触觉组",
+      "function": "在 0.6-1.2 秒镜头里堆叠身体压力。",
+      "visual_prompt_seed": "three to five tactile inserts: eye, hand, signal, surface, breath, rain; high contrast near-monochrome",
+      "video_prompt_seed": "rapid hard-cut cluster, each shot has one decisive micro action, no explanatory text",
+      "sfx": "syncopated breaths, ticks, impact hits, short air pressure bursts"
+    },
+    {
+      "id": "M08",
+      "name": "暴风眼静止",
+      "function": "在极动之后突然抽空声音和运动。",
+      "visual_prompt_seed": "still subject in a quiet center, surrounding chaos softened or blurred; pale silver light, deep blacks",
+      "video_prompt_seed": "all motion slows, camera stabilizes, subject appears suspended inside silence",
+      "sfx": "near-silence, isolated breath, distant muted tone"
+    },
+    {
+      "id": "M09",
+      "name": "现实空间超现实化",
+      "function": "把职业场景升华成心流意象。",
+      "visual_prompt_seed": "real environment subtly transforms into impossible scale: track into cloud road, operating room into white void, office into orbital grid",
+      "video_prompt_seed": "slow drift forward, realistic textures remain but space opens beyond normal physics",
+      "sfx": "soft air bloom, filtered machine tone, slow tonal swell for post mix"
+    },
+    {
+      "id": "M10",
+      "name": "终局悬浮远景",
+      "function": "让人物和系统合一，完成心理释放。",
+      "visual_prompt_seed": "wide negative-space final image, subject small but centered in a vast abstract path, ring, corridor, cloud layer, or horizon",
+      "video_prompt_seed": "calm glide or locked-off hold, no subtitles, no logo, no explanatory text",
+      "sfx": "subtle wind, fading machine resonance, calm breath"
+    }
+  ]
+}
