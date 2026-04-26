@@ -1,0 +1,4 @@
+interface:
+  display_name: "Video Master"
+  short_description: "Video scripts, storyboards, audio, prompts"
+  default_prompt: "Use $video-master to turn my video idea or campaign materials into a production package with script, audio copy, storyboard images, and copy-ready prompts."
