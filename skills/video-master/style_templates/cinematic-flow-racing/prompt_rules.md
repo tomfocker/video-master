@@ -2,7 +2,8 @@
 
 ## Storyboard Image Prompts
 
-- Include: high-contrast near-monochrome, crushed blacks, wet silver highlights, rare red signal accent.
+- Include: black-and-white Chiaroscuro contrast, high-contrast near-monochrome, crushed blacks, wet silver highlights, rare red signal accent.
+- Use black and white as information compression: remove decorative color and force attention onto speed, life/death stakes, texture, rain grain, carbon fiber, metal, skin, fire, and light cuts.
 - Use tactile image anchors: visor reflection, gloved hand, gauge needle, tire spray, metal texture, breath fog, rain, smoke, carbon fiber.
 - Use scale contrast: extreme close-up against vast negative-space wide shots.
 - For flow-state shots, use calm surreal expansion instead of literal explanation.
@@ -40,6 +41,12 @@ For text, write:
 ```
 
 Do not include a `负面提示词` or `Negative prompt` field.
+
+For SFX and audio design, each shot should specify whether it belongs to the external noise field or the subjective inner field:
+
+- High-pressure shots: engine or machine roar, gearbox scream, gear bite, wind pressure, rain spray, tactile friction, fragmented breath, warning tones.
+- Threshold shot: sound peaks, then drops abruptly.
+- Flow-state shots: deep space low-frequency bed, controlled breath, minimal resonance, no per-clip music.
 
 ## User Overrides
 

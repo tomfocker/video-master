@@ -69,6 +69,42 @@
       "duration_guidance": "4-8s, smooth and sparse"
     }
   ],
+  "three_act_pressure_model": [
+    {
+      "act": "入局与凝视",
+      "time_window": "00:00-00:11",
+      "core_logic": "Use restrained pacing and fatalistic images to establish danger before the action begins.",
+      "visual_logic": "backlit silhouette, destruction/glory concept montage, cold preparation-space wide, visor or face close-up, physical lock/snap as the rhythm trigger",
+      "audio_logic": "close calm VO stays forward; environment remains restrained with low room tone, distant crowd, fire crackle, metal debris, and one sharp lock click"
+    },
+    {
+      "act": "物理极限与感官过载",
+      "time_window": "00:12-00:37",
+      "core_logic": "Release pressure through jump cuts, extreme speed shots, macro textures, and subjective/objective cross-cutting.",
+      "visual_logic": "rain spray, low tracking speed, airflow streaks, carbon-fiber or metal macro texture, heat shimmer, POV, tense face, mirror ghost, redline threshold",
+      "audio_logic": "engine or machine roar, gearbox scream, gear bite, wind pressure, rain, tactile friction, fragmented breath, warning tones; external noise battles the inner VO"
+    },
+    {
+      "act": "心流与超现实之境",
+      "time_window": "00:38-00:58",
+      "core_logic": "Drop from physical speed into spiritual slowness; rebuild space into a surreal flow-state order.",
+      "visual_logic": "slow-motion hair or head movement, sparks, ghosted formations, storm-eye wide, cloud-road, black void control gesture, orbital final path",
+      "audio_logic": "abrupt silence drop after threshold; keep deep space low-frequency bed, calm breath, and minimal resonance while mechanical roar disappears"
+    }
+  ],
+  "audio_design_model": {
+    "principle": "Subjective sound field and environmental sound field fight for control: close calm VO versus violent machinery, then a silence drop into flow state.",
+    "subjective_voice": "close-mic, calm, low, intimate VO or breath; dialogue copy stays in audio/SRT files, not in video model prompts",
+    "environmental_noise": ["engine or machine roar", "gearbox scream", "gear bite", "wind pressure", "rain spray", "metal vibration", "crowd wash", "warning tones"],
+    "pressure_curve": [
+      "restrained low-frequency bed in the opening",
+      "rapidly rising mechanical and tactile SFX during overload",
+      "fragmented breath and warning tones near redline",
+      "abrupt cut to near-silence at the threshold",
+      "deep space tone and controlled breath in the flow-state ending"
+    ],
+    "music_policy": "Do not ask video models to generate per-clip background music; music belongs to whole-film post-production."
+  },
   "minimum_requirements": {
     "rapid_cut_clusters": 1,
     "rapid_cut_cluster_min_shots": 3,
