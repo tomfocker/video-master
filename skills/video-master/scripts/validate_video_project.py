@@ -37,6 +37,7 @@ from delivery_paths import (
     preview_mp4_path,
     video_prompt_path,
 )
+from style_templates import TemplateError, load_template
 
 
 BASE_REQUIRED = [
@@ -146,6 +147,7 @@ IMPACT_CAMERA_TERMS = [
     "impact",
     "whip",
 ]
+VALID_TEMPLATE_STRENGTHS = {"light", "medium", "high"}
 
 
 class Shot(BaseModel):
@@ -468,6 +470,56 @@ def validate_final_video_prompt_audio_contract(project: Path, errors: list[str])
             break
 
 
+def validate_style_template(project: Path, spec: dict[str, str], errors: list[str]) -> None:
+    template_id = spec.get("template_id", "").strip()
+    style_route = spec.get("style_route", "").strip()
+    if not template_id:
+        if style_route == "use_style_template":
+            errors.append("template_id is required when style_route is use_style_template")
+        return
+
+    template_strength = spec.get("template_strength", "").strip()
+    if not template_strength:
+        errors.append("template_strength is required when template_id is set")
+        return
+    if template_strength not in VALID_TEMPLATE_STRENGTHS:
+        errors.append("template_strength must be one of: high, light, medium")
+        return
+
+    try:
+        template = load_template(template_id)
+    except TemplateError as exc:
+        errors.append(str(exc))
+        return
+
+    allow_draft = spec.get("allow_draft_template", "false").strip().lower() == "true"
+    if template["status"] == "draft" and not allow_draft:
+        errors.append(f"draft template requires allow_draft_template: true: {template_id}")
+
+    rhythm_map = project / "strategy" / "rhythm_map.md"
+    rhythm_text = read_text(rhythm_map) if rhythm_map.is_file() else ""
+    if template_id not in rhythm_text:
+        errors.append("rhythm_map must name selected template")
+    if template_strength not in rhythm_text:
+        errors.append("rhythm_map must name selected template_strength")
+
+    prompt_validation = template.get("prompt_validation")
+    if not prompt_validation:
+        return
+
+    required_terms = prompt_validation.get("required_terms", [])
+    minimum_matches = prompt_validation.get("minimum_matches", 0)
+    final_prompt = video_prompt_path(project)
+    prompt_text = read_text(final_prompt) if final_prompt.is_file() else ""
+    prompt_text_lower = prompt_text.lower()
+    matches = [term for term in required_terms if term.strip().lower() in prompt_text_lower]
+    if len(matches) < minimum_matches:
+        errors.append(
+            f"{template_id} prompts must carry the template visual language "
+            f"({len(matches)}/{minimum_matches} required terms matched)"
+        )
+
+
 def validate_storyboard_overview(project: Path, errors: list[str]) -> None:
     overview_candidates = [
         project / OVERVIEW_PNG,
@@ -541,6 +593,7 @@ def main(argv: list[str] | None = None) -> int:
     validate_prompt_language(project, spec, errors)
     validate_copy_and_subtitle_policy(project, spec, errors)
     validate_final_video_prompt_audio_contract(project, errors)
+    validate_style_template(project, spec, errors)
     validate_storyboard_overview(project, errors)
     validate_preview_manifest(project, errors)
 

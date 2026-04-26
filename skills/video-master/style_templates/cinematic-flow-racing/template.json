@@ -68,6 +68,10 @@
     "不使用真实 F1 车手或真实品牌身份，除非用户提供授权。",
     "只迁移色彩、节奏、镜头语言、声音策略和抽象意象结构。"
   ],
+  "prompt_validation": {
+    "required_terms": ["低饱和", "高反差", "黑白", "银色高光", "负空间", "湿润", "机械细节"],
+    "minimum_matches": 3
+  },
   "required_files": [
     "template.md",
     "template.json",

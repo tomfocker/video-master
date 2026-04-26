@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -75,6 +76,13 @@ def _as_dict(value: Any, field: str) -> dict[str, Any]:
     return value
 
 
+def _default_template_root() -> Path:
+    env_root = os.environ.get("VIDEO_MASTER_STYLE_TEMPLATE_ROOT", "").strip()
+    if env_root:
+        return Path(env_root)
+    return DEFAULT_TEMPLATE_ROOT
+
+
 def _validate_template_id(template_id: str) -> str:
     if not isinstance(template_id, str):
         raise TemplateError("template_id must be a string")
@@ -129,6 +137,25 @@ def _validate_required_files(value: Any, package_dir: Path) -> list[str]:
     return filenames
 
 
+def _validate_prompt_validation(value: Any) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        raise TemplateError("prompt_validation must be an object")
+
+    required_terms = value.get("required_terms")
+    if not isinstance(required_terms, list) or not required_terms:
+        raise TemplateError("prompt_validation.required_terms must be a non-empty list")
+    if not all(isinstance(term, str) and term.strip() for term in required_terms):
+        raise TemplateError("prompt_validation.required_terms entries must be non-empty strings")
+
+    minimum_matches = value.get("minimum_matches")
+    if not isinstance(minimum_matches, int) or minimum_matches <= 0:
+        raise TemplateError("prompt_validation.minimum_matches must be a positive integer")
+    if minimum_matches > len(required_terms):
+        raise TemplateError("prompt_validation.minimum_matches cannot exceed required_terms length")
+
+
 def validate_template_metadata(data: dict[str, Any], package_dir: Path) -> dict[str, Any]:
     missing = [field for field in REQUIRED_TEMPLATE_FIELDS if field not in data]
     if missing:
@@ -178,13 +205,14 @@ def validate_template_metadata(data: dict[str, Any], package_dir: Path) -> dict[
         raise TemplateError("duration_range_seconds must include numeric min and max")
 
     _validate_required_files(data["required_files"], package_dir)
+    _validate_prompt_validation(data.get("prompt_validation"))
 
     return data
 
 
 def load_template(template_id: str, template_root: Path | None = None) -> dict[str, Any]:
     clean_id = _validate_template_id(template_id)
-    root, package_dir = _resolve_package_dir(template_root or DEFAULT_TEMPLATE_ROOT, clean_id)
+    root, package_dir = _resolve_package_dir(template_root or _default_template_root(), clean_id)
     if not package_dir.is_dir():
         raise TemplateError(f"template not found: {clean_id}")
 
@@ -196,7 +224,7 @@ def load_template(template_id: str, template_root: Path | None = None) -> dict[s
 
 
 def list_templates(template_root: Path | None = None) -> list[dict[str, Any]]:
-    root = template_root or DEFAULT_TEMPLATE_ROOT
+    root = template_root or _default_template_root()
     if not root.is_dir():
         return []
 

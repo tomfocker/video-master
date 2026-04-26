@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -7,6 +8,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = ROOT / "skills" / "video-master" / "scripts" / "validate_video_project.py"
+REQUIRED_TEMPLATE_FILES = [
+    "template.md",
+    "template.json",
+    "rhythm_rules.json",
+    "prompt_rules.md",
+    "reference_notes.md",
+]
 
 
 def write(path: Path, content: str) -> None:
@@ -18,6 +26,46 @@ def seconds_label(value) -> str:
     return f"{float(value):05.1f}".rstrip("0").rstrip(".")
 
 
+def write_template_package(root: Path, template_id="draft-template", status="draft") -> Path:
+    package = root / template_id
+    package.mkdir(parents=True, exist_ok=True)
+    for filename in REQUIRED_TEMPLATE_FILES:
+        write(package / filename, "{}\n" if filename.endswith(".json") else "# Fixture\n")
+    write(
+        package / "template.json",
+        json.dumps(
+            {
+                "id": template_id,
+                "display_name": "Draft Fixture",
+                "status": status,
+                "version": "0.1.0",
+                "updated_at": "2026-04-26",
+                "tags": ["fixture"],
+                "best_for": ["fixture"],
+                "not_for": ["fixture"],
+                "supported_video_modes": ["fast-paced-tvc"],
+                "supported_aspect_ratios": ["9:16"],
+                "duration_range_seconds": {"min": 1, "max": 120},
+                "strengths": {
+                    "light": {"label": "Light", "behavior": "Light behavior"},
+                    "medium": {"label": "Medium", "behavior": "Medium behavior"},
+                    "high": {"label": "High", "behavior": "High behavior"},
+                },
+                "visual_rules": ["visual"],
+                "rhythm_rules": ["rhythm"],
+                "camera_rules": ["camera"],
+                "sound_rules": ["sound"],
+                "storyboard_prompt_rules": ["storyboard"],
+                "video_prompt_rules": ["video"],
+                "safety_boundaries": ["safety"],
+                "required_files": REQUIRED_TEMPLATE_FILES,
+            },
+            ensure_ascii=False,
+        ),
+    )
+    return package
+
+
 def make_project(
     base: Path,
     *,
@@ -27,6 +75,8 @@ def make_project(
     with_audio=True,
     extra_spec_lines=None,
     shot_overrides=None,
+    rhythm_map_content="# Rhythm Map\n",
+    final_video_prompt_content=None,
 ) -> Path:
     project = base / "sample_project"
     for directory in [
@@ -78,7 +128,7 @@ def make_project(
     write(project / "strategy" / "input_readiness.md", "# Input Readiness\n")
     write(project / "strategy" / "video_mode.md", "# Video Mode\n")
     write(project / "strategy" / "creative_strategy.md", "# Creative Strategy\n")
-    write(project / "strategy" / "rhythm_map.md", "# Rhythm Map\n")
+    write(project / "strategy" / "rhythm_map.md", rhythm_map_content)
     write(project / "script" / "script.md", "# Script\n")
     write(project / "storyboard" / "shot_list.md", "# Shot List\n")
     write(project / "storyboard" / "storyboard_manifest.md", "# Manifest\n")
@@ -141,15 +191,16 @@ def make_project(
                 ensure_ascii=False,
             ),
         )
-        write(
-            project / "最终交付" / "02_提示词" / "视频生成提示词.md",
-            "# Copy Ready\n\n"
-            "## S01\n"
-            "声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。\n"
-            "背景音乐：不要生成背景音乐；整片音乐后期统一处理。\n"
-            "SFX音效：清晨环境声、衣料摩擦声。\n"
-            "画面文字策略：无；字幕使用SRT后期添加，模型生成画面不添加字幕。\n",
-        )
+        if final_video_prompt_content is None:
+            final_video_prompt_content = (
+                "# Copy Ready\n\n"
+                "## S01\n"
+                "声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。\n"
+                "背景音乐：不要生成背景音乐；整片音乐后期统一处理。\n"
+                "SFX音效：清晨环境声、衣料摩擦声。\n"
+                "画面文字策略：无；字幕使用SRT后期添加，模型生成画面不添加字幕。\n"
+            )
+        write(project / "最终交付" / "02_提示词" / "视频生成提示词.md", final_video_prompt_content)
         write(project / "最终交付" / "02_提示词" / "图片生成提示词.md", "# Copy Ready\n")
         write(project / "最终交付" / "03_口播与字幕" / "口播稿.md", "# Final VO\n")
         write(project / "最终交付" / "03_口播与字幕" / "中文字幕.srt", "1\n00:00:00,000 --> 00:00:02,000\n测试\n")
@@ -160,10 +211,15 @@ def make_project(
 
 
 class ValidateVideoProjectTest(unittest.TestCase):
-    def run_validator(self, project: Path):
+    def run_validator(self, project: Path, env=None):
+        subprocess_env = os.environ.copy()
+        subprocess_env.pop("VIDEO_MASTER_STYLE_TEMPLATE_ROOT", None)
+        if env:
+            subprocess_env.update(env)
         return subprocess.run(
             ["python3", str(VALIDATOR), str(project)],
             cwd=ROOT,
+            env=subprocess_env,
             text=True,
             capture_output=True,
             check=False,
@@ -209,6 +265,193 @@ class ValidateVideoProjectTest(unittest.TestCase):
                 },
             )
             result = self.run_validator(project)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_rejects_template_id_without_template_strength(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(
+                Path(tmp),
+                durations=[3, 4, 4, 6, 5, 3, 5],
+                extra_spec_lines=["- style_route: use_style_template", "- template_id: cinematic-flow-racing"],
+            )
+            result = self.run_validator(project)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("template_strength is required when template_id is set", result.stdout + result.stderr)
+
+    def test_rejects_style_template_route_without_template_id(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(
+                Path(tmp),
+                durations=[3, 4, 4, 6, 5, 3, 5],
+                extra_spec_lines=["- style_route: use_style_template"],
+            )
+            result = self.run_validator(project)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(
+                "template_id is required when style_route is use_style_template",
+                result.stdout + result.stderr,
+            )
+
+    def test_rejects_unknown_template_id(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(
+                Path(tmp),
+                durations=[3, 4, 4, 6, 5, 3, 5],
+                extra_spec_lines=[
+                    "- style_route: use_style_template",
+                    "- template_id: missing-template",
+                    "- template_strength: medium",
+                ],
+            )
+            result = self.run_validator(project)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("template not found", result.stdout + result.stderr)
+
+    def test_rejects_template_project_without_rhythm_trace(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(
+                Path(tmp),
+                durations=[6, 1, 1, 1.2, 5, 5, 5, 5.8],
+                extra_spec_lines=[
+                    "- style_route: use_style_template",
+                    "- template_id: cinematic-flow-racing",
+                    "- template_strength: medium",
+                ],
+                shot_overrides={
+                    "S02": {"movement": "车载震动，快切冲击"},
+                    "S03": {"movement": "POV 晃动，硬切"},
+                    "S04": {"movement": "甩镜，仪表红灯闪烁"},
+                },
+            )
+            result = self.run_validator(project)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("rhythm_map must name selected template", result.stdout + result.stderr)
+
+    def test_rejects_cinematic_flow_racing_prompt_with_only_abstract_style_term(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(
+                Path(tmp),
+                durations=[6, 1, 1, 1.2, 5, 5, 5, 5.8],
+                extra_spec_lines=[
+                    "- style_route: use_style_template",
+                    "- template_id: cinematic-flow-racing",
+                    "- template_strength: medium",
+                ],
+                rhythm_map_content=(
+                    "# Rhythm Map\n\n"
+                    "- template_id: cinematic-flow-racing\n"
+                    "- template_strength: medium\n"
+                    "- template_application: 中度套用心流结构。\n"
+                ),
+                shot_overrides={
+                    "S02": {"movement": "车载震动，快切冲击"},
+                    "S03": {"movement": "POV 晃动，硬切"},
+                    "S04": {"movement": "甩镜，仪表红灯闪烁"},
+                },
+                final_video_prompt_content=(
+                    "# Copy Ready\n\n"
+                    "## S01\n"
+                    "画面：进入心流状态，情绪沉静。\n"
+                    "声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。\n"
+                    "背景音乐：不要生成背景音乐；整片音乐后期统一处理。\n"
+                    "SFX音效：远处发动机低频、雨滴敲击、呼吸声。\n"
+                    "画面文字策略：无；不要生成字幕、caption、对白文字或烧录文字，字幕使用 SRT 后期添加。\n"
+                ),
+            )
+            result = self.run_validator(project)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(
+                "cinematic-flow-racing prompts must carry the template visual language",
+                result.stdout + result.stderr,
+            )
+
+    def test_accepts_project_with_official_template_trace(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(
+                Path(tmp),
+                durations=[6, 1, 1, 1.2, 5, 5, 5, 5.8],
+                extra_spec_lines=[
+                    "- style_route: use_style_template",
+                    "- template_id: cinematic-flow-racing",
+                    "- template_strength: medium",
+                ],
+                rhythm_map_content=(
+                    "# Rhythm Map\n\n"
+                    "- template_id: cinematic-flow-racing\n"
+                    "- template_strength: medium\n"
+                    "- template_application: 中度套用现实压迫、快切压力组、暴风眼和超现实心流结构。\n"
+                ),
+                shot_overrides={
+                    "S02": {"movement": "车载震动，快切冲击"},
+                    "S03": {"movement": "POV 晃动，硬切"},
+                    "S04": {"movement": "甩镜，仪表红灯闪烁"},
+                },
+                final_video_prompt_content=(
+                    "# Copy Ready\n\n"
+                    "## S01\n"
+                    "画面：低饱和黑白高反差，湿润银色高光，人物处在巨大负空间中。\n"
+                    "声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。\n"
+                    "背景音乐：不要生成背景音乐；整片音乐后期统一处理。\n"
+                    "SFX音效：远处发动机低频、雨滴敲击、呼吸声。\n"
+                    "画面文字策略：无；不要生成字幕、caption、对白文字或烧录文字，字幕使用 SRT 后期添加。\n"
+                ),
+            )
+            result = self.run_validator(project)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_rejects_draft_template_without_allow_draft_template(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            template_root = root / "templates"
+            write_template_package(template_root)
+            project = make_project(
+                root,
+                durations=[3, 4, 4, 6, 5, 3, 5],
+                extra_spec_lines=[
+                    "- style_route: use_style_template",
+                    "- template_id: draft-template",
+                    "- template_strength: medium",
+                ],
+                rhythm_map_content=(
+                    "# Rhythm Map\n\n"
+                    "- template_id: draft-template\n"
+                    "- template_strength: medium\n"
+                ),
+            )
+            result = self.run_validator(
+                project,
+                env={"VIDEO_MASTER_STYLE_TEMPLATE_ROOT": str(template_root)},
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(
+                "draft template requires allow_draft_template: true: draft-template",
+                result.stdout + result.stderr,
+            )
+
+    def test_accepts_draft_template_with_allow_draft_template(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            template_root = root / "templates"
+            write_template_package(template_root)
+            project = make_project(
+                root,
+                durations=[3, 4, 4, 6, 5, 3, 5],
+                extra_spec_lines=[
+                    "- style_route: use_style_template",
+                    "- template_id: draft-template",
+                    "- template_strength: medium",
+                    "- allow_draft_template: true",
+                ],
+                rhythm_map_content=(
+                    "# Rhythm Map\n\n"
+                    "- template_id: draft-template\n"
+                    "- template_strength: medium\n"
+                ),
+            )
+            result = self.run_validator(
+                project,
+                env={"VIDEO_MASTER_STYLE_TEMPLATE_ROOT": str(template_root)},
+            )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_rejects_missing_audio_and_deliverables(self):
