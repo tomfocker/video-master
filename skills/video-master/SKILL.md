@@ -43,6 +43,11 @@ Recommended dependencies enable:
 - Do not use a `Negative prompt` / `负面提示词` field in final video prompts. Prefer positive generation requirements and clear policy fields such as `画面文字策略`.
 - Avoid unlicensed celebrity likenesses, copyrighted characters, trademark-heavy style imitation, or deceptive real-person depictions unless the user provides rights and the request is allowed. Convert risky requests into original characters, original brands, or generic style language.
 - If the user provides reference images or videos for style, treat them as `reference_style` assets: extract transferable color, lighting, camera, pacing, framing, and packaging rules, but do not copy subjects, plot, branding, protected characters, creator identity, or a living artist/director's protected style. Use the distilled rules and safe reference frames to guide native image generation and final video prompts.
+- When a user wants a reusable style approach, offer three project style modes: `original`, `use_style_template`, or `create_style_template_from_reference`.
+- Official style templates live in `style_templates/<template_id>/` and are applied only through `template_id` plus `template_strength`.
+- Supported `template_strength` values are `light`, `medium`, and `high`. Default to `medium` when the user selects a template but does not express a strength preference.
+- Do not use a draft style template for a final project unless the user explicitly opts in with `allow_draft_template: true`.
+- A style template transfers creative rules such as rhythm, palette, camera language, sound policy, and prompt structure; it never authorizes copying reference subjects, exact shots, dialogue, branding, subtitles, watermarks, or creator identity.
 
 ## Pipeline
 
@@ -56,6 +61,14 @@ Classify the input mode before creative work:
 - `asset-assisted`: the user has partial assets such as product photos, logo, copy, selling points, reference videos, or target platform.
 - `material-locked`: the user has approved assets/copy/brand rules; Codex must structure and adapt them without inventing unsupported claims or changing key wording.
 
+Before video-mode confirmation, classify the style route:
+
+- `original`: create a new style from the project brief.
+- `use_style_template`: use an official template from `style_templates/`.
+- `create_style_template_from_reference`: analyze reference assets and produce a draft template package for user confirmation.
+
+If using a template, capture `template_id`, `template_strength`, and whether draft templates are allowed.
+
 If the mode is unclear, ask one concise question. Otherwise proceed with explicit assumptions.
 
 Write:
@@ -66,7 +79,7 @@ Capture available materials, missing materials, what may be invented, what must 
 
 When the user uploads reference images or videos, label each asset's role explicitly:
 
-- `reference_style`: use only for transferable style rules such as palette, contrast, lighting, pacing, camera language, framing, transition rhythm, captions, and packaging.
+- `reference_style`: use only for transferable style rules such as palette, contrast, lighting, pacing, camera language, framing, transition rhythm, and visual packaging. Captions/subtitles may be analyzed as packaging observations, but final image/video prompts must not ask models to reproduce burned subtitles or subtitle styling unless `subtitle_rendering_policy` and `burned_subtitles_allowed` explicitly allow generated text.
 - `reference_subject`: use for permitted product/person/object continuity when the user owns or provides the asset.
 - `do-not-copy`: note any protected characters, celebrity likenesses, brand marks, plots, slogans, or recognizable creator-specific style that must not be replicated.
 
@@ -133,6 +146,9 @@ Present the Production Lock as a bundled recommendation and wait for confirmatio
 10. Claims/compliance boundaries
 11. Storyboard image coverage: every shot, key shots, or selected scenes
 12. Reference style usage: mimic color grading, camera language, edit rhythm, typography/packaging, or only general mood
+13. Style route: `original`, `use_style_template`, or `create_style_template_from_reference`
+14. Style template fields when applicable: `template_id`, `template_strength`, and `allow_draft_template`
+15. Template application summary: what is inherited, what is adapted, and what must not be copied
 
 Write:
 
@@ -157,7 +173,7 @@ Measure objective traits with local tooling when possible: duration, aspect rati
 
 The final style rules must answer:
 
-- What should be mimicked: palette, contrast, lighting, lens language, shot duration pattern, camera movement, transitions, subtitles, packaging.
+- What should be mimicked: palette, contrast, lighting, lens language, shot duration pattern, camera movement, transitions, and packaging. Subtitle behavior may be recorded as an analysis-only/post-production observation, not as a generation instruction unless the subtitle policy explicitly allows generated text.
 - What must not be copied: people, brand marks, exact scenes, plot, dialogue, slogans, copyrighted characters, or protected creator style.
 - How the rules affect storyboard image prompts and video prompts.
 
@@ -176,6 +192,10 @@ Act like a creative director, not a spreadsheet. For high-motion subjects such a
 
 Use `references/video-modes.md`, `references/platform-and-model-profiles.md`, and any `references/style_analysis.md`.
 
+If `template_id` is present, read `style_templates/<template_id>/template.md`, `rhythm_rules.json`, and `prompt_rules.md` before writing the rhythm map.
+
+When a style template is selected, `strategy/rhythm_map.md` must name the template, state the selected strength, and explain how the template rhythm is adapted to the current subject and duration.
+
 ### Step 5: Script, Copy, And Audio Extraction
 
 Gate: creative strategy and rhythm map exist.
@@ -191,6 +211,7 @@ Write:
 - `audio/audio_generation_prompt.md`
 
 Use `references/audio-and-copy.md`. Keep audio copy centralized so TTS, captions, and final video prompts stay consistent.
+If `template_id` is present, read `style_templates/<template_id>/template.md` and `prompt_rules.md` before writing script, copy, and audio files so rhythm, sound policy, and copy posture remain aligned with the selected style template.
 Confirm whether the spoken copy is Chinese, English, bilingual, or user-supplied before writing `audio/voiceover_script.md`. Treat `audio/captions.srt` as a post-production subtitle asset unless `burned_subtitles_allowed` is explicitly true. For Chinese-facing delivery, create Chinese localized captions even if the spoken VO is English, and keep the VO-language transcript as a separate SRT.
 In `audio/music_sfx_cue_sheet.md`, map an SFX cue to every shot. Keep background music as a whole-film post-production direction unless the user explicitly asks to generate or mix music later.
 
@@ -205,11 +226,14 @@ Write:
 
 Use a compact overview table plus per-shot detail blocks. Avoid a single very wide Markdown table for all fields. Every shot must include timing, beat, visual action, framing, camera, movement, lighting, audio/copy references, continuity notes, image prompt seed, and video prompt seed.
 
+If `template_id` is present, read `style_templates/<template_id>/template.md`, `rhythm_rules.json`, and `prompt_rules.md` before writing the shot list and storyboard plan, then apply the selected `template_strength` while redesigning the subject, plot, characters, product, and brand details for the current project.
+
 ### Step 7: Storyboard Image Prompts And Native Images
 
 Gate: `shot_list.md` exists and storyboard coverage is known.
 
 Read `brief/spec_lock.md`, `references/storyboard-and-video-prompts.md`, and any `references/style_analysis.md`.
+If `template_id` is present, also read `style_templates/<template_id>/prompt_rules.md` and carry the template's safe prompt rules according to `template_strength`.
 
 Write `prompts/storyboard_image_prompts.md` before generating images. Generate storyboard frames with native image generation:
 
@@ -237,6 +261,7 @@ Write:
 If the target workflow is Chinese or domestic Chinese video models are named, final copy-ready prompts must be Chinese-first. Keep `prompts/video_prompts.md` detailed for review, and make `最终交付/02_提示词/视频生成提示词.md` easy to copy into a video model.
 
 Use `references/storyboard-and-video-prompts.md`, `references/platform-and-model-profiles.md`, and any `references/style_analysis.md`. If `reference_style` assets exist, final video prompts must carry the same safe style rules used for native image generation so generated video matches the reference look and editing language without copying protected content.
+When a style template is selected, storyboard image prompts and video prompts must carry the template's safe prompt rules according to `template_strength`.
 Separate external audio from generated visuals. Use fields such as `Voiceover/audio` or `声音/口播` for post-production narration, and `On-screen text policy` or `画面文字策略` for visual text. Do not use mixed labels such as `声音/字幕`; they can cause video models to burn VO lines into the picture. When `subtitle_rendering_policy` is `post-production-only`, every copy-ready prompt should say the model-generated picture should not include subtitles, captions, dialogue text, lyrics, or burned-in text.
 
 For external voiceover, never paste the actual VO sentence into the video prompt. Write `声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。` and keep the line itself in the audio/SRT files. Each shot block should also include `背景音乐：不要生成背景音乐；整片音乐后期统一处理。` and an `SFX音效` line. Do not include a `负面提示词` section in final prompts.

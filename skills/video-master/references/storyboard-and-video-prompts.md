@@ -73,12 +73,25 @@ Use `references/style_analysis.md`, `references/color_style.md`, `references/edi
 
 Style transfer rules:
 
-- Transfer color grading, contrast, saturation, black level, highlight behavior, lighting direction, lens feel, framing density, edit rhythm, transition language, subtitle placement, and packaging motifs.
+- Transfer color grading, contrast, saturation, black level, highlight behavior, lighting direction, lens feel, framing density, edit rhythm, transition language, and packaging motifs.
+- Treat reference subtitle placement or caption styling as analysis-only/post-production observations. Do not ask image or video models to reproduce burned subtitles, caption placement, or subtitle styling unless `subtitle_rendering_policy` and `burned_subtitles_allowed` explicitly allow generated text.
 - Use safe keyframes as visual references for native image generation when the image tool supports reference inputs; otherwise cite the keyframe paths and style rules in the prompt text.
 - Keep the new project's original subjects, plot, characters, products, copy, and brand rules.
 - Do not copy subjects, plot, branding, or protected style from the reference.
 - Do not ask for an exact remake, frame-by-frame match, identifiable creator style, celebrity likeness, copyrighted character, real brand mark, or recognizable scene from the reference.
 - If the uploaded reference is a user-owned brand asset, preserve only the specific brand elements the user authorizes in `brief/spec_lock.md`.
+
+## Style Template Application
+
+Use this section when applying a style template to storyboard image prompts and video prompts.
+
+When `brief/spec_lock.md` contains `template_id`, prompt writing must read `style_templates/<template_id>/prompt_rules.md`.
+
+- `light`: inherit mood, palette, lighting, and broad atmosphere only.
+- `medium`: inherit mood, rhythm strategy, camera language, sound policy, and prompt fields while redesigning the subject.
+- `high`: inherit the template's narrative rhythm and camera grammar strongly, while still rewriting all subject matter and never copying exact reference content.
+
+Final video prompts must remain subject-specific and must not mention copying the reference video.
 
 ## Detailed Video Prompt Block
 

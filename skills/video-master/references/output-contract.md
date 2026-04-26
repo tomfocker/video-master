@@ -209,6 +209,13 @@ Keep this short and data-oriented. Downstream phases re-read it before writing e
 - do_not_copy:
 - keyframe_paths:
 
+## style_route
+- style_route: original | use_style_template | create_style_template_from_reference
+- template_id: <template_id when style_route is use_style_template>
+- template_strength: <light | medium | high when template_id is set>
+- allow_draft_template: false
+- template_application_summary: <conditional summary of what is inherited, adapted, and not copied when a style template is selected>
+
 ## continuity
 - character_bible:
 - product_bible:
