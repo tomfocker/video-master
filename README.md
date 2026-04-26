@@ -1,10 +1,10 @@
 # video-master
 
-`video-master` is a Codex skill for turning a video idea or existing campaign materials into an AI video production package: intake analysis, video-mode routing, creative strategy, script/copy/audio extraction, detailed storyboard, native image-generated storyboard frames, and copy-ready video prompts.
+`video-master` 是一个 Codex skill，用来把视频想法、广告需求、已有素材或参考片，整理成一套 AI 视频前期制作包：需求判断、视频类型确认、创意策略、剧本/文案/音频拆分、详细分镜、原生生图分镜图，以及可直接复制到视频大模型里的生成提示词。
 
-This repository follows the same broad shape as `ppt-master`: the product core lives in `skills/video-master/`, while repository-level docs and examples explain how to install, use, test, and evolve it.
+这个项目参考了 `ppt-master` 的组织方式：核心能力放在 `skills/video-master/`，仓库层面的文档、示例和测试用于说明如何安装、使用、验证和继续演进。
 
-## Repository Layout
+## 项目结构
 
 ```text
 video-master/
@@ -28,64 +28,80 @@ video-master/
   docs/
     roadmap.md
     superpowers/plans/
+    superpowers/specs/
   examples/
     sample-request.md
   tests/
     test_validate_video_project.py
 ```
 
-## Current Scope
+## 当前能力
 
-- Classify whether the user has only an idea, partial assets, or locked brand/copy materials.
-- Confirm the video mode before scriptwriting: TVC, product promo, narrative short, animation, tutorial, brand film, or ecommerce conversion.
-- Confirm copy/voiceover language separately from prompt language, then lock subtitle rendering policy before final prompts.
-- Design non-uniform rhythm maps instead of defaulting to equal shot durations, including rapid-cut clusters and impact camera language for high-motion subjects.
-- Extract voiceover, TTS lines, captions, whole-film music direction, per-shot SFX cues, and audio-generation prompts.
-- Package final `.srt` files under `最终交付/03_口播与字幕/`; English VO projects for Chinese-facing delivery can include both `英文字幕.srt` and `中文字幕.srt`.
-- Use Codex native image generation for storyboard frames when requested.
-- Analyze user-provided reference images or videos as `reference_style` assets, then carry safe style rules into native image generation and video prompts without copying source content.
-- Produce Chinese-first final prompts for domestic Chinese video-generation workflows.
-- Keep subtitles as post-production assets by default; final video prompts tell the video model not to generate or burn subtitles unless explicitly approved.
-- Package final user-facing outputs under `最终交付/`.
-- Generate a storyboard overview HTML and PNG contact sheet.
-- Generate a packaged MP4 storyboard animatic preview with title/end cards, shot overlays, captions, and optional voiceover. The default preview profile is 12fps and follows the locked project aspect ratio with still frames kept stable; it can be skipped with `--preview-profile off`.
-- Keep exact external VO copy out of final video prompts, require no per-clip background music, require per-shot SFX cues, and avoid negative-prompt fields in copy-ready video prompts.
-- Generate or package a TTS voiceover track from centralized `tts_lines.json`.
-- Export a production workbook for shot lists, voiceover, and handoff files.
-- Validate project structure, timing, audio files, prompt language, and final delivery files with a local script.
+- 判断用户输入是纯想法、半成品素材，还是已经锁定的品牌/文案资料。
+- 在写剧本前确认视频类型，例如广告 TVC、产品宣传短视频、故事短片、动画、教程讲解、品牌片或电商转化短视频。
+- 分开确认提示词语言、口播语言、字幕语言和字幕渲染策略，避免视频模型误生成内嵌字幕。
+- 设计非均匀镜头节奏，不再默认平均分配时长；高速、运动、竞速类主题会加入快切组、冲击镜头和呼吸镜头。
+- 提取并集中管理口播稿、TTS 行、字幕、整片音乐方向、逐镜头 SFX 音效和音频生成提示。
+- 面向国内用户交付中文优先的最终提示词；英文口播项目也会在 `最终交付/03_口播与字幕/` 中保留 `英文字幕.srt` 和 `中文字幕.srt`。
+- 需要分镜图时，使用 Codex 原生生图能力生成 storyboard frames。
+- 支持把用户提供的参考图片或视频作为 `reference_style` 分析，提炼可迁移的色彩、光影、节奏、镜头语言和包装规则，但不复制原片人物、品牌、台词、水印或具体画面。
+- 默认把字幕作为后期资产处理；最终视频提示词会明确要求视频模型不要生成或烧录字幕，除非用户明确允许。
+- 把用户真正需要使用的结果集中放到 `最终交付/`。
+- 生成分镜总览 HTML 和 PNG 总览图。
+- 生成 MP4 分镜预览视频，包含片头/片尾卡、镜头信息、字幕和可选配音。默认 `draft` 预览为 12fps，并自动匹配项目画面比例；如果不需要预览，可使用 `--preview-profile off`。
+- 外部画外音不会直接写进最终视频提示词；每个视频片段提示词会要求不要生成背景音乐，并保留逐镜头 SFX 音效说明。
+- 支持基于 `tts_lines.json` 生成或打包 TTS 配音。
+- 导出制作总表，方便查看镜头、口播和交付信息。
+- 使用本地校验脚本检查项目结构、镜头时长、音频文件、提示词语言和最终交付文件。
 
-## Install For Codex
+## 风格库方向
 
-The active local install is:
+项目正在设计可扩展的视频风格库。未来用户可以选择：
+
+- 完全原创：按新主题重新设计风格、剧本、分镜和提示词。
+- 使用正式模板：调用已经维护好的导演风格模板。
+- 基于参考片创建模板：先由 AI 分析风格档案、节奏规则、分镜策略和提示词规则，再由用户补充设计思路、剪辑技巧和创作意图，确认后入库。
+
+相关设计文档见：
+
+```text
+docs/superpowers/specs/2026-04-26-video-style-library-design.md
+```
+
+## 安装到 Codex
+
+本地 Codex skill 的安装位置通常是：
 
 ```text
 ~/.codex/skills/video-master
 ```
 
-To update the installed copy from this repository after edits:
+修改仓库里的 skill 后，可以用下面的命令同步到 Codex：
 
 ```bash
 rsync -a --delete skills/video-master/ ~/.codex/skills/video-master/
 ```
 
-## Recommended Dependencies
+## 推荐依赖
 
-`video-master` works as a skill without extra packages, but this repository also includes local helper tools. Install the recommended Python dependencies for the best output quality:
+`video-master` 作为 skill 可以不安装额外依赖运行，但仓库内的本地辅助工具需要 Python 依赖来获得更好的效果：
 
 ```bash
 python3 -m pip install -r requirements.txt
 ```
 
-Recommended dependencies currently support:
+推荐依赖当前用于：
 
-- `Pillow`: storyboard contact sheets and image preparation.
-- `openpyxl`: production workbook export.
-- `imageio[ffmpeg]` + `numpy`: MP4 storyboard animatic preview.
-- `edge-tts`: optional TTS voiceover generation.
-- `pydantic`: stronger JSON schema validation.
-- `pysubs2`: subtitle validation.
+- `Pillow`：生成分镜总览图和处理图片。
+- `openpyxl`：导出制作总表。
+- `imageio[ffmpeg]` 和 `numpy`：生成 MP4 分镜预览视频。
+- `edge-tts`：可选 TTS 配音生成。
+- `pydantic`：更稳的 JSON 结构校验。
+- `pysubs2`：字幕文件校验。
 
-## Validate
+## 验证项目
+
+校验 skill 和测试：
 
 ```bash
 python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/video-master
@@ -97,7 +113,7 @@ python3 -m unittest tests/test_make_animatic.py -v
 python3 -m unittest tests/test_generate_voiceover_tts.py -v
 ```
 
-For a generated project:
+针对生成后的视频项目：
 
 ```bash
 python3 skills/video-master/scripts/make_storyboard_overview.py video_projects/<project>
@@ -107,7 +123,7 @@ python3 skills/video-master/scripts/make_animatic.py video_projects/<project>
 python3 skills/video-master/scripts/validate_video_project.py video_projects/<project>
 ```
 
-Animatic preview profiles:
+分镜预览视频模式：
 
 ```bash
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --preview-profile draft
@@ -115,7 +131,7 @@ python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --preview-profile off
 ```
 
-Motion styles:
+预览视频运动方式：
 
 ```bash
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --motion-style center-zoom
@@ -123,7 +139,7 @@ python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --motion-style none
 ```
 
-## Example Invocation
+## 示例调用
 
 ```text
 Use $video-master 帮我做一个 30 秒小红书美妆新品广告。
