@@ -33,6 +33,11 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
     captions_zh.srt
     music_sfx_cue_sheet.md
     audio_generation_prompt.md
+  packaging/
+    title_packaging_plan.json
+    title_packaging_prompts.md
+    title_cards/
+    alpha_mov/
   references/
     style_analysis.md
     color_style.md
@@ -58,11 +63,15 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
       分镜预览.mp4
     06_制作总表/
       制作总表.xlsx
+    07_title_packaging/
+      main_title.png
+      main_title.mov
   qa/
     metadata/
       storyboard_overview.html
       preview_manifest.json
       tts_manifest.json
+      title_packaging_manifest.json
 ```
 
 ## input_readiness.md
@@ -242,6 +251,13 @@ Keep this short and data-oriented. Downstream phases re-read it before writing e
 - allowed:
 - avoid:
 - sensitive_flags:
+
+## title_packaging
+- title_packaging_enabled: false
+- title_packaging_assets: main_title | chapter_card | lower_third | name_tag | data_callout | counter | cta_card | end_card
+- title_packaging_reference_assets:
+- title_packaging_alpha_mov_required: false
+- title_packaging_motion_need: none | stroke_reveal | route_draw | counter_tick | mask_wipe | glow_sweep | custom
 ```
 
 ## Reference Style Files
@@ -560,3 +576,71 @@ python3 ${SKILL_DIR}/scripts/generate_voiceover_tts.py <project_path>
 ```
 
 This also writes `最终交付/03_口播与字幕/口播文本.txt` and `qa/metadata/tts_manifest.json`. Use `--dry-run` to prepare the text/manifest without calling a TTS service.
+
+## Optional Title Packaging Sidecar
+
+Title packaging is optional and separate from video prompt generation. Do not place title-packaging instructions, alpha-MOV paths, lower-third notes, or packaging file references inside `最终交付/02_提示词/视频生成提示词.md`.
+
+`packaging/title_packaging_plan.json`:
+
+```json
+{
+  "aspect_ratio": "16:9",
+  "generate_alpha_mov": false,
+  "duration_seconds": 2.0,
+  "fps": 24,
+  "items": [
+    {
+      "id": "main_title",
+      "type": "title_card",
+      "text": "项目标题",
+      "subtitle": "可选副标题",
+      "position": "center",
+      "animation": "fade-up",
+      "color": "#FFFFFFFF",
+      "accent_color": "#D6B46AFF",
+      "motion_template": "brush_reveal",
+      "design_asset": "packaging/generated_design/main_title_alpha.png"
+    }
+  ]
+}
+```
+
+Supported item types are `title_card`, `chapter_card`, `lower_third`, `name_tag`, `counter`, `data_callout`, `cta_card`, and `end_card`. For `counter` or `data_callout`, use `start_value`, `end_value`, `prefix`, `suffix`, and `decimals` when a number should be rendered.
+
+When alpha MOV delivery is explicitly requested, use `motion_template` instead of relying on a trivial fade. Supported production templates are `brush_reveal`, `mask_wipe`, `glow_sweep`, `route_light_trail`, `route_draw`, `odometer`, `number_roll`, `marker_annotation`, and `annotation_arrow`. `design_asset` may point to a cleaned transparent PNG generated during native look development; the renderer uses it as the visual layer and applies the selected alpha-channel motion template.
+
+The default packaging deliverable is a transparent PNG. Set `generate_alpha_mov: true` only when the user explicitly needs animated overlay delivery and the motion is meaningful, such as stroke reveal, route drawing, counter ticking, mask wipe, glow sweep, or a specified custom motion. Do not create MOV just for a static image with fade or position offset.
+
+`packaging/title_packaging_prompts.md` contains style-exploration prompts for native image generation when needed. It is not copied into video prompts.
+
+`qa/metadata/title_packaging_manifest.json`:
+
+```json
+{
+  "title_packaging": true,
+  "plan": "packaging/title_packaging_plan.json",
+  "canvas": "1920x1080",
+  "fps": 24,
+  "alpha_mov_codec": "prores_ks/prores_4444",
+  "items": [
+    {
+      "id": "main_title",
+      "type": "title_card",
+      "text": "项目标题",
+      "transparent_png": "最终交付/07_title_packaging/main_title.png",
+      "motion_template": null,
+      "alpha_mov": null,
+      "duration_seconds": 2.0
+    }
+  ]
+}
+```
+
+Generate deterministic packaging assets with:
+
+```bash
+python3 ${SKILL_DIR}/scripts/render_title_packaging.py <project_path>
+```
+
+Use `--alpha-mov` only for requested animated delivery. The generated transparent PNG files, and optional MOV files when requested, are post-production overlays for editing software.

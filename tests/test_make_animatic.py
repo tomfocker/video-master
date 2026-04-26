@@ -2,6 +2,7 @@ import base64
 import importlib.util
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 import wave
@@ -58,7 +59,7 @@ class MakeAnimaticTest(unittest.TestCase):
 
             result = subprocess.run(
                 [
-                    "python3",
+                    sys.executable,
                     str(ANIMATIC),
                     str(project),
                     "--title-card-seconds",
@@ -100,7 +101,7 @@ class MakeAnimaticTest(unittest.TestCase):
 
             result = subprocess.run(
                 [
-                    "python3",
+                    sys.executable,
                     str(ANIMATIC),
                     str(project),
                     "--title-card-seconds",
@@ -130,7 +131,7 @@ class MakeAnimaticTest(unittest.TestCase):
             )
 
             result = subprocess.run(
-                ["python3", str(ANIMATIC), str(project), "--preview-profile", "off"],
+                [sys.executable, str(ANIMATIC), str(project), "--preview-profile", "off"],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
@@ -169,7 +170,7 @@ class MakeAnimaticTest(unittest.TestCase):
 
             result = subprocess.run(
                 [
-                    "python3",
+                    sys.executable,
                     str(ANIMATIC),
                     str(project),
                     "--fps",
@@ -221,7 +222,7 @@ class MakeAnimaticTest(unittest.TestCase):
 
             result = subprocess.run(
                 [
-                    "python3",
+                    sys.executable,
                     str(ANIMATIC),
                     str(project),
                     "--fps",

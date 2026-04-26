@@ -65,6 +65,31 @@ class ReferenceStyleWorkflowTest(unittest.TestCase):
         self.assertIn("must not ask models to reproduce burned subtitles or subtitle styling", skill)
         self.assertIn("Do not ask image or video models to reproduce burned subtitles", prompt_reference)
 
+    def test_title_packaging_is_documented_as_sidecar(self):
+        skill = (ROOT / "skills" / "video-master" / "SKILL.md").read_text(encoding="utf-8")
+        output_contract = (
+            ROOT / "skills" / "video-master" / "references" / "output-contract.md"
+        ).read_text(encoding="utf-8")
+        prompt_reference = (
+            ROOT / "skills" / "video-master" / "references" / "storyboard-and-video-prompts.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("optional sidecar branch", skill)
+        self.assertIn("does not modify video prompts", skill)
+        self.assertIn("main_title", skill)
+        self.assertIn("chapter_card", skill)
+        self.assertIn("data_callout", skill)
+        self.assertIn("Default title packaging output is static transparent PNG", skill)
+        self.assertIn("render_title_packaging.py", skill)
+        self.assertIn("title_packaging_enabled", output_contract)
+        self.assertIn("title_packaging_motion_need", output_contract)
+        self.assertIn("07_title_packaging", output_contract)
+        self.assertIn("Do not place title-packaging instructions", output_contract)
+        self.assertIn("generate_alpha_mov\": false", output_contract)
+        self.assertIn("Title Packaging Prompt Sidecar", prompt_reference)
+        self.assertIn("Never paste these sidecar prompts", prompt_reference)
+        self.assertIn("Default to transparent PNG packaging", prompt_reference)
+
 
 if __name__ == "__main__":
     unittest.main()

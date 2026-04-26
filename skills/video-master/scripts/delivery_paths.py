@@ -16,6 +16,7 @@ FINAL_AUDIO_DIR = FINAL_ROOT / "03_口播与字幕"
 FINAL_OVERVIEW_DIR = FINAL_ROOT / "04_分镜总览"
 FINAL_PREVIEW_DIR = FINAL_ROOT / "05_预览视频"
 FINAL_WORKBOOK_DIR = FINAL_ROOT / "06_制作总表"
+FINAL_TITLE_PACKAGING_DIR = FINAL_ROOT / "07_title_packaging"
 
 HANDOFF = FINAL_ROOT / "00_使用说明.md"
 VIDEO_PROMPTS = FINAL_PROMPTS_DIR / "视频生成提示词.md"
@@ -30,6 +31,7 @@ PREVIEW_MP4 = FINAL_PREVIEW_DIR / "分镜预览.mp4"
 WORKBOOK = FINAL_WORKBOOK_DIR / "制作总表.xlsx"
 PREVIEW_MANIFEST = METADATA_DIR / "preview_manifest.json"
 TTS_MANIFEST = METADATA_DIR / "tts_manifest.json"
+TITLE_PACKAGING_MANIFEST = METADATA_DIR / "title_packaging_manifest.json"
 OVERVIEW_HTML = METADATA_DIR / "storyboard_overview.html"
 
 
@@ -92,3 +94,11 @@ def voiceover_script_path(project: Path) -> Path:
 
 def final_audio_dir(project: Path) -> Path:
     return first_existing(project, [FINAL_AUDIO_DIR, LEGACY_ROOT / "final_audio"])
+
+
+def title_packaging_dir(project: Path) -> Path:
+    return first_existing(project, [FINAL_TITLE_PACKAGING_DIR, LEGACY_ROOT / "title_packaging"])
+
+
+def title_packaging_manifest_path(project: Path) -> Path:
+    return first_existing(project, [TITLE_PACKAGING_MANIFEST, LEGACY_ROOT / "title_packaging_manifest.json"])

@@ -14,6 +14,7 @@ class DependenciesTest(unittest.TestCase):
         self.assertIn("openpyxl", skill_requirements)
         self.assertIn("pydantic", skill_requirements)
         self.assertIn("pysubs2", skill_requirements)
+        self.assertIn("PyYAML", skill_requirements)
         self.assertIn("imageio[ffmpeg]", skill_requirements)
         self.assertIn("numpy", skill_requirements)
         self.assertIn("edge-tts", skill_requirements)

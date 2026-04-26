@@ -1,5 +1,6 @@
 import base64
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -22,7 +23,7 @@ class StoryboardOverviewTest(unittest.TestCase):
                 (frames / name).write_bytes(PNG_1X1)
 
             result = subprocess.run(
-                ["python3", str(OVERVIEW), str(project)],
+                [sys.executable, str(OVERVIEW), str(project)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,

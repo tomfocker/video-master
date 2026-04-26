@@ -28,6 +28,7 @@ from delivery_paths import (
     OVERVIEW_PNG,
     PREVIEW_MANIFEST,
     PREVIEW_MP4,
+    TITLE_PACKAGING_MANIFEST,
     VIDEO_PROMPTS,
     VOICEOVER_SCRIPT,
     WORKBOOK,
@@ -35,6 +36,8 @@ from delivery_paths import (
     first_existing,
     preview_manifest_path,
     preview_mp4_path,
+    title_packaging_dir,
+    title_packaging_manifest_path,
     video_prompt_path,
 )
 from style_templates import TemplateError, load_template
@@ -119,6 +122,14 @@ EXTERNAL_VOICEOVER_TERMS = [
     "external voiceover",
     "voiceover added in post",
     "post-production voiceover",
+]
+TITLE_PACKAGING_VIDEO_PROMPT_MARKERS = [
+    "title_packaging",
+    "alpha_mov",
+    "07_title_packaging",
+    "标题包装",
+    "透明mov",
+    "透明通道mov",
 ]
 HIGH_MOTION_TERMS = [
     "高速",
@@ -383,6 +394,10 @@ def parse_boolish_false(value: str) -> bool:
     return value.strip().lower() in {"false", "no", "0", "否", "不", "不允许"}
 
 
+def parse_boolish_true(value: str) -> bool:
+    return value.strip().lower() in {"true", "yes", "1", "on", "enabled", "是", "开启", "啟用"}
+
+
 def validate_copy_and_subtitle_policy(project: Path, spec: dict[str, str], errors: list[str]) -> None:
     for field in COPY_POLICY_FIELDS:
         if not spec.get(field):
@@ -565,6 +580,63 @@ def validate_preview_manifest(project: Path, errors: list[str]) -> None:
             errors.append(f"preview manifest missing field: {field}")
 
 
+def validate_title_packaging(project: Path, spec: dict[str, str], errors: list[str]) -> None:
+    plan_path = project / "packaging" / "title_packaging_plan.json"
+    manifest_path = title_packaging_manifest_path(project)
+    enabled = parse_boolish_true(spec.get("title_packaging_enabled", ""))
+    if not enabled and not plan_path.exists() and not manifest_path.exists():
+        return
+
+    prompt_path = video_prompt_path(project)
+    prompt_text = read_text(prompt_path) if prompt_path.is_file() else ""
+    prompt_text_lower = prompt_text.lower()
+    if any(marker.lower() in prompt_text_lower for marker in TITLE_PACKAGING_VIDEO_PROMPT_MARKERS):
+        errors.append("title packaging must stay out of copy-ready video prompts")
+
+    if not plan_path.is_file():
+        errors.append("missing title packaging plan: packaging/title_packaging_plan.json")
+    if not manifest_path.is_file():
+        errors.append(f"missing title packaging manifest: {TITLE_PACKAGING_MANIFEST.as_posix()}")
+        return
+
+    try:
+        manifest = json.loads(read_text(manifest_path))
+    except json.JSONDecodeError as exc:
+        errors.append(f"invalid JSON in {TITLE_PACKAGING_MANIFEST.as_posix()}: {exc}")
+        return
+    if not isinstance(manifest, dict):
+        errors.append(f"{TITLE_PACKAGING_MANIFEST.as_posix()} must be an object")
+        return
+    if manifest.get("title_packaging") is not True:
+        errors.append("title packaging manifest must set title_packaging=true")
+
+    items = manifest.get("items")
+    if not isinstance(items, list) or not items:
+        errors.append("title packaging manifest requires a non-empty items list")
+        return
+
+    final_dir = title_packaging_dir(project)
+    if not final_dir.is_dir():
+        errors.append("missing title packaging final directory: 鏈€缁堜氦浠?/07_title_packaging")
+
+    for index, item in enumerate(items, start=1):
+        if not isinstance(item, dict):
+            errors.append(f"title packaging manifest item {index} must be an object")
+            continue
+        png = item.get("transparent_png")
+        if not png:
+            errors.append(f"title packaging manifest item {index} missing transparent_png")
+        else:
+            png_path = project / str(png)
+            if not png_path.is_file() or png_path.stat().st_size == 0:
+                errors.append(f"missing title packaging transparent PNG: {png}")
+        mov = item.get("alpha_mov")
+        if mov:
+            mov_path = project / str(mov)
+            if not mov_path.is_file() or mov_path.stat().st_size == 0:
+                errors.append(f"missing title packaging alpha MOV: {mov}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate a video-master project package.")
     parser.add_argument("project", type=Path, help="Path to a video-master project directory")
@@ -588,6 +660,7 @@ def main(argv: list[str] | None = None) -> int:
     validate_style_template(project, spec, errors)
     validate_storyboard_overview(project, errors)
     validate_preview_manifest(project, errors)
+    validate_title_packaging(project, spec, errors)
 
     if errors:
         for error in errors:

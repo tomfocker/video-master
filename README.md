@@ -15,6 +15,7 @@ video-master/
       scripts/
         make_storyboard_overview.py
         make_animatic.py
+        render_title_packaging.py
         generate_voiceover_tts.py
         export_production_workbook.py
         validate_video_project.py
@@ -51,6 +52,7 @@ video-master/
 - 把用户真正需要使用的结果集中放到 `最终交付/`。
 - 生成分镜总览 HTML 和 PNG 总览图。
 - 生成 MP4 分镜预览视频，包含片头/片尾卡、镜头信息、字幕和可选配音。默认 `draft` 预览为 12fps，并自动匹配项目画面比例；如果不需要预览，可使用 `--preview-profile off`。
+- 可选生成商业标题包装旁路资产，包括大标题、章节标题、人名条、关键数据/数字包装和 CTA/end card。默认交付透明 PNG；只有明确需要真实动画叠加时才生成 ProRes 4444 透明通道 MOV。MOV 模板支持 `brush_reveal`、`route_light_trail`、`odometer`、`marker_annotation` 等，并可把原生生图清理出的透明设计稿作为 `design_asset` 继续动画化。这个分支不会改写原有视频提示词。
 - 外部画外音不会直接写进最终视频提示词；每个视频片段提示词会要求不要生成背景音乐，并保留逐镜头 SFX 音效说明。
 - 支持基于 `tts_lines.json` 生成或打包 TTS 配音。
 - 导出制作总表，方便查看镜头、口播和交付信息。
@@ -126,6 +128,7 @@ python3 skills/video-master/scripts/make_storyboard_overview.py video_projects/<
 python3 skills/video-master/scripts/export_production_workbook.py video_projects/<project>
 python3 skills/video-master/scripts/generate_voiceover_tts.py video_projects/<project>
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project>
+python3 skills/video-master/scripts/render_title_packaging.py video_projects/<project>
 python3 skills/video-master/scripts/validate_video_project.py video_projects/<project>
 ```
 

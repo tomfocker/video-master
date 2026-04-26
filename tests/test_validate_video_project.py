@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -217,7 +218,7 @@ class ValidateVideoProjectTest(unittest.TestCase):
         if env:
             subprocess_env.update(env)
         return subprocess.run(
-            ["python3", str(VALIDATOR), str(project)],
+            [sys.executable, str(VALIDATOR), str(project)],
             cwd=ROOT,
             env=subprocess_env,
             text=True,

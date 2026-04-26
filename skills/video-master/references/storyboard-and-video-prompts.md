@@ -81,6 +81,32 @@ Style transfer rules:
 - Do not ask for an exact remake, frame-by-frame match, identifiable creator style, celebrity likeness, copyrighted character, real brand mark, or recognizable scene from the reference.
 - If the uploaded reference is a user-owned brand asset, preserve only the specific brand elements the user authorizes in `brief/spec_lock.md`.
 
+## Title Packaging Prompt Sidecar
+
+Use this section only for `packaging/title_packaging_prompts.md`. It is not part of storyboard prompts or copy-ready video prompts.
+
+Title packaging may use native image generation for designed packaging images. Without API-native transparency, generate the asset on a pure chroma-key background and remove the key locally. Exact readable text should be rendered or verified by the deterministic packaging script.
+
+Prompt fields:
+
+```text
+Use case: commercial title packaging sidecar
+Asset type: title_card | chapter_card | lower_third | name_tag | counter | data_callout | cta_card | end_card
+Transparent background: yes
+Text (verbatim): "<exact short title or name>"
+Subtitle (optional): "<exact short subtitle>"
+Composition: <center / lower third / top left / bottom right>
+Typography mood: <premium editorial / sports broadcast / documentary / tech launch>
+Material and light: <glass, metal, paper, ink, glow, shadow, rim light>
+Reference packaging style: <use only typography mood, spacing, hierarchy, material, light, and commercial polish from reference_style assets>
+Do not copy: exact source title names, layouts, logos, watermarks, or source artwork
+Delivery note: final exact text, transparent PNG overlays, and optional alpha MOV overlays are rendered by scripts/render_title_packaging.py
+```
+
+Never paste these sidecar prompts into `prompts/video_prompts.md` or `最终交付/02_提示词/视频生成提示词.md`.
+
+Default to transparent PNG packaging. Request MOV only when the user needs a real animated overlay such as stroke reveal, route drawing, counter ticking, mask wipe, glow sweep, or a custom motion. A simple fade or position shift is not enough reason to create MOV. When MOV is needed, record the chosen `motion_template` in `packaging/title_packaging_plan.json`; supported templates include `brush_reveal`, `mask_wipe`, `glow_sweep`, `route_light_trail`, `odometer`, `number_roll`, `marker_annotation`, and `annotation_arrow`. If native image generation created a designed transparent title layer, reference it as `design_asset` and let `scripts/render_title_packaging.py` animate the alpha overlay.
+
 ## Style Template Application
 
 Use this section when applying a style template to storyboard image prompts and video prompts.

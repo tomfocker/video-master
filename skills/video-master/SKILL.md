@@ -30,6 +30,11 @@ Recommended dependencies enable:
 - Follow the serial pipeline. Do not write later-phase deliverables before the current phase's gate is satisfied.
 - Treat `brief/spec_lock.md` as the execution contract. Re-read it before writing each shot prompt, generating each storyboard frame, or assembling final deliverables.
 - Use native image generation for storyboard frames when the user asks for images, 分镜图, storyboard frames, keyframes, or visual boards. Do not substitute SVG boxes or text-only placeholders.
+- Treat title packaging as an optional sidecar branch only. It must never change the normal storyboard, script, audio, or video-prompt generation flow.
+- When the user asks for commercial title cards, lower thirds, number animations, alpha overlays, or packaging text, create separate title-packaging deliverables; do not add packaging notes, title-packaging file paths, or alpha-MOV instructions to copy-ready video prompts.
+- During the Production Lock, explicitly ask whether the user needs title-packaging images: main title, chapter/section cards, lower thirds/name tags, key data/counter callouts, CTA/end cards, or none. Default to `title_packaging_enabled: false` only when the user does not need packaging or asks to keep the package lean.
+- For title packaging, use native image generation for designed packaging images and chroma-key/transparent PNG look development when available. Use `scripts/render_title_packaging.py` for exact text, verified transparent PNGs, and optional ProRes 4444 alpha MOV overlays.
+- Default title packaging output is static transparent PNG. Do not generate MOV just for a simple fade, scale, or position shift; create MOV only when the user explicitly asks for animated overlay delivery and provides a meaningful animation need.
 - If a dedicated `imagegen` skill/tool is available, follow it for image generation and project-bound save-path handling.
 - If native image generation is unavailable, create the complete image prompt set, mark each affected frame `Needs-Generation`, and continue with the remaining package.
 - Do not claim a storyboard image file exists until its path has been verified.
@@ -121,6 +126,11 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
   storyboard/frames/
   prompts/
   audio/
+  packaging/
+    title_packaging_plan.json
+    title_packaging_prompts.md
+    title_cards/
+    alpha_mov/
   references/
   references/reference_keyframes/
   最终交付/
@@ -130,6 +140,7 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
     04_分镜总览/
     05_预览视频/
     06_制作总表/
+    07_title_packaging/
   qa/metadata/
 ```
 
@@ -150,6 +161,7 @@ Present the Production Lock as a bundled recommendation and wait for confirmatio
 13. Style route: `original`, `use_style_template`, or `create_style_template_from_reference`
 14. Style template fields when applicable: `template_id`, `allow_draft_template`, and `template_user_overrides`
 15. Template application summary: what is inherited from the template, what is overridden by the user's ideas, and what must not be copied
+16. Optional title packaging: ask whether to generate `main_title`, `chapter_card`, `lower_third`/`name_tag`, `data_callout`/`counter`, `cta_card`/`end_card`, or none. Capture exact copy, style references, PNG-only vs real animated overlay need, and `title_packaging_enabled`. This is a sidecar branch and does not modify video prompts.
 
 Write:
 
@@ -267,6 +279,41 @@ Separate external audio from generated visuals. Use fields such as `Voiceover/au
 
 For external voiceover, never paste the actual VO sentence into the video prompt. Write `声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。` and keep the line itself in the audio/SRT files. Each shot block should also include `背景音乐：不要生成背景音乐；整片音乐后期统一处理。` and an `SFX音效` line. Do not include a `负面提示词` section in final prompts.
 
+### Step 8.5: Optional Title Packaging Sidecar
+
+Gate: the user explicitly asks for title packaging, commercial title cards, lower thirds, number animations, alpha overlays, or packaging text.
+
+This branch runs beside the video prompts. It must not rewrite `prompts/video_prompts.md`, must not edit `最终交付/02_提示词/视频生成提示词.md`, and must not insert title-packaging instructions into any copy-ready video prompt.
+
+In the formal Production Lock, ask the user whether they need any of these packaging images:
+
+- `main_title`: main title or campaign title.
+- `chapter_card`: chapter, section, location, or day title.
+- `lower_third` / `name_tag`: person name, role, location label, interview ID.
+- `data_callout` / `counter`: key number, ranking, percentage, year, distance, price, milestone.
+- `cta_card` / `end_card`: ending slogan, follow/subscribe, campaign CTA.
+
+If the user is unsure, recommend PNG-only packaging first. MOV is optional and should be used only for meaningful animation such as stroke reveal, route drawing, counter ticking, mask wipe, glow sweep, or designed motion; do not render MOV for a simple static image with fade/position offset.
+
+Write:
+
+- `packaging/title_packaging_plan.json`
+- `packaging/title_packaging_prompts.md`
+- `packaging/title_cards/`
+- `packaging/alpha_mov/`
+- `qa/metadata/title_packaging_manifest.json`
+- `最终交付/07_title_packaging/`
+
+Use reference packaging assets as `reference_style` only: extract typography mood, composition, material, lighting, spacing, commercial polish, motion intent, and layout grammar. Do not copy the original title names, exact layout, logos, brand marks, watermarks, or recognizable source artwork.
+
+When native image generation is available, use it to create designed packaging looks. Without API-native transparency, generate the packaging on a pure chroma-key background, remove the key locally, and verify the transparent PNG. For exact Chinese/English text, counters, lower thirds, and editor-ready static overlays, render deterministic PNG assets with:
+
+```bash
+python3 ${SKILL_DIR}/scripts/render_title_packaging.py <project_path>
+```
+
+The default output is transparent PNG only. Use `--alpha-mov` only when the user explicitly requests animated alpha overlay delivery and the motion is more than a trivial fade or offset. In `packaging/title_packaging_plan.json`, set `motion_template` to a production template such as `brush_reveal`, `mask_wipe`, `glow_sweep`, `route_light_trail`, `odometer`, or `marker_annotation`. For designed main titles, put the native-image-generation result through chroma-key cleanup first, then pass the transparent PNG as `design_asset`; the script handles exact alpha MOV motion and keeps the asset outside video prompts. The MOV output is a ProRes 4444 alpha overlay meant for editing software, not a video-generation prompt input.
+
 ### Step 9: Deliverables Package
 
 Gate: script, shot list, audio files, storyboard manifest, generated frames, and video prompts exist.
@@ -277,6 +324,7 @@ Write:
 - `最终交付/03_口播与字幕/口播稿.md`
 - `最终交付/03_口播与字幕/中文字幕.srt` and/or `最终交付/03_口播与字幕/英文字幕.srt`
 - Any model/platform-specific final files requested by the user
+- Optional title packaging files in `最终交付/07_title_packaging/` only when `title_packaging_enabled` is true or the user requested the sidecar branch
 
 If the user wants a voiced preview and dependencies/network are available, generate a TTS track from the centralized copy:
 

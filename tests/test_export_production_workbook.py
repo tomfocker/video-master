@@ -1,5 +1,6 @@
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -45,7 +46,7 @@ class ExportProductionWorkbookTest(unittest.TestCase):
             write(project / "最终交付" / "00_使用说明.md", "# Handoff\n")
 
             result = subprocess.run(
-                ["python3", str(EXPORTER), str(project)],
+                [sys.executable, str(EXPORTER), str(project)],
                 cwd=ROOT,
                 text=True,
                 capture_output=True,
