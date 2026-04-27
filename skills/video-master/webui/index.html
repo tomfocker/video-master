@@ -535,19 +535,15 @@
       box-shadow: var(--glow-blue), var(--shadow);
     }
 
+    .graph-node.shot {
+      width: 320px;
+      min-height: 206px;
+      border-color: rgba(125, 165, 255, 0.72);
+    }
+
     .graph-node.frame {
       width: 340px;
       min-height: 256px;
-    }
-
-    .graph-node.prompt {
-      width: 300px;
-      min-height: 208px;
-    }
-
-    .graph-node.output {
-      width: 250px;
-      min-height: 166px;
     }
 
     .graph-node.packaging {
@@ -563,7 +559,7 @@
     }
 
     .node-head {
-      height: 42px;
+      height: 38px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -605,9 +601,9 @@
     }
 
     .node-body {
-      padding: 12px;
+      padding: 10px;
       display: grid;
-      gap: 10px;
+      gap: 8px;
     }
 
     .node-thumb {
@@ -644,6 +640,43 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
+    }
+
+    .shot-layout {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr);
+      gap: 9px;
+      align-items: start;
+    }
+
+    .shot-layout .node-thumb {
+      aspect-ratio: 9 / 16;
+    }
+
+    .shot-content {
+      min-width: 0;
+      display: grid;
+      gap: 7px;
+    }
+
+    .shot-section-label {
+      color: #dce7fb;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .shot-prompt {
+      max-height: 62px;
+      overflow: auto;
+      border: 1px solid rgba(77, 95, 121, 0.52);
+      border-radius: var(--radius);
+      background: rgba(7, 10, 15, 0.7);
+      color: #d7e3f6;
+      padding: 7px 8px;
+      font-size: 11px;
+      line-height: 1.42;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .badge {
@@ -962,7 +995,7 @@
         </div>
         <div class="canvas-tools">
           <button id="showAllButton" type="button">全部节点</button>
-          <button id="showShotsButton" type="button">只看分镜</button>
+          <button id="showShotsButton" type="button">分镜流程</button>
           <button id="showPackagingButton" type="button">包装旁路</button>
         </div>
       </div>
@@ -1212,6 +1245,25 @@
       });
     }
 
+    const SHOT_GRID_COLUMNS = 4;
+    const SHOT_CARD_WIDTH = 320;
+    const SHOT_CARD_HEIGHT = 206;
+    const SHOT_GRID_START_X = 330;
+    const SHOT_GRID_START_Y = 72;
+    const SHOT_GRID_GAP_X = 40;
+    const SHOT_GRID_GAP_Y = 96;
+    const SOURCE_COLUMN_X = 70;
+    const SOURCE_NODE_WIDTH = 250;
+
+    function shotGridPosition(index) {
+      const row = Math.floor(index / SHOT_GRID_COLUMNS);
+      const col = index % SHOT_GRID_COLUMNS;
+      return {
+        x: SHOT_GRID_START_X + col * (SHOT_CARD_WIDTH + SHOT_GRID_GAP_X),
+        y: SHOT_GRID_START_Y + row * (SHOT_CARD_HEIGHT + SHOT_GRID_GAP_Y),
+      };
+    }
+
     function buildGraph(project) {
       if (!project) return { nodes: [], edges: [] };
       const nodes = [];
@@ -1228,10 +1280,10 @@
         type: "source",
         title: "项目入口",
         subtitle: tWorkflow(workflow.workflow_mode),
-        x: 70,
+        x: SOURCE_COLUMN_X,
         y: 72,
-        width: 286,
-        height: 168,
+        width: SOURCE_NODE_WIDTH,
+        height: 112,
         meta: {
           "入口模式": tWorkflow(workflow.workflow_mode),
           "确认策略": tPolicy(workflow.confirmation_policy),
@@ -1245,10 +1297,10 @@
         type: "style",
         title: "视觉风格锁定",
         subtitle: style.visual_style_preset_id ? tStyle(style.visual_style_preset_id) : "待定",
-        x: 70,
-        y: 294,
-        width: 286,
-        height: 168,
+        x: SOURCE_COLUMN_X,
+        y: 220,
+        width: SOURCE_NODE_WIDTH,
+        height: 118,
         meta: {
           "风格预设": style.visual_style_preset_id ? tStyle(style.visual_style_preset_id) : "待定",
           "锁定状态": style.visual_style_lock || "未记录",
@@ -1261,10 +1313,10 @@
         type: "character",
         title: "人物形象锁定",
         subtitle: characterStatus(project),
-        x: 70,
-        y: 516,
-        width: 286,
-        height: 168,
+        x: SOURCE_COLUMN_X,
+        y: 374,
+        width: SOURCE_NODE_WIDTH,
+        height: 118,
         meta: {
           "状态": characterStatus(project),
           "固定人物": characters.fixed_characters || "未启用",
@@ -1274,120 +1326,77 @@
       });
 
       if (shots.length) {
+        let previousShotId = "";
         shots.forEach((shot, index) => {
-          const y = 72 + index * 318;
-          const frameNode = {
-            id: `frame_${shot.shot_id}`,
-            type: "frame",
-            title: `${shot.shot_id} 最终分镜图`,
+          const position = shotGridPosition(index);
+          const shotNode = {
+            id: `shot_${shot.shot_id}`,
+            type: "shot",
+            title: `${shot.shot_id} 分镜制作卡`,
             subtitle: shot.beat || `${shot.duration_seconds || "-"} 秒`,
-            x: 430,
-            y,
-            width: 340,
-            height: 260,
+            x: position.x,
+            y: position.y,
+            width: SHOT_CARD_WIDTH,
+            height: SHOT_CARD_HEIGHT,
             shot,
             image: shot.frame?.exists ? fileUrl(project.project.path, shot.frame.path) : "",
             meta: {
               "镜头": shot.shot_id,
+              "流程": `${index + 1}/${shots.length}`,
               "时间": `${shot.start || "-"} 至 ${shot.end || "-"}`,
               "时长": `${shot.duration_seconds ?? "-"} 秒`,
               "画面文件": shot.frame?.path || "未生成",
+              "视频提示词": shot.video_prompt ? "已合并到卡片" : "暂无",
             },
             text: shot.visual_action || shot.purpose || "最终分镜图节点。",
           };
-          const promptNode = {
-            id: `prompt_${shot.shot_id}`,
-            type: "prompt",
-            title: `${shot.shot_id} 视频提示词`,
-            subtitle: "copy-ready prompt",
-            x: 846,
-            y: y + 18,
-            width: 300,
-            height: 214,
-            shot,
-            meta: {
-              "提示词来源": "最终交付/02_提示词",
-              "镜头": shot.shot_id,
-            },
-            text: shot.video_prompt || "暂无视频提示词。",
-          };
-          const outputNode = {
-            id: `output_${shot.shot_id}`,
-            type: "output",
-            title: `${shot.shot_id} 视频片段`,
-            subtitle: "待送入视频模型",
-            x: 1226,
-            y: y + 38,
-            width: 250,
-            height: 172,
-            shot,
-            meta: {
-              "输出阶段": "视频模型生成",
-              "交付状态": project.deliverables?.preview_video?.exists ? "预览已生成" : "等待生成视频片段",
-            },
-            text: "这里代表由分镜图和视频提示词合成的视频片段节点。",
-          };
-          nodes.push(frameNode, promptNode, outputNode);
-          edges.push(["project_input", frameNode.id, "main"]);
-          edges.push(["style_lock", frameNode.id, "alt"]);
-          edges.push(["character_lock", frameNode.id, "alt"]);
-          edges.push([frameNode.id, promptNode.id, "main"]);
-          edges.push([promptNode.id, outputNode.id, "main"]);
+          nodes.push(shotNode);
+          if (index === 0) {
+            edges.push(["project_input", shotNode.id, "main"]);
+            edges.push(["style_lock", shotNode.id, "alt"]);
+            edges.push(["character_lock", shotNode.id, "alt"]);
+          } else {
+            edges.push([previousShotId, shotNode.id, "main"]);
+          }
+          previousShotId = shotNode.id;
         });
       } else {
-        const framePlaceholder = {
-          id: "frame_placeholder",
-          type: "frame",
-          title: "最终分镜图",
+        const shotPlaceholder = {
+          id: "shot_placeholder",
+          type: "shot",
+          title: "分镜制作卡",
           subtitle: "等待生成 shot_list",
-          x: 430,
+          x: SHOT_GRID_START_X,
           y: 72,
-          width: 340,
-          height: 246,
+          width: SHOT_CARD_WIDTH,
+          height: SHOT_CARD_HEIGHT,
           meta: {
             "状态": "暂无分镜",
             "来源": "最终交付/01_分镜图",
           },
-          text: "生成项目分镜后，每一张最终分镜图会在这里展开成独立节点。",
-        };
-        const promptPlaceholder = {
-          id: "prompt_placeholder",
-          type: "prompt",
-          title: "视频提示词",
-          subtitle: "等待生成 prompts",
-          x: 846,
-          y: 92,
-          width: 300,
-          height: 192,
-          meta: {
-            "状态": "暂无提示词",
-            "来源": "最终交付/02_提示词",
+          text: "生成项目分镜后，每一张分镜制作卡会同时展示最终分镜图和视频提示词。",
+          shot: {
+            duration_seconds: "",
+            start: "",
+            video_prompt: "生成视频提示词后，每个镜头的 copy-ready prompt 会合并展示在分镜制作卡中。",
           },
-          text: "生成视频提示词后，每个镜头的 copy-ready prompt 会连接到对应分镜图。",
         };
-        const outputPlaceholder = {
-          id: "output_placeholder",
-          type: "output",
-          title: "视频片段",
-          subtitle: "等待模型生成",
-          x: 1226,
-          y: 112,
-          width: 250,
-          height: 166,
-          meta: {
-            "状态": "等待分镜和提示词",
-          },
-          text: "这里会承接分镜图和提示词，表示后续送入视频模型生成的片段。",
-        };
-        nodes.push(framePlaceholder, promptPlaceholder, outputPlaceholder);
-        edges.push(["project_input", "frame_placeholder", "main"]);
-        edges.push(["style_lock", "frame_placeholder", "alt"]);
-        edges.push(["character_lock", "frame_placeholder", "alt"]);
-        edges.push(["frame_placeholder", "prompt_placeholder", "main"]);
-        edges.push(["prompt_placeholder", "output_placeholder", "main"]);
+        nodes.push(shotPlaceholder);
+        edges.push(["project_input", "shot_placeholder", "main"]);
+        edges.push(["style_lock", "shot_placeholder", "alt"]);
+        edges.push(["character_lock", "shot_placeholder", "alt"]);
       }
 
-      const baseY = shots.length ? 72 + shots.length * 318 + 86 : 650;
+      const lastShotId = shots.length ? `shot_${shots[shots.length - 1].shot_id}` : "shot_placeholder";
+      const firstShotId = shots.length ? `shot_${shots[0].shot_id}` : "shot_placeholder";
+      const packagingEnabled = titleItems.length || project.title_packaging?.title_packaging_enabled === "true" || project.title_packaging?.title_packaging_enabled === true;
+      const usedColumns = shots.length ? Math.min(shots.length, SHOT_GRID_COLUMNS) : 1;
+      const gridRows = Math.max(1, Math.ceil(Math.max(shots.length, 1) / SHOT_GRID_COLUMNS));
+      const gridRight = SHOT_GRID_START_X + usedColumns * SHOT_CARD_WIDTH + Math.max(0, usedColumns - 1) * SHOT_GRID_GAP_X;
+      const gridHeight = gridRows * SHOT_CARD_HEIGHT + Math.max(0, gridRows - 1) * SHOT_GRID_GAP_Y;
+      const finalX = gridRight + 40;
+      const finalY = SHOT_GRID_START_Y + Math.max(0, (gridHeight - 178) / 2);
+      const baseY = SHOT_GRID_START_Y + gridRows * (SHOT_CARD_HEIGHT + SHOT_GRID_GAP_Y) + 70;
       if (titleItems.length) {
         titleItems.forEach((item, index) => {
           const node = {
@@ -1395,8 +1404,8 @@
             type: "packaging",
             title: `文字包装 ${item.id || index + 1}`,
             subtitle: item.type || "title packaging",
-            x: 430 + (index % 2) * 386,
-            y: baseY + Math.floor(index / 2) * 220,
+            x: finalX,
+            y: baseY + index * 190,
             width: 294,
             height: 168,
             meta: {
@@ -1407,32 +1416,31 @@
             text: "包装资产是旁路节点，不写入视频提示词。",
           };
           nodes.push(node);
-          edges.push(["project_input", node.id, "alt"]);
+          edges.push([firstShotId, node.id, "alt"]);
         });
-      } else {
+      } else if (packagingEnabled) {
         nodes.push({
           id: "packaging_sidecar",
           type: "packaging",
           title: "文字包装旁路",
           subtitle: packagingStatus(project),
-          x: 430,
+          x: finalX,
           y: baseY,
           width: 294,
           height: 168,
           meta: { "状态": packagingStatus(project) },
           text: "大标题、章节卡、人名条、关键数据等包装素材会在这里形成旁路节点。",
         });
-        edges.push(["project_input", "packaging_sidecar", "alt"]);
+        edges.push([firstShotId, "packaging_sidecar", "alt"]);
       }
 
-      const deliverableY = baseY + (titleItems.length ? Math.ceil(titleItems.length / 2) * 220 + 40 : 228);
       nodes.push({
         id: "final_delivery",
         type: "deliverable",
         title: "最终交付包",
         subtitle: "最终交付目录",
-        x: 846,
-        y: deliverableY,
+        x: finalX,
+        y: finalY,
         width: 300,
         height: 178,
         meta: {
@@ -1443,8 +1451,9 @@
         text: "最终交付目录汇总分镜图、提示词、字幕、预览视频、制作总表和包装素材。",
       });
 
+      edges.push([lastShotId, "final_delivery", "main"]);
       nodes
-        .filter((node) => node.type === "output" || node.type === "packaging")
+        .filter((node) => node.type === "packaging")
         .forEach((node) => edges.push([node.id, "final_delivery", node.type === "packaging" ? "alt" : "main"]));
 
       applySavedLayout(project, nodes);
@@ -1539,12 +1548,22 @@
     function filteredNodes() {
       const nodes = state.graph.nodes || [];
       if (state.filter === "shots") {
-        return nodes.filter((node) => ["source", "style", "character", "frame", "prompt", "output", "deliverable"].includes(node.type));
+        return nodes.filter((node) => ["source", "style", "character", "shot", "deliverable"].includes(node.type));
       }
       if (state.filter === "packaging") {
-        return nodes.filter((node) => ["source", "style", "packaging", "deliverable"].includes(node.type));
+        return nodes.filter((node) => ["source", "style", "shot", "packaging", "deliverable"].includes(node.type));
       }
       return nodes;
+    }
+
+    function edgeOrientation(from, to) {
+      if (from.type === "shot" && to.type === "shot") {
+        return Math.abs(from.y - to.y) < SHOT_CARD_HEIGHT * 0.45 ? "horizontal" : "vertical";
+      }
+      if (from.type === "shot" && to.type === "deliverable") {
+        return "horizontal";
+      }
+      return "horizontal";
     }
 
     function renderEdge(edge, nodes) {
@@ -1552,12 +1571,15 @@
       const from = nodes.find((node) => node.id === fromId);
       const to = nodes.find((node) => node.id === toId);
       if (!from || !to) return "";
-      const x1 = from.x + from.width;
-      const y1 = from.y + from.height / 2;
-      const x2 = to.x;
-      const y2 = to.y + to.height / 2;
-      const bend = Math.max(82, Math.abs(x2 - x1) * 0.34);
-      const d = `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`;
+      const verticalFlow = edgeOrientation(from, to) === "vertical";
+      const x1 = verticalFlow ? from.x + from.width / 2 : from.x + from.width;
+      const y1 = verticalFlow ? from.y + from.height : from.y + from.height / 2;
+      const x2 = verticalFlow ? to.x + to.width / 2 : to.x;
+      const y2 = verticalFlow ? to.y : to.y + to.height / 2;
+      const bend = verticalFlow ? Math.max(72, Math.abs(y2 - y1) * 0.34) : Math.max(82, Math.abs(x2 - x1) * 0.34);
+      const d = verticalFlow
+        ? `M ${x1} ${y1} C ${x1} ${y1 + bend}, ${x2} ${y2 - bend}, ${x2} ${y2}`
+        : `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`;
       const alt = edgeType === "alt" ? " alt" : "";
       return `
         <path class="edge-path${alt}" d="${d}"></path>
@@ -1568,7 +1590,7 @@
 
     function renderNode(node) {
       const selected = node.id === state.selectedNodeId ? " selected" : "";
-      const body = node.type === "frame" ? renderFrameBody(node) : renderTextBody(node);
+      const body = node.type === "shot" ? renderShotBody(node) : renderTextBody(node);
       return `
         <article class="graph-node ${escapeHtml(node.type)}${selected}" data-node="${escapeHtml(node.id)}" style="left:${node.x}px;top:${node.y}px;width:${node.width}px;min-height:${node.height}px">
           <div class="node-head">
@@ -1581,17 +1603,31 @@
       `;
     }
 
-    function renderFrameBody(node) {
+    function renderShotBody(node) {
       const shot = node.shot || {};
       const image = node.image ? `<img src="${node.image}" alt="${escapeHtml(node.title)}">` : `<span>暂无分镜图</span>`;
+      const prompt = shot.video_prompt || "暂无视频提示词。";
       return `
         <div class="node-body">
-          <div class="node-thumb">${image}</div>
-          <div class="node-meta">
-            ${badge(shot.duration_seconds !== undefined ? `${shot.duration_seconds} 秒` : "时长待定")}
-            ${badge(shot.start || "起点待定")}
+          <div class="shot-layout">
+            <div class="node-thumb">${image}</div>
+            <div class="shot-content">
+              <div class="node-meta">
+                ${badge(shot.duration_seconds !== undefined ? `${shot.duration_seconds} 秒` : "时长待定")}
+                ${badge(shot.start || "起点待定")}
+                ${badge("最终分镜图", "complete")}
+                ${badge("视频提示词", shot.video_prompt ? "guided" : "missing")}
+              </div>
+              <div>
+                <div class="shot-section-label">画面说明</div>
+                <div class="node-text">${escapeHtml(node.text || "")}</div>
+              </div>
+              <div>
+                <div class="shot-section-label">视频提示词</div>
+                <div class="shot-prompt">${escapeHtml(prompt)}</div>
+              </div>
+            </div>
           </div>
-          <div class="node-text">${escapeHtml(node.text || "")}</div>
         </div>
       `;
     }
@@ -1674,7 +1710,7 @@
     }
 
     function layoutKey() {
-      return `video-master-node-layout:${state.currentProject}`;
+      return `video-master-node-layout-v2-grid:${state.currentProject}`;
     }
 
     function loadSavedLayout() {

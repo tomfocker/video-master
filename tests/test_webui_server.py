@@ -47,6 +47,12 @@ class WebUIServerTest(unittest.TestCase):
         self.assertNotIn("introMediaLabel", html)
         self.assertNotIn("intro-media-label", html)
         self.assertIn("节点式分镜预览编辑器", html)
+        self.assertIn("分镜流程", html)
+        self.assertIn("分镜制作卡", html)
+        self.assertIn("renderShotBody", html)
+        self.assertIn("shotGridPosition", html)
+        self.assertIn("SHOT_GRID_COLUMNS", html)
+        self.assertIn("edgeOrientation", html)
         self.assertIn("最终分镜图", html)
         self.assertIn("视频提示词", html)
         self.assertIn("最终交付包", html)
@@ -61,6 +67,7 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("showIntro", html)
         self.assertIn("character_lock", html)
         self.assertIn("人物形象锁定", html)
+        self.assertNotIn("output_${shot.shot_id}", html)
 
     def test_server_lists_project_and_serves_frame_file(self):
         module = load_module()
