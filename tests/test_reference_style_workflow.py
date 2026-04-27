@@ -90,6 +90,28 @@ class ReferenceStyleWorkflowTest(unittest.TestCase):
         self.assertIn("Never paste these sidecar prompts", prompt_reference)
         self.assertIn("Default to transparent PNG packaging", prompt_reference)
 
+    def test_seedance2_is_documented_as_default_video_prompt_profile(self):
+        skill = (ROOT / "skills" / "video-master" / "SKILL.md").read_text(encoding="utf-8")
+        output_contract = (
+            ROOT / "skills" / "video-master" / "references" / "output-contract.md"
+        ).read_text(encoding="utf-8")
+        platform_reference = (
+            ROOT / "skills" / "video-master" / "references" / "platform-and-model-profiles.md"
+        ).read_text(encoding="utf-8")
+        prompt_reference = (
+            ROOT / "skills" / "video-master" / "references" / "storyboard-and-video-prompts.md"
+        ).read_text(encoding="utf-8")
+
+        for text in [skill, output_contract, platform_reference, prompt_reference]:
+            self.assertIn("Seedance 2.0", text)
+            self.assertIn("seedance-2.0", text)
+
+        self.assertIn("default target video model", skill)
+        self.assertIn("unless the user explicitly names another video model", skill)
+        self.assertIn("target_model: seedance-2.0", output_contract)
+        self.assertIn("(00-1.5s)", prompt_reference)
+        self.assertIn("动态时间切片", prompt_reference)
+
 
 if __name__ == "__main__":
     unittest.main()

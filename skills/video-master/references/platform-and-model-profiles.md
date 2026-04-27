@@ -16,6 +16,29 @@ Always consider safe zones for subtitles and UI overlays. Avoid placing critical
 
 ## Model Profiles
 
+### Default Target Model
+
+Default to `seedance-2.0` / Seedance 2.0 for video generation prompts unless the user explicitly names another video model. Record both fields in `brief/spec_lock.md`:
+
+```text
+- target_model: seedance-2.0
+- prompt_dialect: seedance-2.0
+```
+
+When a user names another model, keep the selected model in `target_model` and use the closest profile below.
+
+### `seedance-2.0`
+
+Use for the default workflow and for users who name Seedance, Seedance 2.0, 豆包视频, or a Seedance-compatible Chinese video-generation workflow.
+
+- Final prompts default to Chinese-first, with optional English camera tags only when they add precision.
+- Write one copy-ready block per shot, not one long film prompt.
+- Inside each shot, add a `动态时间切片` section with time-coded segments such as `(00-1.5s)` and `(1.5-3.0s)`.
+- Every time slice should combine camera movement, changing light/environment, subject action, and micro-expression or material motion where relevant.
+- Keep motion continuous and physically plausible: slow, smooth, connected, natural, not abrupt unless the shot deliberately calls for impact.
+- Add stability constraints: clear face when a face appears, stable identity, normal anatomy, consistent wardrobe/product, no flicker, no ghosting, no watermarks or accidental text.
+- Keep external VO, subtitles, background music policy, and SFX as separate fields; do not paste narration lines into the video prompt.
+
 ### `model-agnostic`
 
 Use labeled prompts with visual, motion, camera, continuity, external audio policy, background music policy, SFX, on-screen text policy, and generation requirements.
@@ -44,7 +67,9 @@ Separate subject movement from camera movement. Keep action grounded and duratio
 
 ## Prompt Language Rule
 
+- If the user names no target video model, use `target_model: seedance-2.0` and `prompt_dialect: seedance-2.0`.
 - If the user writes in Chinese and names no foreign model, set `prompt_language: zh-CN`.
 - If the user names a domestic Chinese model, set `prompt_dialect: domestic-cn`.
+- If the user names Seedance 2.0, set `prompt_dialect: seedance-2.0`.
 - If the user names Sora/Runway/Pika and asks for English, use English.
 - If uncertain, use Chinese final prompts plus optional English technical tags.

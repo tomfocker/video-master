@@ -196,6 +196,11 @@ def make_project(
             final_video_prompt_content = (
                 "# Copy Ready\n\n"
                 "## S01\n"
+                "目标模型：Seedance 2.0\n"
+                "动态时间切片：\n"
+                "(00-1.5s): 镜头缓慢推近，清晨光线掠过产品表面，主体动作自然连续。\n"
+                "(1.5-3.0s): 镜头继续稳定推进，手部轻轻拿起产品，反射光保持平滑。\n"
+                "稳定性要求：主体稳定、产品造型稳定、无闪烁、无重影。\n"
                 "声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。\n"
                 "背景音乐：不要生成背景音乐；整片音乐后期统一处理。\n"
                 "SFX音效：清晨环境声、衣料摩擦声。\n"
@@ -393,7 +398,12 @@ class ValidateVideoProjectTest(unittest.TestCase):
                 final_video_prompt_content=(
                     "# Copy Ready\n\n"
                     "## S01\n"
+                    "目标模型：Seedance 2.0\n"
                     "画面：低饱和黑白高反差，湿润银色高光，人物处在巨大负空间中。\n"
+                    "动态时间切片：\n"
+                    "(00-1.5s): 镜头缓慢推近，湿润银色高光沿着人物轮廓移动，人物呼吸和眼神保持克制。\n"
+                    "(1.5-3.0s): 手持压迫感轻微增强，背景负空间维持稳定，雨滴和反射光自然流动。\n"
+                    "稳定性要求：主体稳定、人体结构正常、服装一致、无闪烁、无重影。\n"
                     "声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。\n"
                     "背景音乐：不要生成背景音乐；整片音乐后期统一处理。\n"
                     "SFX音效：远处发动机低频、雨滴敲击、呼吸声。\n"
@@ -581,6 +591,33 @@ class ValidateVideoProjectTest(unittest.TestCase):
             combined = result.stdout + result.stderr
             self.assertIn("missing no-background-music instruction", combined)
             self.assertIn("missing SFX sound design", combined)
+
+    def test_default_seedance2_profile_requires_time_sliced_motion_prompts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp), durations=[3, 4, 4, 6, 5, 3, 5], prompt_language="zh-CN")
+            write(
+                project / "最终交付" / "02_提示词" / "视频生成提示词.md",
+                "# Copy Ready\n\n"
+                "## S01\n"
+                "声音/口播：外部画外音，后期添加。\n"
+                "背景音乐：不要生成背景音乐；整片音乐后期统一处理。\n"
+                "SFX音效：雨声。\n"
+                "画面文字策略：模型生成画面不添加字幕。\n",
+            )
+            result = self.run_validator(project)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Seedance 2.0 prompts require time-coded motion slices", result.stdout + result.stderr)
+
+    def test_explicit_non_seedance_model_can_use_model_agnostic_prompt_blocks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(
+                Path(tmp),
+                durations=[3, 4, 4, 6, 5, 3, 5],
+                prompt_language="zh-CN",
+                extra_spec_lines=["- target_model: model-agnostic"],
+            )
+            result = self.run_validator(project)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_rejects_mixed_audio_subtitle_field_when_burned_subtitles_are_disabled(self):
         with tempfile.TemporaryDirectory() as tmp:

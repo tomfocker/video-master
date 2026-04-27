@@ -8,6 +8,7 @@ Derive this from `brief/spec_lock.md` and reuse it across every prompt:
 
 ```text
 Aspect ratio: <ratio>
+Target video model/profile: <seedance-2.0 by default, or explicitly named model>
 Prompt language: <zh-CN / en / bilingual>
 Copy language: <zh-CN / en / bilingual / user-supplied>
 Voiceover language: <zh-CN / en / bilingual / none>
@@ -163,7 +164,7 @@ Use this for `prompts/video_prompts.md`.
 
 ## Copy-Ready Chinese Prompt Block
 
-Use this for `最终交付/02_提示词/视频生成提示词.md` when `prompt_language` is `zh-CN`.
+Use this for `最终交付/02_提示词/视频生成提示词.md` when `prompt_language` is `zh-CN` and the user has explicitly selected a non-Seedance model-agnostic format. Otherwise use the Seedance 2.0 block below.
 
 ```markdown
 ## S01 - <镜头名>
@@ -187,8 +188,41 @@ If a character visibly speaks on camera, the prompt may describe the performance
 
 Per-clip background music should stay off. Current segmented video models often produce different music beds per clip, which makes assembly cuts feel hard. Keep music direction in the whole-film audio plan and keep final video prompts focused on visual motion plus shot-specific SFX.
 
+## Seedance 2.0 Copy-Ready Prompt Block
+
+Seedance 2.0 is the default target video model/profile. Use this for `最终交付/02_提示词/视频生成提示词.md` unless the user explicitly names another video model. It keeps the single-shot prompt easy to paste while adding the motion detail Seedance expects.
+
+```markdown
+## S01 - <镜头名>
+
+目标模型：Seedance 2.0
+时长：<秒数>
+画幅：<比例>
+参考图：<相对路径>
+画面：<中文描述主体、场景、构图、风格>
+视觉连续性：<固定角色/产品/服装/场景/材质规则>
+
+动态时间切片：
+(00-1.5s): <运镜方式>，<光影/环境发生变化>，<主体起势动作和微表情/材质运动>，动作自然连续。
+(1.5-3.0s): <运镜变化>，<主体位移或产品转动>，<发丝/衣摆/液体/反射/尘埃等物理互动>，保持稳定。
+(3.0-4.0s): <关键视觉高潮或特写推进>，<面部/产品细节>，<环境余韵或光线扫过>。
+
+运镜与焦段：<景别、机位、镜头运动，可保留 slow dolly in / handheld / macro close-up / shallow depth of field 等英文标签>
+光线与风格：<中文描述光线、色彩、质感、统一性>
+稳定性要求：五官清晰、面部稳定、人体结构正常、同一角色、服装一致、发型不变；产品造型、材质和比例稳定；无闪烁、无重影。
+声音/口播：<外部配音或后期音频说明；如果是画外音，不写具体台词，只写后期添加>
+背景音乐：不要生成背景音乐；整片音乐后期统一处理
+SFX音效：<本镜头需要的现场声/拟音/冲击音>
+画面文字策略：<默认无；如需片内文字，写明准确文字和用户授权>
+字幕策略：post-production only；字幕使用 audio/captions.srt 后期添加，模型生成画面不添加字幕、caption、对白文字或烧录字幕
+生成要求：连续运动、真实物理惯性、清晰主体、稳定构图、自然表情或材质变化；不要写“负面提示词”字段
+```
+
+Time-slice count should follow duration: 2s can use 2 slices, 3-5s usually uses 3-4 slices, 10s uses about 8 slices, and 15s uses about 12 slices. Do not make every slice a new scene; the slices describe how one shot evolves over time.
+
 ## Prompt Dialect Notes
 
+- Seedance 2.0: default profile; use Chinese-first prompts with `动态时间切片`, explicit camera movement, environment interaction, micro-expression/material motion, and stability constraints.
 - Model-agnostic: use clear natural language with labeled fields.
 - Domestic Chinese models: default Chinese prompts; keep actions concrete; keep one dominant action per shot; add reference image paths when supported.
 - Sora-style: emphasize scene physics, continuity, cinematic movement, and temporal progression.

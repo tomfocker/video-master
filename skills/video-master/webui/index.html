@@ -52,7 +52,8 @@
 
     button,
     input,
-    textarea {
+    textarea,
+    select {
       font: inherit;
       letter-spacing: 0;
     }
@@ -68,7 +69,8 @@
     button:hover,
     button:focus-visible,
     input:focus-visible,
-    textarea:focus-visible {
+    textarea:focus-visible,
+    select:focus-visible {
       border-color: var(--blue);
       outline: 3px solid rgba(91, 140, 255, 0.16);
     }
@@ -257,7 +259,7 @@
     .topbar {
       grid-column: 1 / -1;
       display: grid;
-      grid-template-columns: 350px minmax(260px, 1fr) auto auto auto auto auto;
+      grid-template-columns: 350px minmax(260px, 1fr) auto auto auto;
       gap: 10px;
       align-items: center;
       padding: 12px 16px;
@@ -446,6 +448,7 @@
 
     .canvas-tools {
       display: flex;
+      align-items: center;
       gap: 8px;
       pointer-events: auto;
     }
@@ -456,6 +459,57 @@
       padding: 0 10px;
       color: var(--muted);
       background: rgba(12, 18, 27, 0.78);
+    }
+
+    .canvas-tools button.active {
+      color: #ecfdf5;
+      border-color: rgba(74, 222, 128, 0.54);
+      background: rgba(21, 128, 61, 0.22);
+    }
+
+    .canvas-tools select {
+      height: 36px;
+      min-width: 112px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0 10px;
+      color: var(--muted);
+      background: rgba(12, 18, 27, 0.84);
+    }
+
+    .canvas-tools option {
+      color: var(--ink);
+      background: #101722;
+    }
+
+    .canvas-context-menu {
+      position: fixed;
+      z-index: 12;
+      min-width: 180px;
+      padding: 6px;
+      border: 1px solid rgba(77, 95, 121, 0.8);
+      border-radius: var(--radius);
+      background: rgba(11, 16, 24, 0.96);
+      box-shadow: var(--shadow);
+    }
+
+    .canvas-context-menu.hidden {
+      display: none;
+    }
+
+    .canvas-context-menu button {
+      width: 100%;
+      height: 32px;
+      padding: 0 10px;
+      text-align: left;
+      color: #dce7fb;
+      background: transparent;
+      border-color: transparent;
+    }
+
+    .canvas-context-menu button:hover {
+      background: rgba(91, 140, 255, 0.16);
+      border-color: rgba(91, 140, 255, 0.32);
     }
 
     .viewport {
@@ -470,6 +524,10 @@
 
     .viewport.panning {
       cursor: grabbing;
+    }
+
+    .viewport.connecting {
+      cursor: crosshair;
     }
 
     .world {
@@ -499,10 +557,41 @@
       stroke: rgba(61, 214, 208, 0.44);
     }
 
+    .edge-path.idea-link {
+      stroke: rgba(248, 184, 78, 0.72);
+      stroke-dasharray: 7 8;
+      filter: drop-shadow(0 0 10px rgba(248, 184, 78, 0.22));
+    }
+
+    .edge-path.manual {
+      stroke: rgba(61, 214, 208, 0.82);
+      stroke-width: 2.6;
+      filter: drop-shadow(0 0 12px rgba(61, 214, 208, 0.22));
+    }
+
+    .edge-path.connection-preview {
+      stroke: rgba(226, 232, 240, 0.72);
+      stroke-width: 2.4;
+      stroke-dasharray: 5 7;
+      filter: drop-shadow(0 0 12px rgba(148, 163, 184, 0.2));
+    }
+
     .edge-dot {
       fill: rgba(15, 23, 42, 0.95);
       stroke: rgba(125, 165, 255, 0.76);
       stroke-width: 2;
+    }
+
+    .edge-dot.idea-link {
+      stroke: rgba(248, 184, 78, 0.82);
+    }
+
+    .edge-dot.manual {
+      stroke: rgba(61, 214, 208, 0.88);
+    }
+
+    .edge-dot.connection-preview {
+      stroke: rgba(226, 232, 240, 0.72);
     }
 
     .node-layer {
@@ -522,12 +611,21 @@
       cursor: grab;
       overflow: hidden;
       user-select: none;
+      touch-action: none;
+      transition: border-color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
     }
 
     .graph-node.dragging {
       cursor: grabbing;
       opacity: 0.92;
       z-index: 6;
+      will-change: transform;
+    }
+
+    .graph-node.inertia {
+      cursor: grabbing;
+      z-index: 5;
+      will-change: transform;
     }
 
     .graph-node.selected {
@@ -536,8 +634,8 @@
     }
 
     .graph-node.shot {
-      width: 320px;
-      min-height: 206px;
+      width: 392px;
+      min-height: 470px;
       border-color: rgba(125, 165, 255, 0.72);
     }
 
@@ -552,10 +650,22 @@
       border-color: rgba(248, 184, 78, 0.58);
     }
 
+    .graph-node.copywriting {
+      width: 286px;
+      min-height: 154px;
+      border-color: rgba(167, 139, 250, 0.58);
+    }
+
     .graph-node.character {
       width: 286px;
       min-height: 154px;
       border-color: rgba(61, 214, 208, 0.58);
+    }
+
+    .graph-node.idea {
+      width: 320px;
+      min-height: 212px;
+      border-color: rgba(248, 184, 78, 0.68);
     }
 
     .node-head {
@@ -592,6 +702,50 @@
       flex: 0 0 auto;
       font-size: 17px;
       line-height: 1;
+      padding: 0;
+    }
+
+    .node-flow-ports {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .flow-port {
+      position: absolute;
+      top: 50%;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border-color: rgba(125, 165, 255, 0.62);
+      color: #dbeafe;
+      background: rgba(7, 10, 15, 0.9);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.28);
+      font-size: 11px;
+      font-weight: 820;
+      line-height: 1;
+      pointer-events: auto;
+      transform: translateY(-50%);
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+      z-index: 2;
+    }
+
+    .flow-port:hover,
+    .flow-port.active {
+      border-color: rgba(61, 214, 208, 0.86);
+      background: rgba(15, 118, 110, 0.34);
+      transform: translateY(-50%) scale(1.08);
+    }
+
+    .flow-port-in {
+      left: -14px;
+    }
+
+    .flow-port-out {
+      right: -14px;
     }
 
     .node-drag-hint {
@@ -644,25 +798,131 @@
 
     .shot-layout {
       display: grid;
-      grid-template-columns: 82px minmax(0, 1fr);
+      grid-template-columns: 1fr;
       gap: 9px;
       align-items: start;
     }
 
-    .shot-layout .node-thumb {
-      aspect-ratio: 9 / 16;
+    .adaptive-shot-media {
+      min-height: 188px;
+      aspect-ratio: 16 / 9;
+      align-self: start;
+    }
+
+    .shot-media-top {
+      width: 100%;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .adaptive-shot-media img {
+      object-fit: contain;
+      background: rgba(4, 7, 12, 0.72);
     }
 
     .shot-content {
       min-width: 0;
       display: grid;
-      gap: 7px;
+      gap: 8px;
+    }
+
+    .shot-details {
+      align-content: start;
+    }
+
+    .shot-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .shot-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .shot-action {
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      color: #dce7fb;
+      background: rgba(91, 140, 255, 0.14);
+      border-color: rgba(91, 140, 255, 0.38);
+      font-size: 11px;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .shot-action:disabled {
+      opacity: 0.46;
+      cursor: not-allowed;
     }
 
     .shot-section-label {
       color: #dce7fb;
       font-size: 11px;
       font-weight: 800;
+    }
+
+    .shot-bindings {
+      display: grid;
+      gap: 6px;
+    }
+
+    .shot-binding {
+      display: grid;
+      gap: 4px;
+      padding: 7px 8px;
+      border: 1px solid rgba(77, 95, 121, 0.44);
+      border-radius: var(--radius);
+      background: rgba(9, 14, 22, 0.58);
+    }
+
+    .shot-binding-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #e8f0ff;
+      font-size: 11px;
+      font-weight: 820;
+    }
+
+    .binding-chip {
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0 7px;
+      color: #dbeafe;
+      background: rgba(91, 140, 255, 0.16);
+      font-size: 11px;
+      font-weight: 780;
+    }
+
+    .binding-chip.packaging-chip {
+      color: #dcfce7;
+      background: rgba(22, 163, 74, 0.18);
+    }
+
+    .shot-binding-text {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .storyboard-frame-only {
+      gap: 10px;
+    }
+
+    .storyboard-frame-only .node-text {
+      -webkit-line-clamp: 3;
     }
 
     .shot-prompt {
@@ -677,6 +937,97 @@
       line-height: 1.42;
       white-space: pre-wrap;
       word-break: break-word;
+    }
+
+    .shot-editor {
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(77, 95, 121, 0.45);
+      display: grid;
+      gap: 9px;
+    }
+
+    .shot-editor-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: #eef5ff;
+      font-size: 12px;
+      font-weight: 820;
+    }
+
+    .shot-form-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 86px;
+      gap: 8px;
+    }
+
+    .shot-editor label {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 720;
+    }
+
+    .shot-editor input,
+    .shot-editor textarea {
+      width: 100%;
+      border: 1px solid rgba(77, 95, 121, 0.62);
+      border-radius: var(--radius);
+      background: rgba(7, 10, 15, 0.78);
+      color: var(--ink);
+      padding: 7px 8px;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .shot-editor textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .shot-editor-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .idea-form,
+    .idea-status {
+      display: grid;
+      gap: 9px;
+    }
+
+    .idea-form label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 740;
+    }
+
+    .idea-form textarea,
+    .idea-form select {
+      width: 100%;
+      border: 1px solid rgba(77, 95, 121, 0.62);
+      border-radius: var(--radius);
+      background: rgba(7, 10, 15, 0.78);
+      color: var(--ink);
+      padding: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .idea-form textarea {
+      min-height: 82px;
+      resize: vertical;
+    }
+
+    .idea-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
     }
 
     .badge {
@@ -927,7 +1278,7 @@
 </head>
 <body>
   <section id="intro" class="intro" aria-label="Video Master 开场页">
-    <video id="introVideo" class="intro-video" autoplay muted loop playsinline></video>
+    <video id="introVideo" class="intro-video" src="/assets/intro-background-20260427-v2.mp4" autoplay muted loop playsinline></video>
     <div id="introImage" class="intro-image" hidden></div>
     <div id="introFallback" class="intro-fallback visible"></div>
     <div class="intro-scrim"></div>
@@ -942,7 +1293,7 @@
     </div>
   </section>
 
-  <div class="app">
+  <div class="app side-hidden inspector-hidden">
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark">VM</div>
@@ -956,8 +1307,6 @@
         <button id="refreshButton" class="top-button" type="button">刷新项目</button>
       </div>
       <button id="showIntroButton" class="top-button" type="button">开场</button>
-      <button id="toggleSideButton" class="top-button" type="button">隐藏项目库</button>
-      <button id="toggleInspectorButton" class="top-button" type="button">隐藏检查器</button>
       <button id="fitButton" class="top-button" type="button">适配画布</button>
       <button id="writeStateButton" class="top-button primary-button" type="button">写入状态</button>
     </header>
@@ -966,7 +1315,6 @@
       <button id="zoomInButton" class="rail-button" type="button" title="放大">+</button>
       <button id="zoomOutButton" class="rail-button" type="button" title="缩小">-</button>
       <button id="resetZoomButton" class="rail-button active" type="button" title="重置">1</button>
-      <button id="reloadCanvasButton" class="rail-button" type="button" title="刷新">R</button>
     </nav>
 
     <aside class="side">
@@ -994,9 +1342,12 @@
           <div id="modeBadges" class="badge-row"></div>
         </div>
         <div class="canvas-tools">
-          <button id="showAllButton" type="button">全部节点</button>
-          <button id="showShotsButton" type="button">分镜流程</button>
-          <button id="showPackagingButton" type="button">包装旁路</button>
+          <button id="toggleFrameworkButton" type="button" aria-pressed="false">只看框架</button>
+          <select id="canvasModeSelect" aria-label="画布视图">
+            <option value="all">全部节点</option>
+            <option value="shots">分镜流程</option>
+            <option value="packaging">包装旁路</option>
+          </select>
         </div>
       </div>
       <div id="viewport" class="viewport">
@@ -1004,6 +1355,9 @@
           <svg id="connectionLayer" class="connection-layer"></svg>
           <div id="nodeLayer" class="node-layer"></div>
         </div>
+      </div>
+      <div id="canvasContextMenu" class="canvas-context-menu hidden">
+        <button type="button" data-context-add-idea>新增分镜想法</button>
       </div>
     </main>
 
@@ -1027,12 +1381,21 @@
       selectedNodeId: "",
       zoom: 1,
       filter: "all",
-      sideHidden: false,
-      inspectorHidden: false,
+      frameworkOnly: false,
+      contextMenu: null,
+      draftIdea: null,
+      manualEdges: [],
+      sideHidden: true,
+      inspectorHidden: true,
       pan: null,
       nodeDrag: null,
+      nodeInertia: null,
+      connectionDrag: null,
+      editingShot: null,
       suppressClickUntil: 0,
     };
+
+    const INTRO_BACKGROUND_VIDEO = "/assets/intro-background-20260427-v2.mp4";
 
     const els = {
       intro: document.querySelector("#intro"),
@@ -1045,17 +1408,13 @@
       rootInput: document.querySelector("#rootInput"),
       refreshButton: document.querySelector("#refreshButton"),
       showIntroButton: document.querySelector("#showIntroButton"),
-      toggleSideButton: document.querySelector("#toggleSideButton"),
-      toggleInspectorButton: document.querySelector("#toggleInspectorButton"),
       fitButton: document.querySelector("#fitButton"),
       writeStateButton: document.querySelector("#writeStateButton"),
       zoomInButton: document.querySelector("#zoomInButton"),
       zoomOutButton: document.querySelector("#zoomOutButton"),
       resetZoomButton: document.querySelector("#resetZoomButton"),
-      reloadCanvasButton: document.querySelector("#reloadCanvasButton"),
-      showAllButton: document.querySelector("#showAllButton"),
-      showShotsButton: document.querySelector("#showShotsButton"),
-      showPackagingButton: document.querySelector("#showPackagingButton"),
+      toggleFrameworkButton: document.querySelector("#toggleFrameworkButton"),
+      canvasModeSelect: document.querySelector("#canvasModeSelect"),
       projectList: document.querySelector("#projectList"),
       projectCount: document.querySelector("#projectCount"),
       projectTitle: document.querySelector("#projectTitle"),
@@ -1064,6 +1423,7 @@
       miniMap: document.querySelector("#miniMap"),
       viewport: document.querySelector("#viewport"),
       world: document.querySelector("#world"),
+      canvasContextMenu: document.querySelector("#canvasContextMenu"),
       connectionLayer: document.querySelector("#connectionLayer"),
       nodeLayer: document.querySelector("#nodeLayer"),
       inspector: document.querySelector("#inspector"),
@@ -1124,6 +1484,19 @@
       return payload;
     }
 
+    async function writeJson(url, payload) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || response.statusText);
+      }
+      return result;
+    }
+
     async function loadProjects(selectFirst = true) {
       els.serverState.textContent = "读取项目中";
       const params = new URLSearchParams();
@@ -1148,6 +1521,7 @@
         state.currentProject = "";
         state.project = null;
         state.graph = { nodes: [], edges: [] };
+        state.manualEdges = [];
         renderProject();
       }
     }
@@ -1155,10 +1529,15 @@
     async function loadProject(projectPath, writeState) {
       state.currentProject = projectPath;
       state.selectedNodeId = "";
+      state.editingShot = null;
+      state.contextMenu = null;
+      state.draftIdea = null;
+      closeCanvasContextMenu();
       const params = new URLSearchParams({ path: projectPath });
       if (writeState) params.set("write", "true");
       state.project = await readJson(`/api/project?${params.toString()}`);
       state.graph = buildGraph(state.project);
+      state.manualEdges = loadManualEdges();
       state.selectedNodeId = state.graph.nodes[0]?.id || "";
       renderProjectList();
       renderProject();
@@ -1166,6 +1545,18 @@
     }
 
     async function loadHeroMedia() {
+      if (INTRO_BACKGROUND_VIDEO) {
+        const media = {
+          kind: "video",
+          source: "hardcoded",
+          project_name: "intro-background-20260427-v2",
+          path: INTRO_BACKGROUND_VIDEO,
+          url: INTRO_BACKGROUND_VIDEO,
+        };
+        state.heroMedia = media;
+        applyHeroMedia(media);
+        return;
+      }
       const params = new URLSearchParams();
       const root = els.rootInput.value.trim();
       if (root) params.set("root", root);
@@ -1246,14 +1637,18 @@
     }
 
     const SHOT_GRID_COLUMNS = 4;
-    const SHOT_CARD_WIDTH = 320;
-    const SHOT_CARD_HEIGHT = 206;
+    const SHOT_CARD_WIDTH = 392;
+    const SHOT_CARD_HEIGHT = 470;
     const SHOT_GRID_START_X = 330;
     const SHOT_GRID_START_Y = 72;
     const SHOT_GRID_GAP_X = 40;
-    const SHOT_GRID_GAP_Y = 96;
+    const SHOT_GRID_GAP_Y = 120;
     const SOURCE_COLUMN_X = 70;
     const SOURCE_NODE_WIDTH = 250;
+    const DRAG_INERTIA_FRICTION = 0.84;
+    const DRAG_INERTIA_MIN_VELOCITY = 0.045;
+    const DRAG_INERTIA_MAX_DURATION = 420;
+    const DRAG_MAX_VELOCITY = 1.45;
 
     function shotGridPosition(index) {
       const row = Math.floor(index / SHOT_GRID_COLUMNS);
@@ -1273,7 +1668,7 @@
       const production = project.production_mode || {};
       const style = project.visual_style || {};
       const characters = project.character_design || {};
-      const titleItems = project.deliverables?.title_packaging_manifest?.items || [];
+      const shotRequests = project.shot_requests || [];
 
       nodes.push({
         id: "project_input",
@@ -1387,52 +1782,39 @@
         edges.push(["character_lock", "shot_placeholder", "alt"]);
       }
 
+      shotRequests.forEach((request, index) => {
+        const x = Number.isFinite(Number(request.x)) ? Number(request.x) : SHOT_GRID_START_X + 28 * index;
+        const y = Number.isFinite(Number(request.y)) ? Number(request.y) : SHOT_GRID_START_Y + 64 + 28 * index;
+        const insertAfterShotId = request.insert_after_shot_id || nearestShotIdForPoint({ x, y }, nodes);
+        const requestNode = {
+          id: `idea_${request.request_id || index}`,
+          type: "idea",
+          title: "分镜想法",
+          subtitle: ideaStatusLabel(request.status),
+          x,
+          y,
+          width: 320,
+          height: 212,
+          ideaRequest: request,
+          meta: {
+            "状态": ideaStatusLabel(request.status),
+            "插入位置": insertAfterShotId ? `接在 ${insertAfterShotId} 后` : "由 Codex 判断",
+          },
+          text: request.idea || "等待 Codex 生成正式分镜。",
+        };
+        nodes.push(requestNode);
+        if (insertAfterShotId) {
+          edges.push([`shot_${insertAfterShotId}`, requestNode.id, "idea-link"]);
+        }
+      });
+
       const lastShotId = shots.length ? `shot_${shots[shots.length - 1].shot_id}` : "shot_placeholder";
-      const firstShotId = shots.length ? `shot_${shots[0].shot_id}` : "shot_placeholder";
-      const packagingEnabled = titleItems.length || project.title_packaging?.title_packaging_enabled === "true" || project.title_packaging?.title_packaging_enabled === true;
       const usedColumns = shots.length ? Math.min(shots.length, SHOT_GRID_COLUMNS) : 1;
       const gridRows = Math.max(1, Math.ceil(Math.max(shots.length, 1) / SHOT_GRID_COLUMNS));
       const gridRight = SHOT_GRID_START_X + usedColumns * SHOT_CARD_WIDTH + Math.max(0, usedColumns - 1) * SHOT_GRID_GAP_X;
       const gridHeight = gridRows * SHOT_CARD_HEIGHT + Math.max(0, gridRows - 1) * SHOT_GRID_GAP_Y;
       const finalX = gridRight + 40;
       const finalY = SHOT_GRID_START_Y + Math.max(0, (gridHeight - 178) / 2);
-      const baseY = SHOT_GRID_START_Y + gridRows * (SHOT_CARD_HEIGHT + SHOT_GRID_GAP_Y) + 70;
-      if (titleItems.length) {
-        titleItems.forEach((item, index) => {
-          const node = {
-            id: `packaging_${item.id || index}`,
-            type: "packaging",
-            title: `文字包装 ${item.id || index + 1}`,
-            subtitle: item.type || "title packaging",
-            x: finalX,
-            y: baseY + index * 190,
-            width: 294,
-            height: 168,
-            meta: {
-              "类型": item.type || "-",
-              "透明 PNG": item.transparent_png || "-",
-              "Alpha MOV": item.alpha_mov || "未生成",
-            },
-            text: "包装资产是旁路节点，不写入视频提示词。",
-          };
-          nodes.push(node);
-          edges.push([firstShotId, node.id, "alt"]);
-        });
-      } else if (packagingEnabled) {
-        nodes.push({
-          id: "packaging_sidecar",
-          type: "packaging",
-          title: "文字包装旁路",
-          subtitle: packagingStatus(project),
-          x: finalX,
-          y: baseY,
-          width: 294,
-          height: 168,
-          meta: { "状态": packagingStatus(project) },
-          text: "大标题、章节卡、人名条、关键数据等包装素材会在这里形成旁路节点。",
-        });
-        edges.push([firstShotId, "packaging_sidecar", "alt"]);
-      }
 
       nodes.push({
         id: "final_delivery",
@@ -1452,9 +1834,6 @@
       });
 
       edges.push([lastShotId, "final_delivery", "main"]);
-      nodes
-        .filter((node) => node.type === "packaging")
-        .forEach((node) => edges.push([node.id, "final_delivery", node.type === "packaging" ? "alt" : "main"]));
 
       applySavedLayout(project, nodes);
       return { nodes, edges };
@@ -1484,7 +1863,7 @@
         badge(style.visual_style_preset_id ? tStyle(style.visual_style_preset_id) : "视觉风格待定", "style"),
         badge(packagingStatus(project), "skipped"),
       ].join("");
-      els.graphSummary.textContent = `${nodes.length} 节点 / ${edges.length} 连线`;
+      els.graphSummary.textContent = state.frameworkOnly ? `${shots.length} 分镜框架` : `${nodes.length} 节点 / ${edges.length} 连线`;
       renderMiniMap(project);
       renderBoard();
       renderInspector();
@@ -1512,9 +1891,10 @@
     }
 
     function renderBoard() {
+      cancelNodeInertia();
       const visibleNodes = filteredNodes();
       const visibleIds = new Set(visibleNodes.map((node) => node.id));
-      const visibleEdges = (state.graph.edges || []).filter(([from, to]) => visibleIds.has(from) && visibleIds.has(to));
+      const visibleEdges = canvasEdges().filter(([from, to]) => visibleIds.has(from) && visibleIds.has(to));
       const maxX = Math.max(1500, ...visibleNodes.map((node) => node.x + node.width + 100));
       const maxY = Math.max(820, ...visibleNodes.map((node) => node.y + node.height + 100));
       const scaledWidth = Math.max(maxX * state.zoom, els.viewport.clientWidth + 120);
@@ -1524,6 +1904,9 @@
       els.connectionLayer.setAttribute("width", maxX);
       els.connectionLayer.setAttribute("height", maxY);
       els.world.style.transform = `scale(${state.zoom})`;
+      els.world.classList.toggle("framework-only", state.frameworkOnly);
+      updateFrameworkButton();
+      els.canvasModeSelect.value = state.filter;
 
       renderEdgesOnly(visibleNodes, visibleEdges);
       els.nodeLayer.innerHTML = visibleNodes.map(renderNode).join("");
@@ -1537,23 +1920,101 @@
         });
         nodeEl.addEventListener("pointerdown", (event) => startNodeDrag(event, nodeEl.dataset.node));
       });
+      bindShotCanvasActions();
+      bindConnectionPorts();
     }
 
     function renderEdgesOnly(nodes = filteredNodes(), edges = null) {
       const visibleIds = new Set(nodes.map((node) => node.id));
-      const visibleEdges = edges || (state.graph.edges || []).filter(([from, to]) => visibleIds.has(from) && visibleIds.has(to));
-      els.connectionLayer.innerHTML = visibleEdges.map((edge) => renderEdge(edge, nodes)).join("");
+      const visibleEdges = edges || canvasEdges().filter(([from, to]) => visibleIds.has(from) && visibleIds.has(to));
+      els.connectionLayer.innerHTML = [
+        renderEdgeDefs(),
+        visibleEdges.map((edge) => renderEdge(edge, nodes)).join(""),
+        renderConnectionPreview(nodes),
+      ].join("");
     }
 
     function filteredNodes() {
-      const nodes = state.graph.nodes || [];
+      const nodes = canvasNodes();
+      if (state.frameworkOnly) {
+        return nodes.filter((node) => node.type === "shot");
+      }
       if (state.filter === "shots") {
         return nodes.filter((node) => ["source", "style", "character", "shot", "deliverable"].includes(node.type));
       }
       if (state.filter === "packaging") {
-        return nodes.filter((node) => ["source", "style", "shot", "packaging", "deliverable"].includes(node.type));
+        return nodes.filter((node) => ["source", "style", "character", "shot", "deliverable"].includes(node.type));
       }
       return nodes;
+    }
+
+    function canvasNodes() {
+      const nodes = [...(state.graph.nodes || [])];
+      if (state.draftIdea) nodes.push(state.draftIdea);
+      return nodes;
+    }
+
+    function canvasEdges() {
+      const edges = [...(state.graph.edges || [])];
+      (state.manualEdges || []).forEach(([from, to]) => {
+        if (!from || !to || from === to) return;
+        const manualEdge = [from, to, "manual"];
+        const existingIndex = edges.findIndex(([edgeFrom, edgeTo]) => edgeFrom === from && edgeTo === to);
+        if (existingIndex >= 0) {
+          edges[existingIndex] = manualEdge;
+        } else {
+          edges.push(manualEdge);
+        }
+      });
+      if (state.draftIdea) {
+        const insertAfterShotId = state.draftIdea.insert_after_shot_id || nearestShotIdForPoint(state.draftIdea, state.graph.nodes || []);
+        if (insertAfterShotId) {
+          edges.push([`shot_${insertAfterShotId}`, state.draftIdea.id, "idea-link"]);
+        }
+      }
+      return edges;
+    }
+
+    function renderEdgeDefs() {
+      return `
+        <defs>
+          <marker id="edge-arrow-main" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 1 1 L 9 5.5 L 1 10 Z" fill="rgba(125, 165, 255, 0.86)"></path>
+          </marker>
+          <marker id="edge-arrow-alt" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 1 1 L 9 5.5 L 1 10 Z" fill="rgba(61, 214, 208, 0.76)"></path>
+          </marker>
+          <marker id="edge-arrow-idea" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 1 1 L 9 5.5 L 1 10 Z" fill="rgba(248, 184, 78, 0.86)"></path>
+          </marker>
+          <marker id="edge-arrow-manual" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 1 1 L 9 5.5 L 1 10 Z" fill="rgba(61, 214, 208, 0.92)"></path>
+          </marker>
+          <marker id="edge-arrow-preview" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 1 1 L 9 5.5 L 1 10 Z" fill="rgba(226, 232, 240, 0.82)"></path>
+          </marker>
+        </defs>
+      `;
+    }
+
+    function findCanvasNode(nodeId) {
+      return canvasNodes().find((item) => item.id === nodeId);
+    }
+
+    function nearestShotIdForPoint(point, nodes = canvasNodes()) {
+      const shotNodes = nodes.filter((node) => node.type === "shot" && node.shot?.shot_id);
+      let nearest = null;
+      let nearestDistance = Number.POSITIVE_INFINITY;
+      shotNodes.forEach((node) => {
+        const centerX = node.x + node.width / 2;
+        const centerY = node.y + node.height / 2;
+        const distance = Math.hypot((point?.x || 0) - centerX, (point?.y || 0) - centerY);
+        if (distance < nearestDistance) {
+          nearest = node;
+          nearestDistance = distance;
+        }
+      });
+      return nearest?.shot?.shot_id || "";
     }
 
     function edgeOrientation(from, to) {
@@ -1566,40 +2027,173 @@
       return "horizontal";
     }
 
+    function edgeEndpoint(node, side) {
+      if (node.type === "point") {
+        return { x: node.x, y: node.y };
+      }
+      if (side === "out") {
+        return { x: node.x + node.width, y: node.y + node.height / 2 };
+      }
+      return { x: node.x, y: node.y + node.height / 2 };
+    }
+
+    function edgePath(x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      if (dx >= 72) {
+        const bend = Math.min(220, Math.max(78, dx * 0.42));
+        return `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`;
+      }
+      const loop = Math.min(260, Math.max(112, Math.abs(dy) * 0.42 + 92));
+      const gutter = Math.max(x1, x2) + loop;
+      const midY = y1 + dy * 0.5;
+      return `M ${x1} ${y1} C ${gutter} ${y1}, ${gutter} ${midY}, ${gutter} ${midY} C ${gutter} ${y2}, ${x2 - 82} ${y2}, ${x2} ${y2}`;
+    }
+
+    function edgeMarkerId(edgeType) {
+      if (edgeType === "manual") return "edge-arrow-manual";
+      if (edgeType === "idea-link") return "edge-arrow-idea";
+      if (edgeType === "connection-preview") return "edge-arrow-preview";
+      if (edgeType === "alt") return "edge-arrow-alt";
+      return "edge-arrow-main";
+    }
+
     function renderEdge(edge, nodes) {
       const [fromId, toId, edgeType] = edge;
       const from = nodes.find((node) => node.id === fromId);
       const to = nodes.find((node) => node.id === toId);
       if (!from || !to) return "";
-      const verticalFlow = edgeOrientation(from, to) === "vertical";
-      const x1 = verticalFlow ? from.x + from.width / 2 : from.x + from.width;
-      const y1 = verticalFlow ? from.y + from.height : from.y + from.height / 2;
-      const x2 = verticalFlow ? to.x + to.width / 2 : to.x;
-      const y2 = verticalFlow ? to.y : to.y + to.height / 2;
-      const bend = verticalFlow ? Math.max(72, Math.abs(y2 - y1) * 0.34) : Math.max(82, Math.abs(x2 - x1) * 0.34);
-      const d = verticalFlow
-        ? `M ${x1} ${y1} C ${x1} ${y1 + bend}, ${x2} ${y2 - bend}, ${x2} ${y2}`
-        : `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`;
-      const alt = edgeType === "alt" ? " alt" : "";
+      const start = edgeEndpoint(from, "out");
+      const end = edgeEndpoint(to, "in");
+      const d = edgePath(start.x, start.y, end.x, end.y);
+      const edgeClass = ["alt", "idea-link", "manual", "connection-preview"].includes(edgeType) ? ` ${edgeType}` : "";
       return `
-        <path class="edge-path${alt}" d="${d}"></path>
-        <circle class="edge-dot" cx="${x1}" cy="${y1}" r="7"></circle>
-        <circle class="edge-dot" cx="${x2}" cy="${y2}" r="7"></circle>
+        <path class="edge-path${edgeClass}" d="${d}" marker-end="url(#${edgeMarkerId(edgeType)})"></path>
+        <circle class="edge-dot${edgeClass}" cx="${start.x}" cy="${start.y}" r="7"></circle>
+        <circle class="edge-dot${edgeClass}" cx="${end.x}" cy="${end.y}" r="7"></circle>
       `;
+    }
+
+    function renderConnectionPreview(nodes) {
+      if (!state.connectionDrag) return "";
+      const from = nodes.find((node) => node.id === state.connectionDrag.fromNodeId);
+      if (!from) return "";
+      const pointer = {
+        id: "__connection_pointer",
+        type: "point",
+        x: state.connectionDrag.x,
+        y: state.connectionDrag.y,
+        width: 0,
+        height: 0,
+      };
+      return renderEdge([from.id, pointer.id, "connection-preview"], [...nodes, pointer]);
     }
 
     function renderNode(node) {
       const selected = node.id === state.selectedNodeId ? " selected" : "";
-      const body = node.type === "shot" ? renderShotBody(node) : renderTextBody(node);
+      const body = node.type === "shot" ? renderShotBody(node) : node.type === "idea" ? renderIdeaNodeBody(node) : renderTextBody(node);
+      const headerPort = node.type === "shot" ? "" : `<span class="node-port"></span>`;
+      const flowPorts = renderNodePorts(node);
       return `
         <article class="graph-node ${escapeHtml(node.type)}${selected}" data-node="${escapeHtml(node.id)}" style="left:${node.x}px;top:${node.y}px;width:${node.width}px;min-height:${node.height}px">
           <div class="node-head">
             <span>${escapeHtml(node.title)}</span>
             <span class="node-drag-hint">拖动</span>
-            <span class="node-port">+</span>
+            ${headerPort}
           </div>
           ${body}
+          ${flowPorts}
         </article>
+      `;
+    }
+
+    function renderNodePorts(node) {
+      if (node.type !== "shot" || !node.shot?.shot_id) return "";
+      const nodeId = escapeHtml(node.id);
+      const shotId = escapeHtml(node.shot.shot_id || "");
+      return `
+        <div class="node-flow-ports">
+          <button class="flow-port flow-port-in" type="button" data-connect-port="in" data-connect-node="${nodeId}" title="${shotId} 首端">首</button>
+          <button class="flow-port flow-port-out" type="button" data-connect-port="out" data-connect-node="${nodeId}" title="${shotId} 尾端">尾</button>
+        </div>
+      `;
+    }
+
+    function renderShotBindings(shot) {
+      const copywriting = shot.copywriting || {};
+      const packaging = shot.packaging || {};
+      const blocks = [];
+      if (copywriting.voiceover || copywriting.sfx) {
+        const lines = [
+          copywriting.voiceover ? `口播：${copywriting.voiceover}` : "",
+          copywriting.sfx ? `音效：${copywriting.sfx}` : "",
+        ].filter(Boolean).join(" / ");
+        blocks.push(`
+          <div class="shot-binding">
+            <div class="shot-binding-head"><span class="binding-chip">文案绑定</span><span>${escapeHtml(shot.shot_id || "")}</span></div>
+            <div class="shot-binding-text">${escapeHtml(lines)}</div>
+          </div>
+        `);
+      }
+      if (packaging.role || packaging.summary) {
+        blocks.push(`
+          <div class="shot-binding">
+            <div class="shot-binding-head"><span class="binding-chip packaging-chip">包装绑定</span><span>${escapeHtml(packaging.role || packaging.status || "包装")}</span></div>
+            <div class="shot-binding-text">${escapeHtml(packaging.summary || packaging.status || "包装资产绑定到当前分镜。")}</div>
+          </div>
+        `);
+      }
+      if (!blocks.length) return "";
+      return `<div class="shot-bindings">${blocks.join("")}</div>`;
+    }
+
+    function renderShotInsertOptions(selected = "") {
+      const shots = state.project?.shots || [];
+      const options = [`<option value="">由 Codex 判断</option>`];
+      shots.forEach((shot) => {
+        const value = shot.shot_id || "";
+        const label = `${shot.shot_id || "分镜"} ${shot.beat || ""}`.trim();
+        options.push(`<option value="${escapeHtml(value)}"${value === selected ? " selected" : ""}>${escapeHtml(label)}</option>`);
+      });
+      return options.join("");
+    }
+
+    function renderIdeaNodeBody(node) {
+      const request = node.ideaRequest || null;
+      if (request) {
+        return `
+          <div class="node-body idea-status">
+            <div class="node-meta">
+              ${badge("待生成分支", "skipped")}
+              ${badge(ideaStatusLabel(request.status), request.status === "pending" ? "skipped" : "complete")}
+              ${badge((request.insert_after_shot_id || node.meta?.["插入位置"]) ? (request.insert_after_shot_id ? `接在 ${request.insert_after_shot_id} 后` : node.meta["插入位置"]) : "位置待判断")}
+            </div>
+            <div>
+              <div class="shot-section-label">用户想法</div>
+              <div class="node-text">${escapeHtml(request.idea || "")}</div>
+            </div>
+            <div class="shot-binding">
+              <div class="shot-binding-head"><span class="binding-chip packaging-chip">已回传</span><span>等待 Codex 生成</span></div>
+              <div class="shot-binding-text">这条想法已写入项目队列，Codex 可以据此生成正式分镜、分镜图提示词和 Seedance 2.0 视频提示词。</div>
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <div class="node-body">
+          <form class="idea-form" data-idea-submit data-node-id="${escapeHtml(node.id)}">
+            <label>分镜想法
+              <textarea name="idea" placeholder="例如：补一个粉底液滴落到皮肤上的微距镜头。">${escapeHtml(node.idea || "")}</textarea>
+            </label>
+            <label>插入位置
+              <select name="insert_after_shot_id" data-idea-insert-after="${escapeHtml(node.id)}">${renderShotInsertOptions(node.insert_after_shot_id || "")}</select>
+            </label>
+            <div class="idea-actions">
+              <button class="shot-action" type="button" data-idea-cancel="${escapeHtml(node.id)}">取消</button>
+              <button class="shot-action" type="submit">交给 Codex 生成</button>
+            </div>
+          </form>
+        </div>
       `;
     }
 
@@ -1607,28 +2201,116 @@
       const shot = node.shot || {};
       const image = node.image ? `<img src="${node.image}" alt="${escapeHtml(node.title)}">` : `<span>暂无分镜图</span>`;
       const prompt = shot.video_prompt || "暂无视频提示词。";
+      const editor = state.editingShot?.anchorId === node.id ? renderShotEditor(node) : "";
+      const copyImageDisabled = node.image ? "" : " disabled";
+      if (state.frameworkOnly) {
+        return `
+          <div class="node-body storyboard-frame-only">
+            <div class="node-meta">
+              ${badge(shot.duration_seconds !== undefined ? `${shot.duration_seconds} 秒` : "时长待定")}
+              ${badge(shot.start || "起点待定")}
+              ${badge(shot.beat || "分镜框架", "complete")}
+            </div>
+            <div>
+              <div class="shot-section-label">分镜框架</div>
+              <div class="node-text">${escapeHtml(node.text || shot.purpose || "保留分镜结构，隐藏图像、文案、包装和提示词细节。")}</div>
+            </div>
+          </div>
+        `;
+      }
       return `
         <div class="node-body">
           <div class="shot-layout">
-            <div class="node-thumb">${image}</div>
-            <div class="shot-content">
-              <div class="node-meta">
-                ${badge(shot.duration_seconds !== undefined ? `${shot.duration_seconds} 秒` : "时长待定")}
-                ${badge(shot.start || "起点待定")}
-                ${badge("最终分镜图", "complete")}
-                ${badge("视频提示词", shot.video_prompt ? "guided" : "missing")}
+            <div class="node-thumb adaptive-shot-media shot-media-top">${image}</div>
+            <div class="shot-content shot-details">
+              <div class="shot-toolbar">
+                <div class="node-meta">
+                  ${badge(shot.duration_seconds !== undefined ? `${shot.duration_seconds} 秒` : "时长待定")}
+                  ${badge(shot.start || "起点待定")}
+                  ${badge("最终分镜图", "complete")}
+                  ${badge("视频提示词", shot.video_prompt ? "guided" : "missing")}
+                </div>
+                <div class="shot-actions">
+                  <button class="shot-action" type="button" data-copy-image="${escapeHtml(node.image || "")}"${copyImageDisabled}>复制图片</button>
+                  <button class="shot-action" type="button" data-copy-prompt="${escapeHtml(node.id)}">复制提示词</button>
+                  <button class="shot-action" type="button" data-shot-edit="${escapeHtml(node.id)}">画布内编辑</button>
+                </div>
               </div>
               <div>
                 <div class="shot-section-label">画面说明</div>
                 <div class="node-text">${escapeHtml(node.text || "")}</div>
               </div>
+              ${renderShotBindings(shot)}
               <div>
                 <div class="shot-section-label">视频提示词</div>
                 <div class="shot-prompt">${escapeHtml(prompt)}</div>
               </div>
             </div>
           </div>
+          ${editor}
         </div>
+      `;
+    }
+
+    function renderShotEditor(node) {
+      const shot = node.shot || {};
+      const mode = state.editingShot?.mode === "add" ? "add" : "update";
+      const values = mode === "add" ? {
+        shot_id: "",
+        beat: "",
+        duration_seconds: 3,
+        visual_action: "",
+        framing: "",
+        camera: "",
+        movement: "",
+        lighting: "",
+        image_prompt_seed: "",
+        video_prompt_seed: "",
+      } : shot;
+      return `
+        <form class="shot-editor" data-shot-editor data-mode="${mode}" data-shot-id="${escapeHtml(shot.shot_id || "")}" data-after-shot-id="${escapeHtml(shot.shot_id || "")}">
+          <div class="shot-editor-title">
+            <span>${mode === "add" ? "新增分镜" : "画布内编辑"}</span>
+            <span>${escapeHtml(shot.shot_id || "新镜头")}</span>
+          </div>
+          <div class="shot-form-grid">
+            <label>分镜标题
+              <input name="beat" value="${escapeHtml(values.beat || "")}" placeholder="例如：产品记忆">
+            </label>
+            <label>时长
+              <input name="duration_seconds" type="number" min="0.1" step="0.1" value="${escapeHtml(values.duration_seconds || 3)}">
+            </label>
+          </div>
+          <label>画面说明
+            <textarea name="visual_action" placeholder="直接写这个分镜里要看到的画面、动作和氛围。">${escapeHtml(values.visual_action || "")}</textarea>
+          </label>
+          <div class="shot-form-grid">
+            <label>构图/景别
+              <input name="framing" value="${escapeHtml(values.framing || "")}" placeholder="例如：macro close-up / 全身跟拍">
+            </label>
+            <label>镜头
+              <input name="camera" value="${escapeHtml(values.camera || "")}" placeholder="例如：85mm lens / locked macro">
+            </label>
+          </div>
+          <div class="shot-form-grid">
+            <label>运镜
+              <input name="movement" value="${escapeHtml(values.movement || "")}" placeholder="例如：slow push-in / 稳定横移">
+            </label>
+            <label>光线/质感
+              <input name="lighting" value="${escapeHtml(values.lighting || "")}" placeholder="例如：珍珠白主光、金色边缘光">
+            </label>
+          </div>
+          <label>分镜图提示词种子
+            <textarea name="image_prompt_seed" placeholder="给生图模型的视觉关键词，保持短而具体。">${escapeHtml(values.image_prompt_seed || "")}</textarea>
+          </label>
+          <label>视频提示词种子
+            <textarea name="video_prompt_seed" placeholder="给视频生成提示词模块的动作、情绪和卖点。">${escapeHtml(values.video_prompt_seed || "")}</textarea>
+          </label>
+          <div class="shot-editor-actions">
+            <button class="top-button" type="button" data-shot-cancel>取消</button>
+            <button class="top-button primary-button" type="submit">${mode === "add" ? "添加到画布" : "保存到项目"}</button>
+          </div>
+        </form>
       `;
     }
 
@@ -1637,6 +2319,7 @@
         <div class="node-body">
           <div class="node-meta">
             ${badge(node.subtitle || "节点")}
+            ${node.type === "copywriting" ? badge("文案层", "guided") : ""}
             ${node.type === "packaging" ? badge("旁路", "skipped") : ""}
             ${node.type === "deliverable" ? badge("最终包", "complete") : ""}
           </div>
@@ -1646,7 +2329,7 @@
     }
 
     function renderInspector() {
-      const node = (state.graph.nodes || []).find((item) => item.id === state.selectedNodeId);
+      const node = findCanvasNode(state.selectedNodeId);
       if (!node) {
         els.inspectorType.textContent = "";
         els.inspector.innerHTML = `<div class="empty">点击画布节点查看详情</div>`;
@@ -1665,8 +2348,6 @@
           <pre>${escapeHtml(node.shot.image_prompt || "暂无")}</pre>
         </div>
       ` : "";
-      const noteKey = draftKey(node.id);
-      const noteValue = localStorage.getItem(noteKey) || "";
       els.inspector.innerHTML = `
         <div class="detail-block">
           <h3>${escapeHtml(node.title)}</h3>
@@ -1679,21 +2360,298 @@
           <pre>${escapeHtml(node.text || "暂无")}</pre>
         </div>
         ${promptBlocks}
-        <div class="detail-block">
-          <h3>修改草稿</h3>
-          <textarea id="draftNote" placeholder="在这里记录想改的分镜、提示词或包装方向；当前只保存在浏览器本地，后续由 Codex 写回项目文件。">${escapeHtml(noteValue)}</textarea>
-          <button id="saveDraftButton" class="top-button primary-button" type="button">保存草稿</button>
-        </div>
+        ${node.type === "shot" ? `<div class="detail-block"><h3>画布内编辑</h3><pre>请直接使用分镜卡片里的“画布内编辑”。新分镜请在画布空白处右键创建想法节点。</pre></div>` : ""}
       `;
-      const button = document.querySelector("#saveDraftButton");
-      const textarea = document.querySelector("#draftNote");
-      if (button && textarea) {
-        button.addEventListener("click", () => {
-          localStorage.setItem(noteKey, textarea.value);
-          button.textContent = "已保存";
-          setTimeout(() => { button.textContent = "保存草稿"; }, 900);
+    }
+
+    function bindShotCanvasActions() {
+      els.nodeLayer.querySelectorAll("[data-copy-image]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          copyShotImage(button.dataset.copyImage, button).catch(showError);
         });
+      });
+      els.nodeLayer.querySelectorAll("[data-copy-prompt]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          copyShotPrompt(button.dataset.copyPrompt, button).catch(showError);
+        });
+      });
+      els.nodeLayer.querySelectorAll("[data-shot-edit]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          openShotEditor(button.dataset.shotEdit, "update");
+        });
+      });
+      els.nodeLayer.querySelectorAll("[data-shot-cancel]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          state.editingShot = null;
+          renderBoard();
+        });
+      });
+      els.nodeLayer.querySelectorAll("[data-shot-editor]").forEach((form) => {
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          saveShotFromCanvas(form).catch(showError);
+        });
+      });
+      els.nodeLayer.querySelectorAll("[data-idea-cancel]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (state.draftIdea?.id === button.dataset.ideaCancel) {
+            state.draftIdea = null;
+            renderBoard();
+          }
+        });
+      });
+      els.nodeLayer.querySelectorAll("[data-idea-submit]").forEach((form) => {
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          submitIdeaToCodex(form).catch(showError);
+        });
+      });
+      els.nodeLayer.querySelectorAll("[data-idea-insert-after]").forEach((select) => {
+        select.addEventListener("change", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          updateIdeaNodeLink(select.dataset.ideaInsertAfter, select.value);
+        });
+      });
+    }
+
+    function bindConnectionPorts() {
+      els.nodeLayer.querySelectorAll("[data-connect-port]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        });
+      });
+      els.nodeLayer.querySelectorAll('[data-connect-port="out"]').forEach((button) => {
+        button.addEventListener("pointerdown", startConnectionDrag);
+      });
+    }
+
+    function startConnectionDrag(event) {
+      if (event.button !== 0) return;
+      const fromNodeId = event.currentTarget.dataset.connectNode || "";
+      const fromNode = findCanvasNode(fromNodeId);
+      if (!fromNode || fromNode.type !== "shot") return;
+      event.preventDefault();
+      event.stopPropagation();
+      cancelNodeInertia();
+      closeCanvasContextMenu();
+      const point = canvasPointFromEvent(event);
+      state.connectionDrag = {
+        pointerId: event.pointerId,
+        fromNodeId,
+        x: point.x,
+        y: point.y,
+      };
+      event.currentTarget.classList.add("active");
+      event.currentTarget.setPointerCapture(event.pointerId);
+      els.viewport.classList.add("connecting");
+      renderEdgesOnly();
+    }
+
+    function moveConnectionDrag(event) {
+      if (!state.connectionDrag || event.pointerId !== state.connectionDrag.pointerId) return;
+      event.preventDefault();
+      const point = canvasPointFromEvent(event);
+      state.connectionDrag.x = point.x;
+      state.connectionDrag.y = point.y;
+      renderEdgesOnly();
+    }
+
+    function finishConnectionDrag(event) {
+      if (!state.connectionDrag || event.pointerId !== state.connectionDrag.pointerId) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const drag = state.connectionDrag;
+      const targetPort = document.elementFromPoint(event.clientX, event.clientY)?.closest?.('[data-connect-port="in"]');
+      const targetNodeId = targetPort?.dataset.connectNode || "";
+      clearConnectionDrag(drag);
+      if (targetNodeId && targetNodeId !== drag.fromNodeId) {
+        saveManualEdge(drag.fromNodeId, targetNodeId);
+        return;
       }
+      renderEdgesOnly();
+    }
+
+    function clearConnectionDrag(drag = state.connectionDrag) {
+      if (!drag) return;
+      const sourcePort = findNodeElement(drag.fromNodeId)?.querySelector('[data-connect-port="out"]');
+      if (sourcePort) {
+        sourcePort.classList.remove("active");
+        if (sourcePort.hasPointerCapture?.(drag.pointerId)) {
+          sourcePort.releasePointerCapture(drag.pointerId);
+        }
+      }
+      state.connectionDrag = null;
+      els.viewport.classList.remove("connecting");
+    }
+
+    function saveManualEdge(fromNodeId, toNodeId) {
+      const fromNode = findCanvasNode(fromNodeId);
+      const toNode = findCanvasNode(toNodeId);
+      if (!fromNode || !toNode || fromNode.type !== "shot" || toNode.type !== "shot") return;
+      const existing = new Set((state.manualEdges || []).map(([from, to]) => `${from}->${to}`));
+      if (!existing.has(`${fromNodeId}->${toNodeId}`)) {
+        state.manualEdges = [...(state.manualEdges || []), [fromNodeId, toNodeId, "manual"]];
+        saveManualEdges();
+      }
+      renderBoard();
+      renderInspector();
+    }
+
+    async function copyShotPrompt(nodeId, button) {
+      const node = findCanvasNode(nodeId);
+      const prompt = node?.shot?.video_prompt || "";
+      if (!prompt) throw new Error("当前分镜还没有视频提示词");
+      await copyText(prompt);
+      flashShotAction(button, "已复制");
+    }
+
+    async function copyShotImage(imageUrl, button) {
+      if (!imageUrl) throw new Error("当前分镜还没有分镜图");
+      try {
+        if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
+          throw new Error("浏览器暂不支持图片复制");
+        }
+        const response = await fetch(imageUrl);
+        if (!response.ok) throw new Error(`图片读取失败：${response.status}`);
+        let blob = await response.blob();
+        const type = blob.type || imageMimeFromUrl(imageUrl);
+        if (!type.startsWith("image/")) throw new Error("当前文件不是可复制图片");
+        if (blob.type !== type) {
+          blob = blob.slice(0, blob.size, type);
+        }
+        await navigator.clipboard.write([new ClipboardItem({ [type]: blob })]);
+        flashShotAction(button, "已复制");
+      } catch (error) {
+        const absoluteUrl = new URL(imageUrl, window.location.href).href;
+        await copyText(absoluteUrl);
+        flashShotAction(button, "已复制地址");
+      }
+    }
+
+    async function copyText(text) {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    }
+
+    function imageMimeFromUrl(imageUrl) {
+      const pathname = new URL(imageUrl, window.location.href).pathname.toLowerCase();
+      if (pathname.endsWith(".jpg") || pathname.endsWith(".jpeg")) return "image/jpeg";
+      if (pathname.endsWith(".webp")) return "image/webp";
+      if (pathname.endsWith(".gif")) return "image/gif";
+      return "image/png";
+    }
+
+    function flashShotAction(button, label) {
+      if (!button) return;
+      const original = button.dataset.originalLabel || button.textContent;
+      button.dataset.originalLabel = original;
+      button.textContent = label;
+      window.clearTimeout(button.copyTimer);
+      button.copyTimer = window.setTimeout(() => {
+        button.textContent = button.dataset.originalLabel || original;
+      }, 1200);
+    }
+
+    function openShotEditor(nodeId, mode) {
+      if (!nodeId) return;
+      state.selectedNodeId = nodeId;
+      state.editingShot = { anchorId: nodeId, mode };
+      renderBoard();
+      renderInspector();
+    }
+
+    function updateIdeaNodeLink(nodeId, insertAfterShotId) {
+      const node = findCanvasNode(nodeId);
+      if (!node || node.type !== "idea") return;
+      node.insert_after_shot_id = insertAfterShotId || "";
+      node.meta = {
+        ...(node.meta || {}),
+        "插入位置": node.insert_after_shot_id ? `接在 ${node.insert_after_shot_id} 后` : "由 Codex 判断",
+      };
+      renderEdgesOnly();
+      renderInspector();
+    }
+
+    async function saveShotFromCanvas(form) {
+      if (!state.currentProject) return;
+      const formData = new FormData(form);
+      const mode = form.dataset.mode === "add" ? "add" : "update";
+      const shot = {
+        shot_id: form.dataset.shotId || "",
+        beat: String(formData.get("beat") || ""),
+        duration_seconds: Number(formData.get("duration_seconds") || 3),
+        visual_action: String(formData.get("visual_action") || ""),
+        framing: String(formData.get("framing") || ""),
+        camera: String(formData.get("camera") || ""),
+        movement: String(formData.get("movement") || ""),
+        lighting: String(formData.get("lighting") || ""),
+        image_prompt_seed: String(formData.get("image_prompt_seed") || ""),
+        video_prompt_seed: String(formData.get("video_prompt_seed") || ""),
+      };
+      const payload = {
+        project: state.currentProject,
+        mode,
+        after_shot_id: form.dataset.afterShotId || "",
+        shot,
+      };
+      els.serverState.textContent = "写入分镜中";
+      const result = await writeJson("/api/shot", payload);
+      state.project = result.state;
+      state.graph = buildGraph(state.project);
+      state.selectedNodeId = `shot_${result.shot?.shot_id || shot.shot_id}`;
+      state.editingShot = null;
+      els.serverState.textContent = "分镜已写回";
+      renderProjectList();
+      renderProject();
+    }
+
+    async function submitIdeaToCodex(form) {
+      if (!state.currentProject) return;
+      const formData = new FormData(form);
+      const node = findCanvasNode(form.dataset.nodeId);
+      const idea = String(formData.get("idea") || "").trim();
+      if (!idea) throw new Error("请先写下分镜想法");
+      const payload = {
+        project: state.currentProject,
+        idea,
+        x: Math.round(node?.x || SHOT_GRID_START_X),
+        y: Math.round(node?.y || SHOT_GRID_START_Y),
+        insert_after_shot_id: String(formData.get("insert_after_shot_id") || ""),
+      };
+      els.serverState.textContent = "回传给 Codex 中";
+      const result = await writeJson("/api/shot-request", payload);
+      state.project = result.state;
+      state.graph = buildGraph(state.project);
+      state.draftIdea = null;
+      state.selectedNodeId = `idea_${result.request?.request_id || ""}`;
+      els.serverState.textContent = "已回传给 Codex";
+      renderProjectList();
+      renderProject();
     }
 
     function kv(label, value) {
@@ -1710,7 +2668,29 @@
     }
 
     function layoutKey() {
-      return `video-master-node-layout-v2-grid:${state.currentProject}`;
+      return `video-master-node-layout-v3-media-top:${state.currentProject}`;
+    }
+
+    function manualEdgesKey() {
+      return `video-master-manual-edges-v1:${state.currentProject}`;
+    }
+
+    function loadManualEdges() {
+      if (!state.currentProject) return [];
+      try {
+        const raw = JSON.parse(localStorage.getItem(manualEdgesKey()) || "[]");
+        if (!Array.isArray(raw)) return [];
+        return raw
+          .map((edge) => [String(edge?.[0] || ""), String(edge?.[1] || ""), "manual"])
+          .filter(([from, to]) => from && to && from !== to);
+      } catch {
+        return [];
+      }
+    }
+
+    function saveManualEdges() {
+      if (!state.currentProject) return;
+      localStorage.setItem(manualEdgesKey(), JSON.stringify(state.manualEdges || []));
     }
 
     function loadSavedLayout() {
@@ -1782,6 +2762,16 @@
       return map[value] || value || "影片类型待定";
     }
 
+    function ideaStatusLabel(value) {
+      const map = {
+        pending: "等待 Codex 处理",
+        generating: "生成中",
+        complete: "已生成",
+        failed: "需要重试",
+      };
+      return map[value] || value || "等待 Codex 处理";
+    }
+
     function tStyle(value) {
       const map = {
         imax_70mm_realism: "IMAX 写实",
@@ -1798,8 +2788,24 @@
       return map[value] || value || "待定";
     }
 
+    function updateFrameworkButton() {
+      els.toggleFrameworkButton.textContent = state.frameworkOnly ? "显示完整" : "只看框架";
+      els.toggleFrameworkButton.classList.toggle("active", state.frameworkOnly);
+      els.toggleFrameworkButton.setAttribute("aria-pressed", String(state.frameworkOnly));
+    }
+
+    function toggleFrameworkOnly() {
+      state.frameworkOnly = !state.frameworkOnly;
+      if (state.frameworkOnly) {
+        state.editingShot = null;
+        state.selectedNodeId = "";
+      }
+      renderProject();
+    }
+
     function setFilter(filter) {
       state.filter = filter;
+      els.canvasModeSelect.value = filter;
       renderBoard();
     }
 
@@ -1833,8 +2839,81 @@
       return Boolean(target.closest("button, input, textarea, select, a"));
     }
 
+    function canvasPointFromEvent(event) {
+      const worldRect = els.world.getBoundingClientRect();
+      return {
+        x: Math.max(0, Math.round((event.clientX - worldRect.left) / state.zoom)),
+        y: Math.max(0, Math.round((event.clientY - worldRect.top) / state.zoom)),
+        clientX: event.clientX,
+        clientY: event.clientY,
+      };
+    }
+
+    function openCanvasContextMenu(event) {
+      if (event.target.closest(".graph-node") || isInteractiveTarget(event.target)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      state.contextMenu = canvasPointFromEvent(event);
+      renderCanvasContextMenu();
+    }
+
+    function renderCanvasContextMenu() {
+      if (!state.contextMenu) {
+        closeCanvasContextMenu();
+        return;
+      }
+      const menu = els.canvasContextMenu;
+      menu.classList.remove("hidden");
+      const width = menu.offsetWidth || 180;
+      const height = menu.offsetHeight || 44;
+      const left = Math.min(state.contextMenu.clientX, window.innerWidth - width - 10);
+      const top = Math.min(state.contextMenu.clientY, window.innerHeight - height - 10);
+      menu.style.left = `${Math.max(8, left)}px`;
+      menu.style.top = `${Math.max(8, top)}px`;
+    }
+
+    function closeCanvasContextMenu() {
+      state.contextMenu = null;
+      if (!els.canvasContextMenu) return;
+      els.canvasContextMenu.classList.add("hidden");
+      els.canvasContextMenu.style.left = "";
+      els.canvasContextMenu.style.top = "";
+    }
+
+    function openIdeaNodeAt(point) {
+      if (!point) return;
+      const id = `idea_draft_${Date.now()}`;
+      const insertAfterShotId = nearestShotIdForPoint(point, state.graph.nodes || []);
+      state.frameworkOnly = false;
+      state.filter = "all";
+      state.editingShot = null;
+      state.draftIdea = {
+        id,
+        type: "idea",
+        title: "新增分镜想法",
+        subtitle: "未提交",
+        x: point.x,
+        y: point.y,
+        width: 320,
+        height: 212,
+        idea: "",
+        insert_after_shot_id: insertAfterShotId,
+        meta: {
+          "状态": "未提交",
+          "插入位置": insertAfterShotId ? `接在 ${insertAfterShotId} 后` : "由 Codex 判断",
+          "回传": "交给 Codex 生成分镜及视频提示词",
+        },
+        text: "写下想法后交给 Codex 生成正式分镜、分镜图提示词和 Seedance 2.0 视频提示词。",
+      };
+      state.selectedNodeId = id;
+      closeCanvasContextMenu();
+      renderBoard();
+      renderInspector();
+    }
+
     function startCanvasPan(event) {
       if (event.button !== 0 || event.target.closest(".graph-node") || isInteractiveTarget(event.target)) return;
+      closeCanvasContextMenu();
       event.preventDefault();
       state.pan = {
         pointerId: event.pointerId,
@@ -1865,10 +2944,13 @@
 
     function startNodeDrag(event, nodeId) {
       if (event.button !== 0 || isInteractiveTarget(event.target)) return;
-      const node = (state.graph.nodes || []).find((item) => item.id === nodeId);
+      const node = findCanvasNode(nodeId);
       if (!node) return;
+      cancelNodeInertia();
+      closeCanvasContextMenu();
       event.preventDefault();
       event.stopPropagation();
+      const now = performance.now();
       state.selectedNodeId = nodeId;
       state.nodeDrag = {
         pointerId: event.pointerId,
@@ -1877,9 +2959,16 @@
         startY: event.clientY,
         originalX: node.x,
         originalY: node.y,
+        lastX: node.x,
+        lastY: node.y,
+        lastTime: now,
+        vx: 0,
+        vy: 0,
+        frameId: 0,
         moved: false,
       };
       event.currentTarget.classList.add("dragging");
+      event.currentTarget.style.transform = "translate3d(0px, 0px, 0px)";
       event.currentTarget.setPointerCapture(event.pointerId);
       renderInspector();
     }
@@ -1887,26 +2976,36 @@
     function moveNodeDrag(event) {
       if (!state.nodeDrag || event.pointerId !== state.nodeDrag.pointerId) return;
       event.preventDefault();
-      const node = (state.graph.nodes || []).find((item) => item.id === state.nodeDrag.nodeId);
+      const node = findCanvasNode(state.nodeDrag.nodeId);
       if (!node) return;
+      const now = performance.now();
       const dx = (event.clientX - state.nodeDrag.startX) / state.zoom;
       const dy = (event.clientY - state.nodeDrag.startY) / state.zoom;
       if (Math.abs(dx) > 2 || Math.abs(dy) > 2) state.nodeDrag.moved = true;
-      node.x = Math.max(0, state.nodeDrag.originalX + dx);
-      node.y = Math.max(0, state.nodeDrag.originalY + dy);
-      const nodeEl = findNodeElement(node.id);
-      if (nodeEl) {
-        nodeEl.style.left = `${node.x}px`;
-        nodeEl.style.top = `${node.y}px`;
-      }
-      renderEdgesOnly();
+      const nextX = Math.max(0, state.nodeDrag.originalX + dx);
+      const nextY = Math.max(0, state.nodeDrag.originalY + dy);
+      const elapsed = Math.max(8, now - state.nodeDrag.lastTime);
+      state.nodeDrag.vx = clamp((nextX - state.nodeDrag.lastX) / elapsed, -DRAG_MAX_VELOCITY, DRAG_MAX_VELOCITY);
+      state.nodeDrag.vy = clamp((nextY - state.nodeDrag.lastY) / elapsed, -DRAG_MAX_VELOCITY, DRAG_MAX_VELOCITY);
+      state.nodeDrag.lastX = nextX;
+      state.nodeDrag.lastY = nextY;
+      state.nodeDrag.lastTime = now;
+      node.x = nextX;
+      node.y = nextY;
+      requestNodeDragFrame();
     }
 
     function endNodeDrag(event) {
       if (!state.nodeDrag || event.pointerId !== state.nodeDrag.pointerId) return;
-      const node = (state.graph.nodes || []).find((item) => item.id === state.nodeDrag.nodeId);
+      const drag = state.nodeDrag;
+      const node = findCanvasNode(state.nodeDrag.nodeId);
       const moved = state.nodeDrag.moved;
       const nodeEl = findNodeElement(state.nodeDrag.nodeId);
+      if (drag.frameId) {
+        cancelAnimationFrame(drag.frameId);
+        drag.frameId = 0;
+        applyNodeDragFrame();
+      }
       if (nodeEl) {
         nodeEl.classList.remove("dragging");
         if (nodeEl.hasPointerCapture(event.pointerId)) {
@@ -1914,9 +3013,108 @@
         }
       }
       state.nodeDrag = null;
-      if (node) saveNodeLayout(node);
       if (moved) state.suppressClickUntil = Date.now() + 250;
-      renderBoard();
+      if (moved && node && nodeEl && startNodeInertia(node, nodeEl, drag)) {
+        renderInspector();
+        return;
+      }
+      commitNodePosition(node, nodeEl);
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function requestNodeDragFrame() {
+      if (!state.nodeDrag || state.nodeDrag.frameId) return;
+      state.nodeDrag.frameId = requestAnimationFrame(applyNodeDragFrame);
+    }
+
+    function applyNodeDragFrame() {
+      const drag = state.nodeDrag;
+      if (!drag) return;
+      drag.frameId = 0;
+      const node = findCanvasNode(drag.nodeId);
+      const nodeEl = findNodeElement(drag.nodeId);
+      if (!node || !nodeEl) return;
+      applyNodeTransform(nodeEl, node, drag.originalX, drag.originalY);
+      renderEdgesOnly();
+    }
+
+    function applyNodeTransform(nodeEl, node, originX, originY) {
+      const offsetX = node.x - originX;
+      const offsetY = node.y - originY;
+      nodeEl.style.transform = `translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0px)`;
+    }
+
+    function startNodeInertia(node, nodeEl, drag) {
+      const speed = Math.hypot(drag.vx, drag.vy);
+      if (speed < DRAG_INERTIA_MIN_VELOCITY) return false;
+      const now = performance.now();
+      nodeEl.classList.add("inertia");
+      state.nodeInertia = {
+        nodeId: node.id,
+        originalX: drag.originalX,
+        originalY: drag.originalY,
+        vx: drag.vx,
+        vy: drag.vy,
+        lastTime: now,
+        startedAt: now,
+        frameId: requestAnimationFrame(stepNodeInertia),
+      };
+      return true;
+    }
+
+    function stepNodeInertia(now) {
+      const inertia = state.nodeInertia;
+      if (!inertia) return;
+      const node = findCanvasNode(inertia.nodeId);
+      const nodeEl = findNodeElement(inertia.nodeId);
+      if (!node || !nodeEl) {
+        state.nodeInertia = null;
+        return;
+      }
+      const elapsed = Math.min(32, Math.max(8, now - inertia.lastTime));
+      inertia.lastTime = now;
+      node.x = Math.max(0, node.x + inertia.vx * elapsed);
+      node.y = Math.max(0, node.y + inertia.vy * elapsed);
+      if (node.x === 0 && inertia.vx < 0) inertia.vx = 0;
+      if (node.y === 0 && inertia.vy < 0) inertia.vy = 0;
+      const friction = Math.pow(DRAG_INERTIA_FRICTION, elapsed / 16.67);
+      inertia.vx *= friction;
+      inertia.vy *= friction;
+      applyNodeTransform(nodeEl, node, inertia.originalX, inertia.originalY);
+      renderEdgesOnly();
+      const speed = Math.hypot(inertia.vx, inertia.vy);
+      if (speed > DRAG_INERTIA_MIN_VELOCITY && now - inertia.startedAt < DRAG_INERTIA_MAX_DURATION) {
+        inertia.frameId = requestAnimationFrame(stepNodeInertia);
+        return;
+      }
+      state.nodeInertia = null;
+      commitNodePosition(node, nodeEl);
+    }
+
+    function cancelNodeInertia() {
+      const inertia = state.nodeInertia;
+      if (!inertia) return;
+      cancelAnimationFrame(inertia.frameId);
+      const node = findCanvasNode(inertia.nodeId);
+      const nodeEl = findNodeElement(inertia.nodeId);
+      state.nodeInertia = null;
+      commitNodePosition(node, nodeEl, { rerender: false });
+    }
+
+    function commitNodePosition(node, nodeEl, options = {}) {
+      if (!node) return;
+      const { save = true, rerender = true } = options;
+      if (nodeEl) {
+        nodeEl.style.left = `${node.x}px`;
+        nodeEl.style.top = `${node.y}px`;
+        nodeEl.style.transform = "";
+        nodeEl.classList.remove("dragging", "inertia");
+      }
+      if (save) saveNodeLayout(node);
+      if (rerender) renderBoard();
       renderInspector();
     }
 
@@ -1928,10 +3126,6 @@
       const app = document.querySelector(".app");
       app.classList.toggle("side-hidden", state.sideHidden);
       app.classList.toggle("inspector-hidden", state.inspectorHidden);
-      els.toggleSideButton.textContent = state.sideHidden ? "显示项目库" : "隐藏项目库";
-      els.toggleInspectorButton.textContent = state.inspectorHidden ? "显示检查器" : "隐藏检查器";
-      els.toggleSideButton.setAttribute("aria-pressed", String(state.sideHidden));
-      els.toggleInspectorButton.setAttribute("aria-pressed", String(state.inspectorHidden));
       setTimeout(renderBoard, 0);
     }
 
@@ -1942,7 +3136,6 @@
     }
 
     els.refreshButton.addEventListener("click", () => loadProjects(false).catch(showError));
-    els.reloadCanvasButton.addEventListener("click", () => loadProjects(false).catch(showError));
     els.enterWorkbenchButton.addEventListener("click", hideIntro);
     els.pickProjectButton.addEventListener("click", () => {
       state.sideHidden = false;
@@ -1954,20 +3147,11 @@
       showIntroFallback();
     });
     els.fitButton.addEventListener("click", fitCanvas);
-    els.toggleSideButton.addEventListener("click", () => {
-      state.sideHidden = !state.sideHidden;
-      updatePanelVisibility();
-    });
-    els.toggleInspectorButton.addEventListener("click", () => {
-      state.inspectorHidden = !state.inspectorHidden;
-      updatePanelVisibility();
-    });
     els.zoomInButton.addEventListener("click", () => setZoom(state.zoom + 0.1));
     els.zoomOutButton.addEventListener("click", () => setZoom(state.zoom - 0.1));
     els.resetZoomButton.addEventListener("click", () => setZoom(1));
-    els.showAllButton.addEventListener("click", () => setFilter("all"));
-    els.showShotsButton.addEventListener("click", () => setFilter("shots"));
-    els.showPackagingButton.addEventListener("click", () => setFilter("packaging"));
+    els.toggleFrameworkButton.addEventListener("click", toggleFrameworkOnly);
+    els.canvasModeSelect.addEventListener("change", () => setFilter(els.canvasModeSelect.value));
     els.rootInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") loadProjects(true).catch(showError);
     });
@@ -1975,6 +3159,13 @@
       if (!state.currentProject) return;
       loadProject(state.currentProject, true).catch(showError);
     });
+    els.canvasContextMenu.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const addButton = event.target.closest("[data-context-add-idea]");
+      if (addButton) openIdeaNodeAt(state.contextMenu);
+    });
+    els.canvasContextMenu.addEventListener("pointerdown", (event) => event.stopPropagation());
+    els.viewport.addEventListener("contextmenu", openCanvasContextMenu);
     els.viewport.addEventListener("pointerdown", startCanvasPan);
     els.viewport.addEventListener("pointermove", moveCanvasPan);
     els.viewport.addEventListener("pointerup", endCanvasPan);
@@ -1988,6 +3179,17 @@
     window.addEventListener("pointermove", moveNodeDrag);
     window.addEventListener("pointerup", endNodeDrag);
     window.addEventListener("pointercancel", endNodeDrag);
+    window.addEventListener("pointermove", moveConnectionDrag);
+    window.addEventListener("pointerup", finishConnectionDrag);
+    window.addEventListener("pointercancel", finishConnectionDrag);
+    window.addEventListener("click", closeCanvasContextMenu);
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        clearConnectionDrag();
+        closeCanvasContextMenu();
+        renderEdgesOnly();
+      }
+    });
     if (sessionStorage.getItem("video-master-intro-seen") === "1") {
       els.intro.classList.add("hidden");
     }

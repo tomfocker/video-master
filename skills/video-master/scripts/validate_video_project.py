@@ -131,6 +131,17 @@ TITLE_PACKAGING_VIDEO_PROMPT_MARKERS = [
     "透明mov",
     "透明通道mov",
 ]
+SEEDANCE2_TARGET_MODEL = "seedance-2.0"
+SEEDANCE2_MODEL_TERMS = [
+    "seedance",
+    "seedance 2.0",
+    "seedance-2.0",
+    "seedance2.0",
+    "seedance2",
+]
+SEEDANCE_TIME_SLICE_PATTERN = re.compile(
+    r"(?m)^\s*\(\s*\d+(?:\.\d+)?\s*[-–]\s*\d+(?:\.\d+)?s\s*\)\s*:"
+)
 HIGH_MOTION_TERMS = [
     "高速",
     "快切",
@@ -483,6 +494,31 @@ def validate_final_video_prompt_audio_contract(project: Path, errors: list[str])
             break
 
 
+def is_seedance2_profile(spec: dict[str, str]) -> bool:
+    target_model = spec.get("target_model", "").strip().lower()
+    if not target_model:
+        return True
+    return any(term in target_model for term in SEEDANCE2_MODEL_TERMS)
+
+
+def validate_seedance2_prompt_contract(project: Path, spec: dict[str, str], errors: list[str]) -> None:
+    if not is_seedance2_profile(spec):
+        return
+
+    prompt_path = video_prompt_path(project)
+    if not prompt_path.is_file():
+        return
+
+    prompt_text = read_text(prompt_path)
+    prompt_text_lower = prompt_text.lower()
+    if "seedance" not in prompt_text_lower:
+        errors.append("Seedance 2.0 prompts must name the target model/profile")
+
+    for label, block in split_final_prompt_blocks(prompt_text):
+        if len(SEEDANCE_TIME_SLICE_PATTERN.findall(block)) < 2:
+            errors.append(f"{label} Seedance 2.0 prompts require time-coded motion slices")
+
+
 def validate_style_template(project: Path, spec: dict[str, str], errors: list[str]) -> None:
     template_id = spec.get("template_id", "").strip()
     style_route = spec.get("style_route", "").strip()
@@ -657,6 +693,7 @@ def main(argv: list[str] | None = None) -> int:
     validate_prompt_language(project, spec, errors)
     validate_copy_and_subtitle_policy(project, spec, errors)
     validate_final_video_prompt_audio_contract(project, errors)
+    validate_seedance2_prompt_contract(project, spec, errors)
     validate_style_template(project, spec, errors)
     validate_storyboard_overview(project, errors)
     validate_preview_manifest(project, errors)

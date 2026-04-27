@@ -198,8 +198,8 @@ Keep this short and data-oriented. Downstream phases re-read it before writing e
 - target_platform:
 - delivery_language:
 - prompt_language:
-- prompt_dialect:
-- target_model:
+- prompt_dialect: seedance-2.0 unless the user explicitly names another video model
+- target_model: seedance-2.0
 
 ## production_mode
 - input_mode:
@@ -613,7 +613,7 @@ Use valid JSON.
 - ...
 ```
 
-`最终交付/02_提示词/视频生成提示词.md` should contain only final prompts meant to be copied into the video generator. It must separate external voiceover/audio from visual text instructions. Use `声音/口播` or `Voiceover/audio` for narration that will be added outside the video model, and use `画面文字策略` or `On-screen text policy` for allowed/forbidden generated text. Do not use mixed fields such as `声音/字幕`. When narration is external VO, do not paste the actual VO sentence into the video prompt; keep exact copy in audio/SRT files. When `subtitle_rendering_policy` is `post-production-only`, each prompt should say the model-generated picture should not include subtitles, captions, dialogue text, lyrics, or burned-in text. Each shot block must include `背景音乐：不要生成背景音乐；整片音乐后期统一处理。` and `SFX音效：...`. Do not include a `Negative prompt` or `负面提示词` field in final video prompts.
+`最终交付/02_提示词/视频生成提示词.md` should contain only final prompts meant to be copied into the video generator. The default target model is `seedance-2.0` / Seedance 2.0 unless the user explicitly names another video model. For Seedance 2.0, each shot block must include `目标模型：Seedance 2.0` and a `动态时间切片` section with time-coded motion segments such as `(00-1.5s)` and `(1.5-3.0s)`. It must separate external voiceover/audio from visual text instructions. Use `声音/口播` or `Voiceover/audio` for narration that will be added outside the video model, and use `画面文字策略` or `On-screen text policy` for allowed/forbidden generated text. Do not use mixed fields such as `声音/字幕`. When narration is external VO, do not paste the actual VO sentence into the video prompt; keep exact copy in audio/SRT files. When `subtitle_rendering_policy` is `post-production-only`, each prompt should say the model-generated picture should not include subtitles, captions, dialogue text, lyrics, or burned-in text. Each shot block must include `背景音乐：不要生成背景音乐；整片音乐后期统一处理。` and `SFX音效：...`. Do not include a `Negative prompt` or `负面提示词` field in final video prompts.
 
 `最终交付/02_提示词/图片生成提示词.md` should contain copy-ready image prompts.
 

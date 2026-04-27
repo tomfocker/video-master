@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -39,6 +40,7 @@ from delivery_paths import (
 
 PROJECT_STATE = METADATA_DIR / "project_state.json"
 WORKFLOW_EVENTS = METADATA_DIR / "workflow_events.jsonl"
+CODEX_SHOT_REQUESTS = METADATA_DIR / "codex_shot_requests.json"
 
 
 class ProjectStateError(ValueError):
@@ -104,6 +106,108 @@ def compact_text(value: str, limit: int = 500) -> str:
     if len(value) <= limit:
         return value
     return value[: limit - 1].rstrip() + "..."
+
+
+def preview_text(path: Path, limit: int = 220) -> str:
+    text = read_text(path)
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("- "):
+            line = line[2:].strip()
+        return compact_text(line, limit)
+    return compact_text(text, limit)
+
+
+def normalize_shot_id(value: Any) -> str:
+    match = re.search(r"\bS?(\d{1,3})\b", str(value or ""), flags=re.IGNORECASE)
+    if not match:
+        return ""
+    return f"S{int(match.group(1)):02d}"
+
+
+def extract_numbered_lines_by_shot(text: str, prefix: str) -> dict[str, str]:
+    pattern = re.compile(rf"\b{re.escape(prefix)}(\d{{1,3}})\b[^\n:：]*[:：]\s*(.+)", re.IGNORECASE)
+    result: dict[str, str] = {}
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if line.startswith("- "):
+            line = line[2:].strip()
+        match = pattern.search(line)
+        if match:
+            result[f"S{int(match.group(1)):02d}"] = compact_text(match.group(2), 260)
+    return result
+
+
+def build_shot_copywriting(project: Path) -> dict[str, dict[str, str]]:
+    voiceover_by_shot = extract_numbered_lines_by_shot(read_text(project / "audio" / "voiceover_script.md"), "VO")
+    sfx_by_shot = extract_numbered_lines_by_shot(read_text(project / "audio" / "music_sfx_cue_sheet.md"), "S")
+    shot_ids = set(voiceover_by_shot) | set(sfx_by_shot)
+    return {
+        shot_id: {
+            "voiceover": voiceover_by_shot.get(shot_id, ""),
+            "sfx": sfx_by_shot.get(shot_id, ""),
+        }
+        for shot_id in sorted(shot_ids)
+    }
+
+
+def packaging_item_summary(item: dict[str, Any]) -> str:
+    for key in ("text", "copy", "title", "label", "description", "prompt"):
+        value = item.get(key)
+        if value:
+            return compact_text(str(value), 180)
+    return compact_text(json.dumps(item, ensure_ascii=False), 180)
+
+
+def infer_packaging_shot(item: dict[str, Any], first_shot: str, last_shot: str) -> str:
+    explicit = normalize_shot_id(item.get("shot_id") or item.get("target_shot_id") or item.get("target"))
+    if explicit:
+        return explicit
+    kind = " ".join(str(item.get(key, "")) for key in ("type", "role", "name", "id")).lower()
+    if any(token in kind for token in ("end", "cta", "logo", "brand", "落版", "片尾")):
+        return last_shot
+    return first_shot
+
+
+def build_shot_packaging(project: Path, shots: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    shot_ids = [str(shot.get("shot_id") or f"S{index:02d}") for index, shot in enumerate(shots, start=1) if isinstance(shot, dict)]
+    if not shot_ids:
+        return {}
+    first_shot = shot_ids[0]
+    last_shot = shot_ids[-1]
+    manifest = read_json(title_packaging_manifest_path(project), {})
+    items = manifest.get("items") if isinstance(manifest, dict) else None
+    if isinstance(items, list) and items:
+        bindings: dict[str, dict[str, Any]] = {}
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            shot_id = infer_packaging_shot(item, first_shot, last_shot)
+            binding = bindings.setdefault(
+                shot_id,
+                {"status": "已绑定包装", "role": "包装元素", "items": [], "summary": ""},
+            )
+            binding["items"].append(packaging_item_summary(item))
+        for binding in bindings.values():
+            binding["summary"] = compact_text("；".join(binding["items"]), 220)
+        return bindings
+
+    status = "待生成包装" if manifest else "未启用包装"
+    bindings = {
+        first_shot: {
+            "status": status,
+            "role": "片头标题/主视觉钩子",
+            "summary": "片头标题、主视觉钩子或首屏品牌露出绑定在本镜头。",
+        }
+    }
+    bindings[last_shot] = {
+        "status": status,
+        "role": "品牌落版/CTA",
+        "summary": "品牌口号、产品信息、CTA 或片尾落版绑定在本镜头。",
+    }
+    return bindings
 
 
 def path_info(project: Path, path: Path) -> dict[str, Any]:
@@ -214,6 +318,8 @@ def build_shots(project: Path) -> list[dict[str, Any]]:
         shots = []
     prompts = split_prompt_blocks(read_text(project / "prompts" / "video_prompts.md"))
     image_prompts = split_prompt_blocks(read_text(project / "prompts" / "storyboard_image_prompts.md"))
+    copywriting = build_shot_copywriting(project)
+    packaging = build_shot_packaging(project, shots)
 
     result = []
     for index, raw_shot in enumerate(shots, start=1):
@@ -231,10 +337,18 @@ def build_shots(project: Path) -> list[dict[str, Any]]:
                 "beat": raw_shot.get("beat", ""),
                 "purpose": raw_shot.get("purpose", raw_shot.get("narrative_purpose", "")),
                 "visual_action": raw_shot.get("visual_action", raw_shot.get("subject/action", "")),
+                "framing": raw_shot.get("framing", ""),
                 "camera": raw_shot.get("camera_movement", raw_shot.get("camera", "")),
+                "movement": raw_shot.get("movement", ""),
+                "lighting": raw_shot.get("lighting", ""),
+                "sfx": raw_shot.get("sfx", ""),
+                "image_prompt_seed": raw_shot.get("image_prompt_seed", ""),
+                "video_prompt_seed": raw_shot.get("video_prompt_seed", ""),
                 "frame": path_info(project, frame),
                 "video_prompt": compact_text(prompts.get(shot_id, "")),
                 "image_prompt": compact_text(image_prompts.get(shot_id, "")),
+                "copywriting": copywriting.get(shot_id, {}),
+                "packaging": packaging.get(shot_id, {}),
             }
         )
     return result
@@ -254,6 +368,64 @@ def build_deliverables(project: Path) -> dict[str, Any]:
         "preview_manifest": read_json(preview_manifest, {}),
         "title_packaging_manifest": read_json(title_manifest, {}),
     }
+
+
+def build_copywriting(project: Path) -> dict[str, Any]:
+    script = project / "script" / "script.md"
+    voiceover = project / "audio" / "voiceover_script.md"
+    captions = project / "audio" / "captions.srt"
+    localized_captions = project / "audio" / "captions_zh.srt"
+    music_sfx = project / "audio" / "music_sfx_cue_sheet.md"
+    audio_prompt = project / "audio" / "audio_generation_prompt.md"
+    files = {
+        "script": path_info(project, script),
+        "voiceover": path_info(project, voiceover),
+        "captions": path_info(project, captions),
+        "localized_captions": path_info(project, localized_captions),
+        "music_sfx": path_info(project, music_sfx),
+        "audio_prompt": path_info(project, audio_prompt),
+    }
+    return {
+        "status": node_status([script, voiceover, captions, music_sfx], optional=True),
+        "files": files,
+        "voiceover_preview": preview_text(voiceover),
+        "caption_preview": preview_text(localized_captions) or preview_text(captions),
+        "music_sfx_preview": preview_text(music_sfx),
+    }
+
+
+def number_or_default(value: Any, default: float) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return float(default)
+
+
+def build_shot_requests(project: Path) -> list[dict[str, Any]]:
+    raw_requests = read_json(project / CODEX_SHOT_REQUESTS, [])
+    if not isinstance(raw_requests, list):
+        return []
+    result = []
+    for index, raw in enumerate(raw_requests, start=1):
+        if not isinstance(raw, dict):
+            continue
+        idea = compact_text(str(raw.get("idea") or "").strip(), 500)
+        if not idea:
+            continue
+        x = number_or_default(raw.get("x"), 520 + index * 24)
+        y = number_or_default(raw.get("y"), 160 + index * 24)
+        result.append(
+            {
+                "request_id": str(raw.get("request_id") or f"idea_{index:03d}"),
+                "status": str(raw.get("status") or "pending"),
+                "idea": idea,
+                "x": int(x) if x.is_integer() else x,
+                "y": int(y) if y.is_integer() else y,
+                "insert_after_shot_id": str(raw.get("insert_after_shot_id") or ""),
+                "created_at": str(raw.get("created_at") or ""),
+            }
+        )
+    return result
 
 
 def build_project_state(project: Path) -> dict[str, Any]:
@@ -287,6 +459,8 @@ def build_project_state(project: Path) -> dict[str, Any]:
         "visual_style": visual_style,
         "character_design": character_design,
         "title_packaging": title_packaging,
+        "copywriting": build_copywriting(project),
+        "shot_requests": build_shot_requests(project),
         "flow_nodes": build_flow_nodes(project, sections),
         "shots": build_shots(project),
         "prompts": {key: path_info(project, path) for key, path in prompt_paths(project).items()},

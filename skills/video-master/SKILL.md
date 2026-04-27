@@ -39,6 +39,7 @@ Recommended dependencies enable:
 - If a dedicated `imagegen` skill/tool is available, follow it for image generation and project-bound save-path handling.
 - If native image generation is unavailable, create the complete image prompt set, mark each affected frame `Needs-Generation`, and continue with the remaining package.
 - Do not claim a storyboard image file exists until its path has been verified.
+- Use Seedance 2.0 as the default target video model/profile for video generation prompts. Record `target_model: seedance-2.0` and `prompt_dialect: seedance-2.0` unless the user explicitly names another video model.
 - Prefer Chinese final prompts when the target workflow is Chinese or domestic video models are named. Keep optional English camera/style tags only when useful.
 - Confirm or explicitly assume `copy_language`, `voiceover_language`, `caption_language`, `localized_caption_languages`, and `subtitle_rendering_policy` before writing script, TTS, captions, or final video prompts. Prompt language controls the model prompt; copy language controls the spoken/readable words.
 - Default `subtitle_rendering_policy` to `post-production-only` and `burned_subtitles_allowed` to `false` for generated video clips. Captions may exist as `audio/captions.srt` for preview/post-production, but final video prompts must not ask the video model to render subtitles unless the user explicitly approves generated on-screen text.
@@ -181,7 +182,7 @@ Present the Production Lock as a bundled recommendation and wait for confirmatio
 4. Objective and CTA
 5. Audience and platform
 6. Aspect ratio and target duration
-7. Prompt language and target video model/profile
+7. Prompt language and target video model/profile; default target video model: `seedance-2.0`, unless the user explicitly names another video model.
 8. Copy/VO language, caption language, and subtitle rendering policy (`post-production-only` by default)
 9. Narrative style, visual style, and pacing style
 10. Visual style preset: choose one preset from `references/visual_style_presets.json`, custom, or reference-derived. Present 2-4 relevant cards with a recommended default instead of an unstructured open-ended style question.
@@ -360,10 +361,11 @@ Write:
 - `最终交付/02_提示词/视频生成提示词.md`
 - `最终交付/02_提示词/图片生成提示词.md`
 
-If the target workflow is Chinese or domestic Chinese video models are named, final copy-ready prompts must be Chinese-first. Keep `prompts/video_prompts.md` detailed for review, and make `最终交付/02_提示词/视频生成提示词.md` easy to copy into a video model.
+If no other target video model is specified, write the final prompts for Seedance 2.0. If the target workflow is Chinese, Seedance 2.0, or another domestic Chinese video model, final copy-ready prompts must be Chinese-first. Keep `prompts/video_prompts.md` detailed for review, and make `最终交付/02_提示词/视频生成提示词.md` easy to copy into a video model.
 
 Use `references/storyboard-and-video-prompts.md`, `references/platform-and-model-profiles.md`, and any `references/style_analysis.md`. If `reference_style` assets exist, final video prompts must carry the same safe style rules used for native image generation so generated video matches the reference look and editing language without copying protected content.
 When a style template is selected, storyboard image prompts and video prompts must carry the template's safe prompt rules as a whole, adapted around `template_user_overrides` and the current subject.
+For Seedance 2.0, each copy-ready shot prompt must include a `目标模型：Seedance 2.0` line and a `动态时间切片` section. Split the shot duration into time-coded segments such as `(00-1.5s)` and `(1.5-3.0s)`. Each segment should combine camera movement, changing light/environment, subject action, and micro-expression or material motion where relevant. The block must also keep subject stability constraints such as clear face, stable identity, normal anatomy, consistent wardrobe/product, and smooth continuous motion.
 Separate external audio from generated visuals. Use fields such as `Voiceover/audio` or `声音/口播` for post-production narration, and `On-screen text policy` or `画面文字策略` for visual text. Do not use mixed labels such as `声音/字幕`; they can cause video models to burn VO lines into the picture. When `subtitle_rendering_policy` is `post-production-only`, every copy-ready prompt should say the model-generated picture should not include subtitles, captions, dialogue text, lyrics, or burned-in text.
 
 For external voiceover, never paste the actual VO sentence into the video prompt. Write `声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。` and keep the line itself in the audio/SRT files. Each shot block should also include `背景音乐：不要生成背景音乐；整片音乐后期统一处理。` and an `SFX音效` line. Do not include a `负面提示词` section in final prompts.

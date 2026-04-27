@@ -99,7 +99,9 @@ Run this checklist before final delivery.
 - External VO prompts do not paste the actual narration sentence into the video model prompt.
 - Final prompts include no `Negative prompt` or `负面提示词` field; use positive generation requirements instead.
 - Final prompts include per-shot SFX and a no-background-music policy.
-- Model-specific language appears only when the user named or confirmed a target model/profile.
+- Seedance 2.0 is the default target model/profile unless the user explicitly named another video model.
+- For Seedance 2.0, each copy-ready shot block includes `目标模型：Seedance 2.0`, a `动态时间切片` section, and at least two time-coded motion slices such as `(00-1.5s)` and `(1.5-3.0s)`.
+- Model-specific language for non-default models appears only when the user named or confirmed that target model/profile.
 
 ## Optional Title Packaging
 

@@ -53,6 +53,34 @@ class ProjectStateTest(unittest.TestCase):
                 project / "prompts" / "storyboard_image_prompts.md",
                 "# Image Prompts\n\n## S01\nPhotoreal commercial product hero frame.\n",
             )
+            write(
+                project / "audio" / "voiceover_script.md",
+                "# Voiceover\n\n"
+                "- VO01 (0-3s): 这一刻，光先认出了她。\n"
+                "- VO07 (24-30s): 留住这一刻的光。\n",
+            )
+            write(
+                project / "audio" / "music_sfx_cue_sheet.md",
+                "# Music SFX\n\n"
+                "- S01 00:00-00:03: 闪光灯与红毯人群低语。\n"
+                "- S07 00:24-00:30: 品牌落版音效。\n",
+            )
+            write(
+                project / "qa" / "metadata" / "codex_shot_requests.json",
+                json.dumps(
+                    [
+                        {
+                            "request_id": "idea_001",
+                            "status": "pending",
+                            "idea": "补一个粉底液滴落到皮肤上的微距镜头。",
+                            "x": 620,
+                            "y": 480,
+                            "insert_after_shot_id": "S02",
+                        }
+                    ],
+                    ensure_ascii=False,
+                ),
+            )
 
             state = module.build_project_state(project)
 
@@ -64,6 +92,17 @@ class ProjectStateTest(unittest.TestCase):
             self.assertEqual(state["shots"][0]["shot_id"], "S01")
             self.assertIn("product reveal", state["shots"][0]["purpose"])
             self.assertIn("Photoreal commercial", state["shots"][0]["image_prompt"])
+            self.assertEqual(state["copywriting"]["status"], "complete")
+            self.assertTrue(state["copywriting"]["files"]["voiceover"]["exists"])
+            self.assertTrue(state["copywriting"]["files"]["captions"]["exists"])
+            self.assertIn("这一刻", state["copywriting"]["voiceover_preview"])
+            self.assertIn("这一刻", state["shots"][0]["copywriting"]["voiceover"])
+            self.assertIn("闪光灯", state["shots"][0]["copywriting"]["sfx"])
+            self.assertEqual(state["shots"][0]["packaging"]["role"], "片头标题/主视觉钩子")
+            self.assertEqual(state["shots"][-1]["packaging"]["role"], "品牌落版/CTA")
+            self.assertEqual(state["shot_requests"][0]["request_id"], "idea_001")
+            self.assertEqual(state["shot_requests"][0]["status"], "pending")
+            self.assertIn("粉底液滴落", state["shot_requests"][0]["idea"])
 
             nodes = {node["id"]: node for node in state["flow_nodes"]}
             self.assertEqual(nodes["visual_style"]["status"], "complete")

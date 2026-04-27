@@ -7,6 +7,7 @@ import argparse
 import json
 import mimetypes
 import os
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, unquote, urlparse
@@ -27,6 +28,7 @@ DEFAULT_PROJECT_ROOT = REPO_ROOT / "video_projects"
 VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov"}
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 HERO_MEDIA_OVERRIDE: Path | None = None
+CODEX_SHOT_REQUESTS = Path("qa") / "metadata" / "codex_shot_requests.json"
 
 
 def json_bytes(payload: object, status: int = 200) -> tuple[int, bytes, str]:
@@ -142,6 +144,150 @@ def hero_media_summary(project_root: Path) -> dict[str, object]:
     return {"kind": "none"}
 
 
+def read_json_file(path: Path, default: object) -> object:
+    if not path.is_file():
+        return default
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return default
+
+
+def write_json_file(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def next_shot_id(shots: list[dict[str, object]]) -> str:
+    highest = 0
+    for shot in shots:
+        raw_id = str(shot.get("shot_id", ""))
+        if raw_id.startswith("S") and raw_id[1:].isdigit():
+            highest = max(highest, int(raw_id[1:]))
+    return f"S{highest + 1:02d}"
+
+
+def seconds_label(value: float) -> str:
+    if float(value).is_integer():
+        return f"{int(value):02d}"
+    return f"{value:04.1f}".rstrip("0").rstrip(".")
+
+
+def reflow_shot_times(shots: list[dict[str, object]]) -> None:
+    current = 0.0
+    for shot in shots:
+        try:
+            duration = float(shot.get("duration_seconds", 3))
+        except (TypeError, ValueError):
+            duration = 3.0
+        duration = max(0.1, duration)
+        start = current
+        end = current + duration
+        shot["duration_seconds"] = int(duration) if duration.is_integer() else duration
+        shot["start"] = f"00:{seconds_label(start)}"
+        shot["end"] = f"00:{seconds_label(end)}"
+        shot["time"] = f"{shot['start']}-{shot['end']}"
+        current = end
+
+
+def clean_shot_payload(raw: object, fallback_id: str) -> dict[str, object]:
+    if not isinstance(raw, dict):
+        raise ValueError("shot payload must be an object")
+    shot_id = str(raw.get("shot_id") or fallback_id).strip()
+    if not shot_id:
+        shot_id = fallback_id
+    cleaned: dict[str, object] = {"shot_id": shot_id}
+    text_fields = [
+        "beat",
+        "purpose",
+        "visual_action",
+        "framing",
+        "camera",
+        "movement",
+        "lighting",
+        "image_prompt_seed",
+        "video_prompt_seed",
+    ]
+    for field in text_fields:
+        if field in raw:
+            cleaned[field] = str(raw.get(field) or "").strip()
+    if "duration_seconds" in raw:
+        try:
+            duration = float(raw.get("duration_seconds"))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("duration_seconds must be numeric") from exc
+        cleaned["duration_seconds"] = max(0.1, duration)
+    return cleaned
+
+
+def update_project_shot(project: Path, payload: dict[str, object]) -> dict[str, object]:
+    shot_list_path = project / "storyboard" / "shot_list.json"
+    raw_shots = read_json_file(shot_list_path, [])
+    if not isinstance(raw_shots, list):
+        raise ValueError("storyboard/shot_list.json must be a list")
+    shots = [shot for shot in raw_shots if isinstance(shot, dict)]
+    mode = str(payload.get("mode") or "update").lower()
+    if mode not in {"add", "update"}:
+        raise ValueError("mode must be add or update")
+
+    fallback_id = next_shot_id(shots)
+    incoming = clean_shot_payload(payload.get("shot"), fallback_id)
+    saved_shot: dict[str, object]
+
+    if mode == "add":
+        incoming["shot_id"] = next_shot_id(shots)
+        after_shot_id = str(payload.get("after_shot_id") or "").strip()
+        insert_at = len(shots)
+        for index, shot in enumerate(shots):
+            if str(shot.get("shot_id")) == after_shot_id:
+                insert_at = index + 1
+                break
+        shots.insert(insert_at, incoming)
+        saved_shot = incoming
+    else:
+        shot_id = str(incoming.get("shot_id") or "").strip()
+        if not shot_id:
+            raise ValueError("shot.shot_id is required for update")
+        for index, shot in enumerate(shots):
+            if str(shot.get("shot_id")) == shot_id:
+                shot.update({key: value for key, value in incoming.items() if key != "shot_id"})
+                saved_shot = shot
+                break
+        else:
+            raise ValueError(f"shot not found: {shot_id}")
+
+    reflow_shot_times(shots)
+    write_json_file(shot_list_path, shots)
+    return saved_shot
+
+
+def append_codex_shot_request(project: Path, payload: dict[str, object]) -> dict[str, object]:
+    idea = str(payload.get("idea") or "").strip()
+    if not idea:
+        raise ValueError("idea is required")
+    try:
+        x = float(payload.get("x", 520))
+        y = float(payload.get("y", 160))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("x and y must be numeric") from exc
+    request_path = project / CODEX_SHOT_REQUESTS
+    raw_requests = read_json_file(request_path, [])
+    requests = raw_requests if isinstance(raw_requests, list) else []
+    now = datetime.now(timezone.utc)
+    request = {
+        "request_id": f"idea_{now.strftime('%Y%m%dT%H%M%S%fZ')}",
+        "status": "pending",
+        "idea": idea,
+        "x": int(x) if x.is_integer() else x,
+        "y": int(y) if y.is_integer() else y,
+        "insert_after_shot_id": str(payload.get("insert_after_shot_id") or "").strip(),
+        "created_at": now.isoformat(),
+    }
+    requests.append(request)
+    write_json_file(request_path, requests)
+    return request
+
+
 class VideoMasterHandler(BaseHTTPRequestHandler):
     server_version = "VideoMasterWebUI/0.1"
 
@@ -161,6 +307,19 @@ class VideoMasterHandler(BaseHTTPRequestHandler):
     def send_json(self, payload: object, status: int = 200) -> None:
         code, body, content_type = json_bytes(payload, status)
         self.send_payload(code, body, content_type)
+
+    def read_json_body(self) -> dict[str, object]:
+        length = int(self.headers.get("Content-Length", "0") or "0")
+        if length <= 0:
+            return {}
+        body = self.rfile.read(length)
+        try:
+            payload = json.loads(body.decode("utf-8"))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"invalid JSON body: {exc}") from exc
+        if not isinstance(payload, dict):
+            raise ValueError("JSON body must be an object")
+        return payload
 
     def send_file(self, path: Path) -> None:
         if not path.is_file():
@@ -262,6 +421,42 @@ class VideoMasterHandler(BaseHTTPRequestHandler):
             self.send_json({"error": "unsafe path"}, 400)
             return
         self.send_file(static_path)
+
+    def do_POST(self) -> None:
+        parsed = urlparse(self.path)
+        route = parsed.path
+
+        if route == "/api/shot":
+            try:
+                payload = self.read_json_body()
+                project = resolve_local_path(str(payload.get("project") or ""))
+                if not project.is_dir():
+                    self.send_json({"error": "project path not found"}, 404)
+                    return
+                saved_shot = update_project_shot(project, payload)
+                state = build_project_state(project)
+            except (ProjectStateError, ValueError) as exc:
+                self.send_json({"error": str(exc)}, 400)
+                return
+            self.send_json({"ok": True, "shot": saved_shot, "state": state})
+            return
+
+        if route == "/api/shot-request":
+            try:
+                payload = self.read_json_body()
+                project = resolve_local_path(str(payload.get("project") or ""))
+                if not project.is_dir():
+                    self.send_json({"error": "project path not found"}, 404)
+                    return
+                request = append_codex_shot_request(project, payload)
+                state = build_project_state(project)
+            except (ProjectStateError, ValueError) as exc:
+                self.send_json({"error": str(exc)}, 400)
+                return
+            self.send_json({"ok": True, "request": request, "state": state})
+            return
+
+        self.send_json({"error": "not found"}, 404)
 
 
 def main(argv: list[str] | None = None) -> int:
