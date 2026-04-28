@@ -1934,6 +1934,59 @@
       ].join("");
     }
 
+    function edgeElementKey(edge) {
+      return edge.map((value) => String(value || "main").replaceAll("|", "%7C")).join("|");
+    }
+
+    function findEdgeGroup(edge) {
+      const key = edgeElementKey(edge);
+      return Array.from(els.connectionLayer.querySelectorAll("[data-edge-key]")).find((group) => group.dataset.edgeKey === key);
+    }
+
+    function visibleEdgesForNodes(nodes) {
+      const visibleIds = new Set(nodes.map((node) => node.id));
+      return canvasEdges().filter(([from, to]) => visibleIds.has(from) && visibleIds.has(to));
+    }
+
+    function updateConnectedEdgesDuringDrag(nodeId) {
+      const nodes = filteredNodes();
+      const connectedEdges = visibleEdgesForNodes(nodes).filter(([from, to]) => from === nodeId || to === nodeId);
+      if (!connectedEdges.length) return;
+      for (const edge of connectedEdges) {
+        const group = findEdgeGroup(edge);
+        const nextMarkup = renderEdge(edge, nodes).trim();
+        if (!group || !nextMarkup) {
+          renderEdgesOnly(nodes);
+          return;
+        }
+        group.outerHTML = nextMarkup;
+      }
+    }
+
+    function requestConnectionPreviewFrame() {
+      if (!state.connectionDrag || state.connectionDrag.frameId) return;
+      state.connectionDrag.frameId = requestAnimationFrame(updateConnectionPreviewFrame);
+    }
+
+    function updateConnectionPreviewFrame() {
+      const drag = state.connectionDrag;
+      if (!drag) return;
+      drag.frameId = 0;
+      updateConnectionPreviewOnly();
+    }
+
+    function updateConnectionPreviewOnly(nodes = filteredNodes()) {
+      const current = els.connectionLayer.querySelector('[data-edge-type="connection-preview"]');
+      const nextMarkup = renderConnectionPreview(nodes).trim();
+      if (current && nextMarkup) {
+        current.outerHTML = nextMarkup;
+      } else if (current) {
+        current.remove();
+      } else if (nextMarkup) {
+        els.connectionLayer.insertAdjacentHTML("beforeend", nextMarkup);
+      }
+    }
+
     function filteredNodes() {
       const nodes = canvasNodes();
       if (state.frameworkOnly) {
@@ -2068,9 +2121,11 @@
       const d = edgePath(start.x, start.y, end.x, end.y);
       const edgeClass = ["alt", "idea-link", "manual", "connection-preview"].includes(edgeType) ? ` ${edgeType}` : "";
       return `
-        <path class="edge-path${edgeClass}" d="${d}" marker-end="url(#${edgeMarkerId(edgeType)})"></path>
-        <circle class="edge-dot${edgeClass}" cx="${start.x}" cy="${start.y}" r="7"></circle>
-        <circle class="edge-dot${edgeClass}" cx="${end.x}" cy="${end.y}" r="7"></circle>
+        <g data-edge-key="${escapeHtml(edgeElementKey(edge))}" data-edge-from="${escapeHtml(fromId)}" data-edge-to="${escapeHtml(toId)}" data-edge-type="${escapeHtml(edgeType || "main")}">
+          <path class="edge-path${edgeClass}" d="${d}" marker-end="url(#${edgeMarkerId(edgeType)})"></path>
+          <circle class="edge-dot${edgeClass}" cx="${start.x}" cy="${start.y}" r="7"></circle>
+          <circle class="edge-dot${edgeClass}" cx="${end.x}" cy="${end.y}" r="7"></circle>
+        </g>
       `;
     }
 
@@ -2454,6 +2509,7 @@
         fromNodeId,
         x: point.x,
         y: point.y,
+        frameId: 0,
       };
       event.currentTarget.classList.add("active");
       event.currentTarget.setPointerCapture(event.pointerId);
@@ -2467,7 +2523,7 @@
       const point = canvasPointFromEvent(event);
       state.connectionDrag.x = point.x;
       state.connectionDrag.y = point.y;
-      renderEdgesOnly();
+      requestConnectionPreviewFrame();
     }
 
     function finishConnectionDrag(event) {
@@ -2487,6 +2543,9 @@
 
     function clearConnectionDrag(drag = state.connectionDrag) {
       if (!drag) return;
+      if (drag.frameId) {
+        cancelAnimationFrame(drag.frameId);
+      }
       const sourcePort = findNodeElement(drag.fromNodeId)?.querySelector('[data-connect-port="out"]');
       if (sourcePort) {
         sourcePort.classList.remove("active");
@@ -3038,7 +3097,7 @@
       const nodeEl = findNodeElement(drag.nodeId);
       if (!node || !nodeEl) return;
       applyNodeTransform(nodeEl, node, drag.originalX, drag.originalY);
-      renderEdgesOnly();
+      updateConnectedEdgesDuringDrag(drag.nodeId);
     }
 
     function applyNodeTransform(nodeEl, node, originX, originY) {
@@ -3084,7 +3143,7 @@
       inertia.vx *= friction;
       inertia.vy *= friction;
       applyNodeTransform(nodeEl, node, inertia.originalX, inertia.originalY);
-      renderEdgesOnly();
+      updateConnectedEdgesDuringDrag(inertia.nodeId);
       const speed = Math.hypot(inertia.vx, inertia.vy);
       if (speed > DRAG_INERTIA_MIN_VELOCITY && now - inertia.startedAt < DRAG_INERTIA_MAX_DURATION) {
         inertia.frameId = requestAnimationFrame(stepNodeInertia);
