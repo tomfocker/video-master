@@ -11,7 +11,7 @@ Confirm copy language before writing audio assets:
 - `subtitle_rendering_policy`: `post-production-only` by default.
 - `burned_subtitles_allowed`: `false` by default for generated video clips.
 
-Captions are `post-production only` unless the user explicitly asks for generated on-screen subtitles. `audio/captions.srt` supports previews, editors, and manual upload to platforms; it is not a prompt instruction. Final video prompts should say the model-generated picture should not include subtitles, captions, dialogue text, lyrics, or burned-in text when `burned_subtitles_allowed` is false; include model-friendly wording such as `do not generate subtitles`.
+Captions are a post-production asset unless the user explicitly asks for generated on-screen subtitles. `audio/captions.srt` supports previews, editors, and manual upload to platforms; it is not a prompt instruction. Final video prompts should use only compact model-facing wording such as `字幕：不要生成字幕、caption、对白文字或烧录文字。` when `burned_subtitles_allowed` is false.
 For domestic Chinese workflows, always provide a Chinese `.srt` deliverable. If the voiceover is English, create both the English transcript SRT and a Chinese localized SRT.
 
 ## Required Files
@@ -66,9 +66,9 @@ For domestic Chinese workflows, always provide a Chinese `.srt` deliverable. If 
 
 Generate captions from the same VO/copy source. Do not let captions drift from the spoken lines unless the user wants shorter social captions or localized Chinese subtitles for domestic distribution.
 
-Keep captions separate from video generation prompts. Use `audio/captions.srt` and final audio files for post-production, not fields like `声音/字幕` that combine narration and on-screen text.
+Keep captions separate from video generation prompts. Use `audio/captions.srt` and final audio files for delivery, not fields like `声音/字幕` that combine narration and on-screen text.
 
-If narration is external VO, do not paste the spoken lines into final video prompts. The video prompt should only say that external narration/TTS will be added in post. Keep the exact words in `audio/voiceover_script.md`, `audio/tts_lines.json`, and SRT files.
+If narration is external VO, do not paste the spoken lines into final video prompts. Do not add explanatory VO/post-production notes to copy-ready video prompts unless the user explicitly asks for that model-facing instruction. Keep the exact words in `audio/voiceover_script.md`, `audio/tts_lines.json`, and SRT files.
 
 Recommended naming:
 

@@ -195,16 +195,15 @@ def make_project(
         if final_video_prompt_content is None:
             final_video_prompt_content = (
                 "# Copy Ready\n\n"
-                "## S01\n"
-                "目标模型：Seedance 2.0\n"
+                "## S01（3s / 16:9 / Seedance 2.0 / 参考图：最终交付/01_分镜图/S01.png）\n"
+                "画面：清晨产品出现在窗边，玻璃瓶身映出暖光。\n"
                 "动态时间切片：\n"
                 "(00-1.5s): 镜头缓慢推近，清晨光线掠过产品表面，主体动作自然连续。\n"
                 "(1.5-3.0s): 镜头继续稳定推进，手部轻轻拿起产品，反射光保持平滑。\n"
                 "稳定性要求：主体稳定、产品造型稳定、无闪烁、无重影。\n"
-                "声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。\n"
-                "背景音乐：不要生成背景音乐；整片音乐后期统一处理。\n"
+                "背景音乐：不要生成背景音乐。\n"
                 "SFX音效：清晨环境声、衣料摩擦声。\n"
-                "画面文字策略：无；字幕使用SRT后期添加，模型生成画面不添加字幕。\n"
+                "字幕：不要生成字幕、caption、对白文字或烧录文字。\n"
             )
         write(project / "最终交付" / "02_提示词" / "视频生成提示词.md", final_video_prompt_content)
         write(project / "最终交付" / "02_提示词" / "图片生成提示词.md", "# Copy Ready\n")
@@ -361,12 +360,11 @@ class ValidateVideoProjectTest(unittest.TestCase):
                 },
                 final_video_prompt_content=(
                     "# Copy Ready\n\n"
-                    "## S01\n"
+                    "## S01（6s / 16:9 / Seedance 2.0 / 参考图：最终交付/01_分镜图/S01.png）\n"
                     "画面：进入心流状态，情绪沉静。\n"
-                    "声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。\n"
-                    "背景音乐：不要生成背景音乐；整片音乐后期统一处理。\n"
+                    "背景音乐：不要生成背景音乐。\n"
                     "SFX音效：远处发动机低频、雨滴敲击、呼吸声。\n"
-                    "画面文字策略：无；不要生成字幕、caption、对白文字或烧录文字，字幕使用 SRT 后期添加。\n"
+                    "字幕：不要生成字幕、caption、对白文字或烧录文字。\n"
                 ),
             )
             result = self.run_validator(project)
@@ -397,17 +395,15 @@ class ValidateVideoProjectTest(unittest.TestCase):
                 },
                 final_video_prompt_content=(
                     "# Copy Ready\n\n"
-                    "## S01\n"
-                    "目标模型：Seedance 2.0\n"
+                    "## S01（6s / 16:9 / Seedance 2.0 / 参考图：最终交付/01_分镜图/S01.png）\n"
                     "画面：低饱和黑白高反差，湿润银色高光，人物处在巨大负空间中。\n"
                     "动态时间切片：\n"
                     "(00-1.5s): 镜头缓慢推近，湿润银色高光沿着人物轮廓移动，人物呼吸和眼神保持克制。\n"
                     "(1.5-3.0s): 手持压迫感轻微增强，背景负空间维持稳定，雨滴和反射光自然流动。\n"
                     "稳定性要求：主体稳定、人体结构正常、服装一致、无闪烁、无重影。\n"
-                    "声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。\n"
-                    "背景音乐：不要生成背景音乐；整片音乐后期统一处理。\n"
+                    "背景音乐：不要生成背景音乐。\n"
                     "SFX音效：远处发动机低频、雨滴敲击、呼吸声。\n"
-                    "画面文字策略：无；不要生成字幕、caption、对白文字或烧录文字，字幕使用 SRT 后期添加。\n"
+                    "字幕：不要生成字幕、caption、对白文字或烧录文字。\n"
                 ),
             )
             result = self.run_validator(project)
@@ -607,6 +603,45 @@ class ValidateVideoProjectTest(unittest.TestCase):
             result = self.run_validator(project)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("Seedance 2.0 prompts require time-coded motion slices", result.stdout + result.stderr)
+
+    def test_rejects_standalone_metadata_in_copy_ready_video_prompts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp), durations=[3, 4, 4, 6, 5, 3, 5], prompt_language="zh-CN")
+            write(
+                project / "最终交付" / "02_提示词" / "视频生成提示词.md",
+                "# Copy Ready\n\n"
+                "## S01（3s / 16:9 / Seedance 2.0 / 参考图：最终交付/01_分镜图/S01.png）\n"
+                "目标模型：Seedance 2.0\n"
+                "画面：雨夜红毯上人物回头，闪光灯形成金色背景。\n"
+                "动态时间切片：\n"
+                "(00-1.5s): 中景从车门外侧轻推，雨滴沿车窗滑落，人物肩线从阴影中显出。\n"
+                "(1.5-3.0s): 镜头转为近景停在回眸瞬间，闪光灯在红毯水面形成连贯反射。\n"
+                "背景音乐：不要生成背景音乐。\n"
+                "SFX音效：雨声、快门声。\n"
+                "字幕：不要生成字幕、caption、对白文字或烧录文字。\n",
+            )
+            result = self.run_validator(project)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("copy-ready prompt must keep model/reference metadata in the heading", result.stdout + result.stderr)
+
+    def test_rejects_generic_seedance_time_slice_template_text(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp), durations=[3, 4, 4, 6, 5, 3, 5], prompt_language="zh-CN")
+            write(
+                project / "最终交付" / "02_提示词" / "视频生成提示词.md",
+                "# Copy Ready\n\n"
+                "## S01（3s / 16:9 / Seedance 2.0 / 参考图：最终交付/01_分镜图/S01.png）\n"
+                "画面：雨夜红毯上人物回头，闪光灯形成金色背景。\n"
+                "动态时间切片：\n"
+                "(00-1.5s): gentle dolly 或 tabletop camera movement，环境光轻微变化，主体开始动作。\n"
+                "(1.5-3.0s): 镜头继续完成本镜头节拍，角色或道具产生明确但平滑的位移。\n"
+                "背景音乐：不要生成背景音乐。\n"
+                "SFX音效：雨声、快门声。\n"
+                "字幕：不要生成字幕、caption、对白文字或烧录文字。\n",
+            )
+            result = self.run_validator(project)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("time slices must be shot-specific", result.stdout + result.stderr)
 
     def test_explicit_non_seedance_model_can_use_model_agnostic_prompt_blocks(self):
         with tempfile.TemporaryDirectory() as tmp:

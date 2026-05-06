@@ -30,14 +30,16 @@ Recommended dependencies enable:
 - Follow the serial pipeline. Do not write later-phase deliverables before the current phase's gate is satisfied.
 - Treat `brief/spec_lock.md` as the execution contract. Re-read it before writing each shot prompt, generating each storyboard frame, or assembling final deliverables.
 - Use native image generation for storyboard frames when the user asks for images, 分镜图, storyboard frames, keyframes, or visual boards. Do not substitute SVG boxes or text-only placeholders.
+- Video Master is built around Codex native image generation. Default to assuming native image generation is available during project work; do not mark it unavailable just because a CLI key, environment variable, or tool listing is missing. Only record image generation as unavailable after an actual native image-generation attempt fails in the current turn.
 - Treat fixed characters as a continuity lock before storyboard generation. When a project includes recurring people, hosts, founders, interviewees, actors, or mascots, create/confirm character design anchors first and reference them from storyboard image prompts and video prompts.
+- For formal projects that generate storyboard images, enforce `style_confirmation_gate`: create/confirm the character anchor and the first storyboard frame (S01), set `style_gate_status: pending`, and do not batch-generate remaining storyboard frames until the user approves the current style.
 - Treat title packaging as an optional sidecar branch only. It must never change the normal storyboard, script, audio, or video-prompt generation flow.
 - When the user asks for commercial title cards, lower thirds, number animations, alpha overlays, or packaging text, create separate title-packaging deliverables; do not add packaging notes, title-packaging file paths, or alpha-MOV instructions to copy-ready video prompts.
 - During the Production Lock, explicitly ask whether the user needs title-packaging images: main title, chapter/section cards, lower thirds/name tags, key data/counter callouts, CTA/end cards, or none. Default to `title_packaging_enabled: false` only when the user does not need packaging or asks to keep the package lean.
 - For title packaging, use native image generation for designed packaging images and chroma-key/transparent PNG look development when available. Use `scripts/render_title_packaging.py` for exact text, verified transparent PNGs, and optional ProRes 4444 alpha MOV overlays.
 - Default title packaging output is static transparent PNG. Do not generate MOV just for a simple fade, scale, or position shift; create MOV only when the user explicitly asks for animated overlay delivery and provides a meaningful animation need.
 - If a dedicated `imagegen` skill/tool is available, follow it for image generation and project-bound save-path handling.
-- If native image generation is unavailable, create the complete image prompt set, mark each affected frame `Needs-Generation`, and continue with the remaining package.
+- If a real native image-generation attempt fails, create the complete image prompt set, mark each affected frame `Needs-Generation`, and record the failure reason in `qa/metadata/workflow_events.jsonl`.
 - Do not claim a storyboard image file exists until its path has been verified.
 - Use Seedance 2.0 as the default target video model/profile for video generation prompts. Record `target_model: seedance-2.0` and `prompt_dialect: seedance-2.0` unless the user explicitly names another video model.
 - Prefer Chinese final prompts when the target workflow is Chinese or domestic video models are named. Keep optional English camera/style tags only when useful.
@@ -263,6 +265,7 @@ Ask or confirm whether the project needs fixed-character continuity. If not, rec
 - Generate or collect reference images when available: face/front, half-body or full-body, and any required wardrobe or expression references.
 - Store the character bible and manifest in `characters/`.
 - Record prompt rules that require downstream storyboard and video prompts to reference the locked character IDs instead of reinventing the person.
+- Mark the main reference as the character anchor used by the later `style_confirmation_gate`.
 
 Write when enabled:
 
@@ -277,6 +280,7 @@ Record the selected policy in `brief/spec_lock.md` under `character_design`:
 - `fixed_characters`
 - `character_reference_dir`
 - `character_prompt_rules`
+- `character_anchor`
 
 ### Step 4: Creative Strategy And Rhythm Map
 
@@ -340,6 +344,7 @@ Write `prompts/storyboard_image_prompts.md` before generating images. Generate s
 
 - Every storyboard image prompt must carry the locked visual style preset fields from `brief/spec_lock.md`: `visual_style_preset_id`, medium, realism level, art direction, color palette, lighting, texture, camera language, and storyboard prompt rules.
 - If `character_lock_enabled` is true, every storyboard image prompt involving a fixed character must reference the stable character ID and the locked character bible. Do not vary face, age, hairstyle, body type, or signature wardrobe unless `character_bible.md` allows it.
+- For formal projects, enforce `style_confirmation_gate`: generate or confirm the character anchor, generate only the first storyboard frame (S01), set `style_gate_status: pending`, show both to the user, and do not batch-generate remaining storyboard frames until the user approves the style. If the work is explicitly a simulation/test run, record `style_gate_status: skipped` and the reason before continuing.
 - If shot count is manageable and the user requested detailed storyboard images, generate one frame per shot.
 - If shot count is high, generate key frames unless the user explicitly asks for every shot.
 - If `reference_style` assets exist, inject the distilled style rules and safe reference keyframe paths into every storyboard image prompt. Use native image generation with reference images when the available tool supports it; otherwise include the keyframe paths and style rules in the prompt text. Never ask the model to reproduce the exact source video or image.
@@ -365,10 +370,9 @@ If no other target video model is specified, write the final prompts for Seedanc
 
 Use `references/storyboard-and-video-prompts.md`, `references/platform-and-model-profiles.md`, and any `references/style_analysis.md`. If `reference_style` assets exist, final video prompts must carry the same safe style rules used for native image generation so generated video matches the reference look and editing language without copying protected content.
 When a style template is selected, storyboard image prompts and video prompts must carry the template's safe prompt rules as a whole, adapted around `template_user_overrides` and the current subject.
-For Seedance 2.0, each copy-ready shot prompt must include a `目标模型：Seedance 2.0` line and a `动态时间切片` section. Split the shot duration into time-coded segments such as `(00-1.5s)` and `(1.5-3.0s)`. Each segment should combine camera movement, changing light/environment, subject action, and micro-expression or material motion where relevant. The block must also keep subject stability constraints such as clear face, stable identity, normal anatomy, consistent wardrobe/product, and smooth continuous motion.
-Separate external audio from generated visuals. Use fields such as `Voiceover/audio` or `声音/口播` for post-production narration, and `On-screen text policy` or `画面文字策略` for visual text. Do not use mixed labels such as `声音/字幕`; they can cause video models to burn VO lines into the picture. When `subtitle_rendering_policy` is `post-production-only`, every copy-ready prompt should say the model-generated picture should not include subtitles, captions, dialogue text, lyrics, or burned-in text.
-
-For external voiceover, never paste the actual VO sentence into the video prompt. Write `声音/口播：外部画外音，后期添加；本片段不生成对白或口播台词。` and keep the line itself in the audio/SRT files. Each shot block should also include `背景音乐：不要生成背景音乐；整片音乐后期统一处理。` and an `SFX音效` line. Do not include a `负面提示词` section in final prompts.
+For Seedance 2.0, each copy-ready shot prompt must put model, duration, aspect ratio, and reference-frame path in the shot heading, for example `## S01 - 镜头名（3s / 16:9 / Seedance 2.0 / 参考图：最终交付/01_分镜图/S01.png）`. Do not add standalone `目标模型`, `时长`, `画幅`, or `参考图` lines in the prompt body.
+Every Seedance 2.0 copy-ready shot prompt must include a `动态时间切片` section. Split the shot duration into time-coded segments that are inferred from the shot's actual framing, action, environment, props, and emotional beat. Do not reuse generic slice text across shots. Each segment should describe concrete camera movement, subject action, environment/material motion, and the transition of the shot beat.
+Keep copy-ready video prompts compact and model-facing. Do not paste actual VO sentences, subtitle file paths, packaging file paths, or explanatory post-production notes into the prompt body. Use simple lines such as `背景音乐：不要生成背景音乐。`, `SFX音效：...`, and `字幕：不要生成字幕、caption、对白文字或烧录文字。`. Do not include a `负面提示词` section in final prompts.
 
 ### Step 8.5: Optional Title Packaging Sidecar
 

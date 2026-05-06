@@ -55,11 +55,11 @@ class ReferenceStyleWorkflowTest(unittest.TestCase):
         )
         self.assertIn("- template_id: <template_id when style_route is use_style_template>", output_contract)
         self.assertNotIn("- template_id: cinematic-flow-racing", output_contract)
-        self.assertIn("Do not use mixed labels such as `声音/字幕`", skill)
+        self.assertIn("Do not add standalone `目标模型`, `时长`, `画幅`, or `参考图` lines", skill)
         self.assertIn("Do not include a `Negative prompt` or `负面提示词` field", output_contract)
         self.assertIn("Do not include a `负面提示词` section", skill)
         self.assertIn("不要写“负面提示词”字段", prompt_reference)
-        self.assertIn("背景音乐：不要生成背景音乐；整片音乐后期统一处理", prompt_reference)
+        self.assertIn("背景音乐：不要生成背景音乐", prompt_reference)
         self.assertIn("Per-clip background music should stay off", prompt_reference)
         self.assertIn("analysis-only/post-production observations", prompt_reference)
         self.assertIn("must not ask models to reproduce burned subtitles or subtitle styling", skill)
@@ -109,8 +109,47 @@ class ReferenceStyleWorkflowTest(unittest.TestCase):
         self.assertIn("default target video model", skill)
         self.assertIn("unless the user explicitly names another video model", skill)
         self.assertIn("target_model: seedance-2.0", output_contract)
-        self.assertIn("(00-1.5s)", prompt_reference)
+        self.assertIn("(00-1.0s)", prompt_reference)
         self.assertIn("动态时间切片", prompt_reference)
+        self.assertIn("Do not reuse generic phrases", prompt_reference)
+        self.assertIn("model, duration, aspect ratio, and reference-frame path in the shot heading", platform_reference)
+
+    def test_style_confirmation_gate_stops_after_character_anchor_and_first_frame(self):
+        skill = (ROOT / "skills" / "video-master" / "SKILL.md").read_text(encoding="utf-8")
+        output_contract = (
+            ROOT / "skills" / "video-master" / "references" / "output-contract.md"
+        ).read_text(encoding="utf-8")
+        quality_check = (
+            ROOT / "skills" / "video-master" / "references" / "quality-check.md"
+        ).read_text(encoding="utf-8")
+        prompt_reference = (
+            ROOT / "skills" / "video-master" / "references" / "storyboard-and-video-prompts.md"
+        ).read_text(encoding="utf-8")
+
+        for text in [skill, output_contract, quality_check, prompt_reference]:
+            self.assertIn("style_confirmation_gate", text)
+            self.assertIn("character anchor", text)
+            self.assertIn("first storyboard frame", text)
+            self.assertIn("do not batch-generate remaining storyboard frames", text)
+            self.assertIn("style_gate_status: pending", text)
+
+    def test_native_image_generation_is_default_capability(self):
+        skill = (ROOT / "skills" / "video-master" / "SKILL.md").read_text(encoding="utf-8")
+        quality_check = (
+            ROOT / "skills" / "video-master" / "references" / "quality-check.md"
+        ).read_text(encoding="utf-8")
+        prompt_reference = (
+            ROOT / "skills" / "video-master" / "references" / "storyboard-and-video-prompts.md"
+        ).read_text(encoding="utf-8")
+
+        for text in [skill, quality_check, prompt_reference]:
+            self.assertIn("native image generation", text)
+            self.assertIn("do not", text.lower())
+            self.assertIn("tool listing", text)
+
+        self.assertIn("Default to assuming native image generation is available", skill)
+        self.assertIn("Only record image generation as unavailable after an actual native image-generation attempt fails", skill)
+        self.assertIn("Needs-Generation` is used only after a real native image-generation attempt fails", quality_check)
 
 
 if __name__ == "__main__":

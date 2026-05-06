@@ -312,12 +312,13 @@
 
     .root-control {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: minmax(180px, 1fr) minmax(170px, 240px) auto;
       gap: 8px;
       min-width: 0;
     }
 
-    .root-control input {
+    .root-control input,
+    .root-control select {
       height: 40px;
       width: 100%;
       min-width: 0;
@@ -326,6 +327,10 @@
       background: rgba(20, 29, 42, 0.9);
       color: var(--ink);
       padding: 0 12px;
+    }
+
+    .root-control select {
+      color: #dce7fb;
     }
 
     .top-button,
@@ -366,6 +371,30 @@
       color: var(--ink);
       border-color: var(--blue);
       box-shadow: var(--glow-blue);
+    }
+
+    .project-panel-icon {
+      width: 18px;
+      height: 16px;
+      display: grid;
+      grid-template-columns: 6px 1fr;
+      gap: 3px;
+      padding: 2px;
+      border: 1px solid currentColor;
+      border-radius: 4px;
+      opacity: 0.92;
+    }
+
+    .project-panel-icon::before,
+    .project-panel-icon::after {
+      content: "";
+      border-radius: 2px;
+      background: currentColor;
+      opacity: 0.72;
+    }
+
+    .project-panel-icon::after {
+      opacity: 0.34;
     }
 
     .side,
@@ -497,6 +526,63 @@
       display: none;
     }
 
+    .sync-review-panel {
+      position: fixed;
+      right: 18px;
+      top: 78px;
+      z-index: 14;
+      width: min(360px, calc(100vw - 36px));
+      border: 1px solid rgba(77, 95, 121, 0.76);
+      border-radius: var(--radius);
+      background: rgba(11, 16, 24, 0.96);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .sync-review-panel.hidden {
+      display: none;
+    }
+
+    .sync-review-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(77, 95, 121, 0.48);
+    }
+
+    .sync-review-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 12px 14px;
+      list-style: none;
+      color: #c7d2e4;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .sync-review-list li {
+      padding: 8px 10px;
+      border: 1px solid rgba(77, 95, 121, 0.45);
+      border-radius: 7px;
+      background: rgba(20, 29, 42, 0.72);
+    }
+
+    .sync-review-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 0 14px 14px;
+    }
+
+    .sync-review-actions button {
+      height: 34px;
+      padding: 0 12px;
+      font-weight: 760;
+    }
+
     .canvas-context-menu button {
       width: 100%;
       height: 32px;
@@ -542,12 +628,13 @@
       position: absolute;
       inset: 0;
       overflow: visible;
-      pointer-events: none;
+      pointer-events: auto;
       z-index: 0;
     }
 
     .edge-path {
       fill: none;
+      pointer-events: none;
       stroke: rgba(91, 140, 255, 0.46);
       stroke-width: 2;
       filter: drop-shadow(0 0 10px rgba(91, 140, 255, 0.3));
@@ -569,6 +656,12 @@
       filter: drop-shadow(0 0 12px rgba(61, 214, 208, 0.22));
     }
 
+    .edge-path.selected {
+      stroke: rgba(250, 204, 21, 0.98);
+      stroke-width: 3.2;
+      filter: drop-shadow(0 0 16px rgba(250, 204, 21, 0.34));
+    }
+
     .edge-path.connection-preview {
       stroke: rgba(226, 232, 240, 0.72);
       stroke-width: 2.4;
@@ -578,6 +671,7 @@
 
     .edge-dot {
       fill: rgba(15, 23, 42, 0.95);
+      pointer-events: none;
       stroke: rgba(125, 165, 255, 0.76);
       stroke-width: 2;
     }
@@ -594,14 +688,108 @@
       stroke: rgba(226, 232, 240, 0.72);
     }
 
+    .edge-dot.selected {
+      stroke: rgba(250, 204, 21, 0.96);
+      fill: rgba(69, 48, 10, 0.96);
+    }
+
+    .edge-select-hit {
+      fill: none;
+      pointer-events: stroke;
+      stroke: rgba(255, 255, 255, 0.001);
+      stroke-width: 18;
+      cursor: pointer;
+    }
+
+    .edge-control-halo,
+    .edge-control-handle {
+      pointer-events: auto;
+      cursor: grab;
+    }
+
+    .edge-control-halo {
+      fill: rgba(248, 184, 78, 0.14);
+      stroke: rgba(248, 184, 78, 0.34);
+      stroke-width: 1.5;
+    }
+
+    .edge-control-handle {
+      fill: rgba(248, 184, 78, 0.96);
+      stroke: rgba(7, 10, 15, 0.94);
+      stroke-width: 2;
+      filter: drop-shadow(0 0 10px rgba(248, 184, 78, 0.36));
+    }
+
+    .edge-control-halo:hover,
+    .edge-control-halo.active,
+    .edge-control-handle:hover,
+    .edge-control-handle.active {
+      fill: rgba(250, 204, 21, 0.98);
+      stroke: rgba(254, 243, 199, 0.82);
+      cursor: grabbing;
+    }
+
+    .edge-delete-button {
+      opacity: 0.76;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: opacity 140ms ease;
+    }
+
+    .edge-delete-hit {
+      fill: rgba(255, 255, 255, 0.001);
+      stroke: transparent;
+      filter: none;
+    }
+
+    .edge-delete-icon {
+      fill: rgba(127, 29, 29, 0.92);
+      stroke: rgba(254, 202, 202, 0.78);
+      stroke-width: 1.5;
+      filter: drop-shadow(0 0 10px rgba(251, 113, 133, 0.28));
+    }
+
+    .edge-delete-button text {
+      fill: #ffe4e6;
+      font-size: 15px;
+      font-weight: 900;
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+    }
+
+    .edge-delete-button:hover,
+    .edge-delete-button:focus-visible {
+      opacity: 1;
+    }
+
+    .edge-delete-button:hover .edge-delete-icon,
+    .edge-delete-button:focus-visible .edge-delete-icon {
+      fill: rgba(153, 27, 27, 0.98);
+      stroke: rgba(254, 226, 226, 0.94);
+    }
+
+    .edge-selection-label {
+      fill: #fde68a;
+      stroke: rgba(7, 10, 15, 0.96);
+      stroke-width: 5;
+      paint-order: stroke;
+      font-size: 12px;
+      font-weight: 820;
+      pointer-events: none;
+      text-anchor: middle;
+    }
+
     .node-layer {
       position: absolute;
       inset: 0;
       z-index: 1;
+      pointer-events: none;
     }
 
     .graph-node {
       position: absolute;
+      pointer-events: auto;
       width: 286px;
       min-height: 154px;
       border: 1px solid rgba(77, 95, 121, 0.8);
@@ -609,7 +797,7 @@
       background: rgba(20, 29, 42, 0.94);
       box-shadow: var(--shadow);
       cursor: grab;
-      overflow: hidden;
+      overflow: visible;
       user-select: none;
       touch-action: none;
       transition: border-color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
@@ -631,6 +819,10 @@
     .graph-node.selected {
       border-color: rgba(125, 165, 255, 0.95);
       box-shadow: var(--glow-blue), var(--shadow);
+    }
+
+    .graph-node.pinned {
+      border-color: rgba(248, 184, 78, 0.82);
     }
 
     .graph-node.shot {
@@ -679,7 +871,7 @@
       background: rgba(11, 16, 24, 0.72);
     }
 
-    .node-head span:first-child {
+    .node-title {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -688,6 +880,32 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       font-weight: 760;
+    }
+
+    .node-head-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .node-pin {
+      height: 22px;
+      min-width: 38px;
+      padding: 0 7px;
+      border-radius: 999px;
+      border-color: rgba(77, 95, 121, 0.72);
+      color: var(--muted);
+      background: rgba(7, 10, 15, 0.64);
+      font-size: 11px;
+      font-weight: 760;
+      line-height: 1;
+    }
+
+    .node-pin.active {
+      color: #fde68a;
+      border-color: rgba(248, 184, 78, 0.76);
+      background: rgba(120, 78, 18, 0.28);
     }
 
     .node-port {
@@ -714,22 +932,26 @@
     .flow-port {
       position: absolute;
       top: 50%;
-      width: 28px;
-      height: 28px;
+      width: 36px;
+      height: 36px;
       padding: 0;
       display: grid;
       place-items: center;
       border-radius: 50%;
-      border-color: rgba(125, 165, 255, 0.62);
+      border: 2px solid rgba(125, 165, 255, 0.76);
       color: #dbeafe;
       background: rgba(7, 10, 15, 0.9);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.28);
-      font-size: 11px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 0 0 5px rgba(91, 140, 255, 0.12),
+        0 10px 28px rgba(0, 0, 0, 0.34);
+      font-size: 12px;
       font-weight: 820;
       line-height: 1;
+      overflow: visible;
       pointer-events: auto;
       transform: translateY(-50%);
-      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
       z-index: 2;
     }
 
@@ -737,15 +959,62 @@
     .flow-port.active {
       border-color: rgba(61, 214, 208, 0.86);
       background: rgba(15, 118, 110, 0.34);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 0 0 6px rgba(61, 214, 208, 0.18),
+        0 12px 34px rgba(0, 0, 0, 0.42);
       transform: translateY(-50%) scale(1.08);
     }
 
     .flow-port-in {
-      left: -14px;
+      left: -18px;
     }
 
     .flow-port-out {
-      right: -14px;
+      right: -18px;
+    }
+
+    .port-dot {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    .port-label {
+      position: absolute;
+      top: 50%;
+      min-width: max-content;
+      padding: 5px 8px;
+      border: 1px solid rgba(125, 165, 255, 0.44);
+      border-radius: 999px;
+      color: #e0f2fe;
+      background: rgba(7, 10, 15, 0.92);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
+      font-size: 11px;
+      font-weight: 760;
+      line-height: 1;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      transition: opacity 140ms ease, transform 140ms ease;
+    }
+
+    .flow-port-in .port-label {
+      left: 42px;
+      transform: translate(-4px, -50%);
+    }
+
+    .flow-port-out .port-label {
+      right: 42px;
+      transform: translate(4px, -50%);
+    }
+
+    .flow-port:hover .port-label,
+    .flow-port.active .port-label {
+      opacity: 1;
+      transform: translate(0, -50%);
     }
 
     .node-drag-hint {
@@ -774,11 +1043,53 @@
       overflow: hidden;
     }
 
+    .shot-image-wrap {
+      position: relative;
+    }
+
     .node-thumb img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
+    }
+
+    .shot-image-actions {
+      position: absolute;
+      inset: auto 8px 8px 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-start;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 140ms ease, transform 140ms ease;
+      pointer-events: none;
+    }
+
+    .shot-image-wrap:hover .shot-image-actions,
+    .shot-image-wrap:focus-within .shot-image-actions {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .shot-image-action {
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      color: #edf6ff;
+      background: rgba(7, 10, 15, 0.78);
+      border-color: rgba(226, 232, 240, 0.22);
+      font-size: 11px;
+      font-weight: 780;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+    }
+
+    .shot-image-action:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
     .node-text {
@@ -861,6 +1172,12 @@
       cursor: not-allowed;
     }
 
+    .shot-local-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
     .shot-section-label {
       color: #dce7fb;
       font-size: 11px;
@@ -919,6 +1236,31 @@
 
     .storyboard-frame-only {
       gap: 10px;
+    }
+
+    .density-thumbnail {
+      gap: 8px;
+    }
+
+    .density-thumbnail .adaptive-shot-media {
+      min-height: 150px;
+    }
+
+    .density-thumbnail .node-meta {
+      gap: 5px;
+    }
+
+    .density-standard .shot-prompt,
+    .density-standard .shot-bindings {
+      display: none;
+    }
+
+    .density-full .shot-prompt {
+      display: block;
+    }
+
+    .density-full .shot-bindings {
+      display: grid;
     }
 
     .storyboard-frame-only .node-text {
@@ -1304,6 +1646,9 @@
       </div>
       <div class="root-control">
         <input id="rootInput" type="text" spellcheck="false" aria-label="项目根目录">
+        <select id="projectQuickSelect" aria-label="快捷切换项目">
+          <option value="">快捷切换项目</option>
+        </select>
         <button id="refreshButton" class="top-button" type="button">刷新项目</button>
       </div>
       <button id="showIntroButton" class="top-button" type="button">开场</button>
@@ -1312,6 +1657,9 @@
     </header>
 
     <nav class="rail" aria-label="画布工具">
+      <button id="toggleProjectPanelButton" class="rail-button" type="button" title="显示项目栏" aria-label="显示项目栏" aria-pressed="false">
+        <span class="project-panel-icon" aria-hidden="true"></span>
+      </button>
       <button id="zoomInButton" class="rail-button" type="button" title="放大">+</button>
       <button id="zoomOutButton" class="rail-button" type="button" title="缩小">-</button>
       <button id="resetZoomButton" class="rail-button active" type="button" title="重置">1</button>
@@ -1342,11 +1690,18 @@
           <div id="modeBadges" class="badge-row"></div>
         </div>
         <div class="canvas-tools">
-          <button id="toggleFrameworkButton" type="button" aria-pressed="false">只看框架</button>
+          <button id="syncCanvasButton" type="button">同步修改</button>
+          <button id="organizeCanvasButton" type="button">整理画布</button>
+          <select id="cardDensitySelect" aria-label="卡片显示密度">
+            <option value="thumbnail">缩略</option>
+            <option value="standard" selected>标准</option>
+            <option value="full">完整</option>
+          </select>
           <select id="canvasModeSelect" aria-label="画布视图">
-            <option value="all">全部节点</option>
+            <option value="all">完整制作</option>
             <option value="shots">分镜流程</option>
-            <option value="packaging">包装旁路</option>
+            <option value="framework">只看框架</option>
+            <option value="packaging">包装交付</option>
           </select>
         </div>
       </div>
@@ -1358,6 +1713,17 @@
       </div>
       <div id="canvasContextMenu" class="canvas-context-menu hidden">
         <button type="button" data-context-add-idea>新增分镜想法</button>
+      </div>
+      <div id="syncReviewPanel" class="sync-review-panel hidden" role="dialog" aria-label="同步当前修改确认">
+        <div class="sync-review-head">
+          <h2>变更清单</h2>
+          <span class="small">同步到后台前确认</span>
+        </div>
+        <ul id="syncReviewList" class="sync-review-list"></ul>
+        <div class="sync-review-actions">
+          <button id="cancelCanvasSyncButton" type="button">取消</button>
+          <button id="confirmCanvasSyncButton" class="primary-button" type="button">交给 Codex 处理</button>
+        </div>
       </div>
     </main>
 
@@ -1371,6 +1737,10 @@
   </div>
 
   <script>
+    const UI_PREFS_KEY = "video-master-ui-prefs-v1";
+    const CANVAS_FILTERS = new Set(["all", "shots", "framework", "packaging"]);
+    const CARD_DENSITIES = new Set(["thumbnail", "standard", "full"]);
+
     const state = {
       root: "",
       projects: [],
@@ -1381,16 +1751,23 @@
       selectedNodeId: "",
       zoom: 1,
       filter: "all",
+      cardDensity: "standard",
       frameworkOnly: false,
       contextMenu: null,
       draftIdea: null,
       manualEdges: [],
+      deletedEdges: [],
+      manualEdgeControls: {},
+      selectedEdgeKey: "",
+      canvasBaseline: "",
+      hasZoomPreference: false,
       sideHidden: true,
       inspectorHidden: true,
       pan: null,
       nodeDrag: null,
       nodeInertia: null,
       connectionDrag: null,
+      edgeControlDrag: null,
       editingShot: null,
       suppressClickUntil: 0,
     };
@@ -1406,15 +1783,23 @@
       pickProjectButton: document.querySelector("#pickProjectButton"),
       serverState: document.querySelector("#serverState"),
       rootInput: document.querySelector("#rootInput"),
+      projectQuickSelect: document.querySelector("#projectQuickSelect"),
       refreshButton: document.querySelector("#refreshButton"),
       showIntroButton: document.querySelector("#showIntroButton"),
       fitButton: document.querySelector("#fitButton"),
       writeStateButton: document.querySelector("#writeStateButton"),
+      toggleProjectPanelButton: document.querySelector("#toggleProjectPanelButton"),
       zoomInButton: document.querySelector("#zoomInButton"),
       zoomOutButton: document.querySelector("#zoomOutButton"),
       resetZoomButton: document.querySelector("#resetZoomButton"),
-      toggleFrameworkButton: document.querySelector("#toggleFrameworkButton"),
+      syncCanvasButton: document.querySelector("#syncCanvasButton"),
       canvasModeSelect: document.querySelector("#canvasModeSelect"),
+      cardDensitySelect: document.querySelector("#cardDensitySelect"),
+      organizeCanvasButton: document.querySelector("#organizeCanvasButton"),
+      syncReviewPanel: document.querySelector("#syncReviewPanel"),
+      syncReviewList: document.querySelector("#syncReviewList"),
+      cancelCanvasSyncButton: document.querySelector("#cancelCanvasSyncButton"),
+      confirmCanvasSyncButton: document.querySelector("#confirmCanvasSyncButton"),
       projectList: document.querySelector("#projectList"),
       projectCount: document.querySelector("#projectCount"),
       projectTitle: document.querySelector("#projectTitle"),
@@ -1475,6 +1860,44 @@
       return `/api/file?${params.toString()}`;
     }
 
+    function loadUiPreferences() {
+      try {
+        const prefs = JSON.parse(localStorage.getItem(UI_PREFS_KEY) || "{}");
+        return prefs && typeof prefs === "object" && !Array.isArray(prefs) ? prefs : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveUiPreferences() {
+      const prefs = {
+        sideHidden: Boolean(state.sideHidden),
+        inspectorHidden: Boolean(state.inspectorHidden),
+        filter: CANVAS_FILTERS.has(state.filter) ? state.filter : "all",
+        cardDensity: CARD_DENSITIES.has(state.cardDensity) ? state.cardDensity : "standard",
+        zoom: Number(state.zoom.toFixed(2)),
+      };
+      localStorage.setItem(UI_PREFS_KEY, JSON.stringify(prefs));
+    }
+
+    function applyUiPreferences() {
+      const prefs = loadUiPreferences();
+      if (typeof prefs.sideHidden === "boolean") state.sideHidden = prefs.sideHidden;
+      if (typeof prefs.inspectorHidden === "boolean") state.inspectorHidden = prefs.inspectorHidden;
+      if (CANVAS_FILTERS.has(prefs.filter)) {
+        state.filter = prefs.filter;
+        state.frameworkOnly = prefs.filter === "framework";
+      }
+      if (CARD_DENSITIES.has(prefs.cardDensity)) {
+        state.cardDensity = prefs.cardDensity;
+      }
+      const savedZoom = Number(prefs.zoom);
+      state.hasZoomPreference = Number.isFinite(savedZoom);
+      if (state.hasZoomPreference) {
+        state.zoom = Math.max(0.35, Math.min(2.2, savedZoom));
+      }
+    }
+
     async function readJson(url) {
       const response = await fetch(url);
       const payload = await response.json();
@@ -1507,6 +1930,7 @@
       state.projects = payload.projects || [];
       els.rootInput.value = state.root;
       els.serverState.textContent = "本地工作流已连接";
+      renderProjectQuickSelect();
       renderProjectList();
       loadHeroMedia().catch(showIntroFallback);
 
@@ -1522,6 +1946,11 @@
         state.project = null;
         state.graph = { nodes: [], edges: [] };
         state.manualEdges = [];
+        state.deletedEdges = [];
+        state.manualEdgeControls = {};
+        state.selectedEdgeKey = "";
+        state.canvasBaseline = "";
+        renderProjectQuickSelect();
         renderProject();
       }
     }
@@ -1538,10 +1967,209 @@
       state.project = await readJson(`/api/project?${params.toString()}`);
       state.graph = buildGraph(state.project);
       state.manualEdges = loadManualEdges();
+      state.deletedEdges = loadDeletedEdges();
+      state.manualEdgeControls = loadManualEdgeControls();
+      state.selectedEdgeKey = "";
       state.selectedNodeId = state.graph.nodes[0]?.id || "";
+      renderProjectQuickSelect();
       renderProjectList();
       renderProject();
-      setTimeout(fitCanvas, 20);
+      captureCanvasBaseline();
+      setTimeout(() => {
+        if (state.hasZoomPreference) {
+          renderBoard();
+          return;
+        }
+        fitCanvas({ persist: false });
+      }, 20);
+    }
+
+    function jsonSnapshot(value, fallback) {
+      if (value === undefined || value === null) return fallback;
+      try {
+        return JSON.parse(JSON.stringify(value));
+      } catch {
+        return fallback;
+      }
+    }
+
+    function collectCanvasSyncState() {
+      const project = state.project || {};
+      const shots = (project.shots || []).map((shot) => ({
+        shot_id: shot.shot_id || "",
+        beat: shot.beat || "",
+        duration_seconds: shot.duration_seconds ?? "",
+        start: shot.start || "",
+        end: shot.end || "",
+        visual_action: shot.visual_action || "",
+        image_prompt_seed: shot.image_prompt_seed || "",
+        video_prompt_seed: shot.video_prompt_seed || "",
+        video_prompt: shot.video_prompt || "",
+        frame: jsonSnapshot(shot.frame, {}),
+      }));
+      const nodes = (state.graph.nodes || []).map((node) => ({
+        id: node.id,
+        type: node.type,
+        title: node.title,
+        x: Math.round(node.x || 0),
+        y: Math.round(node.y || 0),
+        width: node.width || 0,
+        height: node.height || 0,
+      }));
+      return {
+        project_name: project.project?.name || "",
+        project_path: state.currentProject,
+        selected_node_id: state.selectedNodeId || "",
+        filter: state.filter,
+        card_density: state.cardDensity,
+        framework_only: state.frameworkOnly,
+        manual_edges: jsonSnapshot(state.manualEdges, []),
+        deleted_edges: jsonSnapshot(state.deletedEdges, []),
+        edge_controls: jsonSnapshot(state.manualEdgeControls, {}),
+        canvas_edges: jsonSnapshot(canvasEdges(), []),
+        draft_idea: jsonSnapshot(state.draftIdea, null),
+        editing_shot: jsonSnapshot(state.editingShot, null),
+        nodes,
+        shots,
+      };
+    }
+
+    function normalizeEdgesForDiff(edges) {
+      return (edges || [])
+        .map((edge) => edge.map((item) => String(item || "")))
+        .sort((a, b) => a.join(">").localeCompare(b.join(">")));
+    }
+
+    function normalizeControlsForDiff(controls) {
+      return Object.fromEntries(Object.entries(controls || {})
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, point]) => [key, {
+          x: Math.round(Number(point?.x) || 0),
+          y: Math.round(Number(point?.y) || 0),
+        }]));
+    }
+
+    function normalizeCanvasStateForDiff(snapshot) {
+      return {
+        filter: snapshot.filter,
+        card_density: snapshot.card_density,
+        framework_only: Boolean(snapshot.framework_only),
+        manual_edges: normalizeEdgesForDiff(snapshot.manual_edges),
+        deleted_edges: (snapshot.deleted_edges || []).map(String).sort(),
+        edge_controls: normalizeControlsForDiff(snapshot.edge_controls),
+        draft_idea: snapshot.draft_idea || null,
+        editing_shot: snapshot.editing_shot || null,
+        nodes: (snapshot.nodes || []).map((node) => ({
+          id: node.id,
+          x: Math.round(Number(node.x) || 0),
+          y: Math.round(Number(node.y) || 0),
+        })).sort((a, b) => String(a.id).localeCompare(String(b.id))),
+        shots: (snapshot.shots || []).map((shot) => ({
+          shot_id: shot.shot_id,
+          duration_seconds: shot.duration_seconds,
+          visual_action: shot.visual_action,
+          image_prompt_seed: shot.image_prompt_seed,
+          video_prompt_seed: shot.video_prompt_seed,
+          video_prompt: shot.video_prompt,
+        })),
+      };
+    }
+
+    function canvasStateFingerprint(snapshot = collectCanvasSyncState()) {
+      return JSON.stringify(normalizeCanvasStateForDiff(snapshot));
+    }
+
+    function captureCanvasBaseline() {
+      state.canvasBaseline = canvasStateFingerprint();
+    }
+
+    function canvasHasMeaningfulChanges() {
+      return Boolean(state.canvasBaseline && canvasStateFingerprint() !== state.canvasBaseline);
+    }
+
+    function collectCanvasChangeSummary() {
+      const project = state.project || {};
+      const nodes = state.graph.nodes || [];
+      const shots = project.shots || [];
+      const items = [`同步 ${shots.length} 个分镜、${nodes.length} 个节点布局和当前视图状态。`];
+      if (!canvasHasMeaningfulChanges()) {
+        items.push("当前还没有检测到新的画布修改，可先调整分镜、连线或编辑卡片后再同步。");
+      } else {
+        items.push("检测到画布修改，Codex 会按当前画布状态处理。");
+      }
+      if ((state.manualEdges || []).length) {
+        items.push(`手动新增或重连 ${state.manualEdges.length} 条分镜流程线。`);
+      }
+      if ((state.deletedEdges || []).length) {
+        items.push(`删除 ${state.deletedEdges.length} 条流程线，后台会按当前画布关系重构。`);
+      }
+      const adjustedEdges = Object.keys(state.manualEdgeControls || {}).length;
+      if (adjustedEdges) {
+        items.push(`调整 ${adjustedEdges} 条连线的弯曲位置。`);
+      }
+      if (state.draftIdea) {
+        items.push("包含 1 个待 Codex 生成的新分镜想法。");
+      }
+      if (state.editingShot?.shot_id || state.editingShot?.anchorId) {
+        items.push("包含当前画布内正在编辑的分镜信息。");
+      }
+      if (state.filter === "framework" || state.frameworkOnly) {
+        items.push("当前处于只看框架视图，后台仍会收到完整画布状态。");
+      }
+      items.push("同步完成后会把当前画布作为新的对照版本。");
+      return items;
+    }
+
+    function openCanvasSyncReview() {
+      if (!state.currentProject) return;
+      const items = collectCanvasChangeSummary();
+      els.syncReviewList.innerHTML = items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+      els.syncReviewPanel.classList.remove("hidden");
+    }
+
+    function closeCanvasSyncReview() {
+      els.syncReviewPanel.classList.add("hidden");
+    }
+
+    async function syncCanvasToBackend() {
+      if (!state.currentProject) return;
+      const originalText = els.syncCanvasButton.textContent;
+      const originalConfirmText = els.confirmCanvasSyncButton.textContent;
+      els.syncCanvasButton.disabled = true;
+      els.confirmCanvasSyncButton.disabled = true;
+      els.syncCanvasButton.textContent = "同步中";
+      els.confirmCanvasSyncButton.textContent = "同步中";
+      els.serverState.textContent = "同步画布修改中";
+      try {
+        await writeJson("/api/canvas-sync", {
+          project: state.currentProject,
+          note: "同步画布当前修改",
+          canvas_state: collectCanvasSyncState(),
+        });
+        els.serverState.textContent = "画布修改已同步";
+        els.syncCanvasButton.textContent = "已同步";
+        els.confirmCanvasSyncButton.textContent = "已同步";
+        captureCanvasBaseline();
+        closeCanvasSyncReview();
+        setTimeout(() => {
+          if (els.syncCanvasButton.textContent === "已同步") {
+            els.syncCanvasButton.textContent = originalText;
+          }
+          if (els.confirmCanvasSyncButton.textContent === "已同步") {
+            els.confirmCanvasSyncButton.textContent = originalConfirmText;
+          }
+        }, 1400);
+      } catch (error) {
+        els.syncCanvasButton.textContent = originalText;
+        els.confirmCanvasSyncButton.textContent = originalConfirmText;
+        throw error;
+      } finally {
+        els.syncCanvasButton.disabled = false;
+        els.confirmCanvasSyncButton.disabled = false;
+        if (els.confirmCanvasSyncButton.textContent === "同步中") {
+          els.confirmCanvasSyncButton.textContent = originalConfirmText;
+        }
+      }
     }
 
     async function loadHeroMedia() {
@@ -1608,6 +2236,7 @@
 
     function renderProjectList() {
       els.projectCount.textContent = `${state.projects.length} 个项目`;
+      renderProjectQuickSelect();
       if (!state.projects.length) {
         els.projectList.innerHTML = `<div class="empty">没有找到项目</div>`;
         return;
@@ -1636,6 +2265,23 @@
       });
     }
 
+    function renderProjectQuickSelect() {
+      if (!els.projectQuickSelect) return;
+      const options = [`<option value="">快捷切换项目</option>`].concat((state.projects || []).map((project) => {
+        const selected = project.path === state.currentProject ? " selected" : "";
+        return `<option value="${escapeHtml(project.path)}"${selected}>${escapeHtml(project.name)}</option>`;
+      }));
+      els.projectQuickSelect.innerHTML = options.join("");
+      els.projectQuickSelect.disabled = !(state.projects || []).length;
+      els.projectQuickSelect.value = state.currentProject || "";
+    }
+
+    function handleProjectQuickSelect() {
+      const projectPath = els.projectQuickSelect.value;
+      if (!projectPath || projectPath === state.currentProject) return;
+      loadProject(projectPath, false).catch(showError);
+    }
+
     const SHOT_GRID_COLUMNS = 4;
     const SHOT_CARD_WIDTH = 392;
     const SHOT_CARD_HEIGHT = 470;
@@ -1649,6 +2295,13 @@
     const DRAG_INERTIA_MIN_VELOCITY = 0.045;
     const DRAG_INERTIA_MAX_DURATION = 420;
     const DRAG_MAX_VELOCITY = 1.45;
+
+    function nodeDisplayHeight(node) {
+      if (node?.type !== "shot" || state.frameworkOnly) return node?.height || 0;
+      if (state.cardDensity === "thumbnail") return 272;
+      if (state.cardDensity === "standard") return 380;
+      return node?.height || SHOT_CARD_HEIGHT;
+    }
 
     function shotGridPosition(index) {
       const row = Math.floor(index / SHOT_GRID_COLUMNS);
@@ -1855,7 +2508,7 @@
       const style = project.visual_style || {};
       const shots = project.shots || [];
       const nodes = state.graph.nodes || [];
-      const edges = state.graph.edges || [];
+      const edges = canvasEdges();
       els.projectTitle.textContent = project.project?.name || "未命名项目";
       els.modeBadges.innerHTML = [
         badge(tWorkflow(workflow.workflow_mode), statusClass(workflow.workflow_mode || "guided")),
@@ -1896,7 +2549,7 @@
       const visibleIds = new Set(visibleNodes.map((node) => node.id));
       const visibleEdges = canvasEdges().filter(([from, to]) => visibleIds.has(from) && visibleIds.has(to));
       const maxX = Math.max(1500, ...visibleNodes.map((node) => node.x + node.width + 100));
-      const maxY = Math.max(820, ...visibleNodes.map((node) => node.y + node.height + 100));
+      const maxY = Math.max(820, ...visibleNodes.map((node) => node.y + nodeDisplayHeight(node) + 100));
       const scaledWidth = Math.max(maxX * state.zoom, els.viewport.clientWidth + 120);
       const scaledHeight = Math.max(maxY * state.zoom, els.viewport.clientHeight + 120);
       els.world.style.width = `${scaledWidth}px`;
@@ -1904,9 +2557,10 @@
       els.connectionLayer.setAttribute("width", maxX);
       els.connectionLayer.setAttribute("height", maxY);
       els.world.style.transform = `scale(${state.zoom})`;
+      state.frameworkOnly = state.filter === "framework";
       els.world.classList.toggle("framework-only", state.frameworkOnly);
-      updateFrameworkButton();
       els.canvasModeSelect.value = state.filter;
+      els.cardDensitySelect.value = state.cardDensity;
 
       renderEdgesOnly(visibleNodes, visibleEdges);
       els.nodeLayer.innerHTML = visibleNodes.map(renderNode).join("");
@@ -1914,11 +2568,18 @@
       els.nodeLayer.querySelectorAll("[data-node]").forEach((nodeEl) => {
         nodeEl.addEventListener("click", () => {
           if (Date.now() < state.suppressClickUntil) return;
+          state.selectedEdgeKey = "";
           state.selectedNodeId = nodeEl.dataset.node;
           renderBoard();
           renderInspector();
         });
         nodeEl.addEventListener("pointerdown", (event) => startNodeDrag(event, nodeEl.dataset.node));
+      });
+      els.nodeLayer.querySelectorAll("[data-pin-node]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          toggleNodePin(button.dataset.pinNode);
+        });
       });
       bindShotCanvasActions();
       bindConnectionPorts();
@@ -1941,6 +2602,10 @@
     function findEdgeGroup(edge) {
       const key = edgeElementKey(edge);
       return Array.from(els.connectionLayer.querySelectorAll("[data-edge-key]")).find((group) => group.dataset.edgeKey === key);
+    }
+
+    function manualEdgeControlId(fromId, toId) {
+      return `${fromId}->${toId}`;
     }
 
     function visibleEdgesForNodes(nodes) {
@@ -1989,14 +2654,14 @@
 
     function filteredNodes() {
       const nodes = canvasNodes();
-      if (state.frameworkOnly) {
+      if (state.filter === "framework" || state.frameworkOnly) {
         return nodes.filter((node) => node.type === "shot");
       }
       if (state.filter === "shots") {
         return nodes.filter((node) => ["source", "style", "character", "shot", "deliverable"].includes(node.type));
       }
       if (state.filter === "packaging") {
-        return nodes.filter((node) => ["source", "style", "character", "shot", "deliverable"].includes(node.type));
+        return nodes.filter((node) => ["shot", "copywriting", "packaging", "deliverable"].includes(node.type));
       }
       return nodes;
     }
@@ -2008,9 +2673,11 @@
     }
 
     function canvasEdges() {
-      const edges = [...(state.graph.edges || [])];
+      const deleted = new Set(state.deletedEdges || []);
+      const edges = (state.graph.edges || []).filter(([from, to]) => !deleted.has(manualEdgeControlId(from, to)));
       (state.manualEdges || []).forEach(([from, to]) => {
         if (!from || !to || from === to) return;
+        if (deleted.has(manualEdgeControlId(from, to))) return;
         const manualEdge = [from, to, "manual"];
         const existingIndex = edges.findIndex(([edgeFrom, edgeTo]) => edgeFrom === from && edgeTo === to);
         if (existingIndex >= 0) {
@@ -2060,7 +2727,7 @@
       let nearestDistance = Number.POSITIVE_INFINITY;
       shotNodes.forEach((node) => {
         const centerX = node.x + node.width / 2;
-        const centerY = node.y + node.height / 2;
+        const centerY = node.y + nodeDisplayHeight(node) / 2;
         const distance = Math.hypot((point?.x || 0) - centerX, (point?.y || 0) - centerY);
         if (distance < nearestDistance) {
           nearest = node;
@@ -2085,9 +2752,9 @@
         return { x: node.x, y: node.y };
       }
       if (side === "out") {
-        return { x: node.x + node.width, y: node.y + node.height / 2 };
+        return { x: node.x + node.width, y: node.y + nodeDisplayHeight(node) / 2 };
       }
-      return { x: node.x, y: node.y + node.height / 2 };
+      return { x: node.x, y: node.y + nodeDisplayHeight(node) / 2 };
     }
 
     function edgePath(x1, y1, x2, y2) {
@@ -2101,6 +2768,50 @@
       const gutter = Math.max(x1, x2) + loop;
       const midY = y1 + dy * 0.5;
       return `M ${x1} ${y1} C ${gutter} ${y1}, ${gutter} ${midY}, ${gutter} ${midY} C ${gutter} ${y2}, ${x2 - 82} ${y2}, ${x2} ${y2}`;
+    }
+
+    function edgePathWithControl(x1, y1, cx, cy, x2, y2) {
+      return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+    }
+
+    function defaultManualEdgeControl(start, end) {
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      if (dx >= 72) {
+        return {
+          x: Math.round(start.x + dx * 0.5),
+          y: Math.round(start.y + dy * 0.5),
+        };
+      }
+      const loop = Math.min(260, Math.max(112, Math.abs(dy) * 0.42 + 92));
+      return {
+        x: Math.round(Math.max(start.x, end.x) + loop),
+        y: Math.round(start.y + dy * 0.5),
+      };
+    }
+
+    function manualEdgeControlPoint(edge, start, end) {
+      const [fromId, toId] = edge;
+      const controlId = manualEdgeControlId(fromId, toId);
+      const saved = state.manualEdgeControls?.[controlId];
+      if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)) {
+        return { x: saved.x, y: saved.y };
+      }
+      return defaultManualEdgeControl(start, end);
+    }
+
+    function isAdjustableEdge(edge, from, to) {
+      const edgeType = edge?.[2] || "main";
+      return from?.type === "shot" && to?.type === "shot" && !["connection-preview", "idea-link"].includes(edgeType);
+    }
+
+    function currentEdgeForControl(fromNodeId, toNodeId, nodes = filteredNodes()) {
+      return visibleEdgesForNodes(nodes).find(([from, to], index, edges) => {
+        const edge = edges[index];
+        const fromNode = nodes.find((node) => node.id === from);
+        const toNode = nodes.find((node) => node.id === to);
+        return from === fromNodeId && to === toNodeId && isAdjustableEdge(edge, fromNode, toNode);
+      }) || [fromNodeId, toNodeId, "manual"];
     }
 
     function edgeMarkerId(edgeType) {
@@ -2118,13 +2829,43 @@
       if (!from || !to) return "";
       const start = edgeEndpoint(from, "out");
       const end = edgeEndpoint(to, "in");
-      const d = edgePath(start.x, start.y, end.x, end.y);
+      const adjustable = isAdjustableEdge(edge, from, to);
+      const control = adjustable ? manualEdgeControlPoint(edge, start, end) : null;
+      const d = control
+        ? edgePathWithControl(start.x, start.y, control.x, control.y, end.x, end.y)
+        : edgePath(start.x, start.y, end.x, end.y);
       const edgeClass = ["alt", "idea-link", "manual", "connection-preview"].includes(edgeType) ? ` ${edgeType}` : "";
+      const controlId = manualEdgeControlId(fromId, toId);
+      const selectedClass = state.selectedEdgeKey === controlId ? " selected" : "";
+      const selectMarkup = adjustable ? `
+          <path class="edge-select-hit" data-edge-select="${escapeHtml(controlId)}" data-edge-select-from="${escapeHtml(fromId)}" data-edge-select-to="${escapeHtml(toId)}" d="${d}"></path>
+        ` : "";
+      const controlMarkup = adjustable && control ? `
+          <circle class="edge-control-halo" data-edge-control="${escapeHtml(controlId)}" data-edge-control-from="${escapeHtml(fromId)}" data-edge-control-to="${escapeHtml(toId)}" data-edge-control-type="${escapeHtml(edgeType || "main")}" cx="${control.x}" cy="${control.y}" r="18"></circle>
+          <circle class="edge-control-handle" data-edge-control="${escapeHtml(controlId)}" data-edge-control-from="${escapeHtml(fromId)}" data-edge-control-to="${escapeHtml(toId)}" data-edge-control-type="${escapeHtml(edgeType || "main")}" cx="${control.x}" cy="${control.y}" r="7"></circle>
+        ` : "";
+      const deleteMarkup = adjustable && control ? `
+          <g class="edge-delete-button" data-edge-delete="${escapeHtml(controlId)}" data-edge-delete-from="${escapeHtml(fromId)}" data-edge-delete-to="${escapeHtml(toId)}" data-edge-delete-type="${escapeHtml(edgeType || "main")}" transform="translate(${control.x + 28} ${control.y - 24})" role="button" tabindex="0" aria-label="删除连线">
+            <title>删除连线</title>
+            <circle class="edge-delete-hit" cx="0" cy="0" r="18"></circle>
+            <circle class="edge-delete-icon" cx="0" cy="0" r="10"></circle>
+            <text x="0" y="0">×</text>
+          </g>
+        ` : "";
+      const labelX = control?.x ?? (start.x + end.x) / 2;
+      const labelY = control?.y ?? (start.y + end.y) / 2;
+      const selectionLabelMarkup = selectedClass ? `
+          <text class="edge-selection-label" x="${labelX}" y="${labelY - 30}">拖动黄点调整 / Delete 删除</text>
+        ` : "";
       return `
         <g data-edge-key="${escapeHtml(edgeElementKey(edge))}" data-edge-from="${escapeHtml(fromId)}" data-edge-to="${escapeHtml(toId)}" data-edge-type="${escapeHtml(edgeType || "main")}">
-          <path class="edge-path${edgeClass}" d="${d}" marker-end="url(#${edgeMarkerId(edgeType)})"></path>
-          <circle class="edge-dot${edgeClass}" cx="${start.x}" cy="${start.y}" r="7"></circle>
-          <circle class="edge-dot${edgeClass}" cx="${end.x}" cy="${end.y}" r="7"></circle>
+          ${selectMarkup}
+          <path class="edge-path${edgeClass}${selectedClass}" d="${d}" marker-end="url(#${edgeMarkerId(edgeType)})"></path>
+          <circle class="edge-dot${edgeClass}${selectedClass}" cx="${start.x}" cy="${start.y}" r="7"></circle>
+          <circle class="edge-dot${edgeClass}${selectedClass}" cx="${end.x}" cy="${end.y}" r="7"></circle>
+          ${selectionLabelMarkup}
+          ${controlMarkup}
+          ${deleteMarkup}
         </g>
       `;
     }
@@ -2146,15 +2887,24 @@
 
     function renderNode(node) {
       const selected = node.id === state.selectedNodeId ? " selected" : "";
+      const pinned = isNodeLayoutPinned(node.id);
+      const pinnedClass = pinned ? " pinned" : "";
       const body = node.type === "shot" ? renderShotBody(node) : node.type === "idea" ? renderIdeaNodeBody(node) : renderTextBody(node);
       const headerPort = node.type === "shot" ? "" : `<span class="node-port"></span>`;
       const flowPorts = renderNodePorts(node);
+      const displayHeight = nodeDisplayHeight(node);
+      const densityClass = node.type === "shot" ? ` density-${escapeHtml(state.cardDensity)}` : "";
+      const nodeId = escapeHtml(node.id);
+      const pinLabel = pinned ? "取消固定节点" : "固定节点";
       return `
-        <article class="graph-node ${escapeHtml(node.type)}${selected}" data-node="${escapeHtml(node.id)}" style="left:${node.x}px;top:${node.y}px;width:${node.width}px;min-height:${node.height}px">
+        <article class="graph-node ${escapeHtml(node.type)}${densityClass}${selected}${pinnedClass}" data-node="${nodeId}" style="left:${node.x}px;top:${node.y}px;width:${node.width}px;min-height:${displayHeight}px">
           <div class="node-head">
-            <span>${escapeHtml(node.title)}</span>
-            <span class="node-drag-hint">拖动</span>
-            ${headerPort}
+            <span class="node-title">${escapeHtml(node.title)}</span>
+            <span class="node-head-actions">
+              <span class="node-drag-hint">拖动</span>
+              <button class="node-pin${pinned ? " active" : ""}" type="button" data-pin-node="${nodeId}" aria-pressed="${String(pinned)}" title="${pinLabel}">${pinned ? "已固定" : "固定"}</button>
+              ${headerPort}
+            </span>
           </div>
           ${body}
           ${flowPorts}
@@ -2168,8 +2918,14 @@
       const shotId = escapeHtml(node.shot.shot_id || "");
       return `
         <div class="node-flow-ports">
-          <button class="flow-port flow-port-in" type="button" data-connect-port="in" data-connect-node="${nodeId}" title="${shotId} 首端">首</button>
-          <button class="flow-port flow-port-out" type="button" data-connect-port="out" data-connect-node="${nodeId}" title="${shotId} 尾端">尾</button>
+          <button class="flow-port flow-port-in" type="button" data-connect-port="in" data-connect-node="${nodeId}" title="${shotId} 连接首端">
+            <span class="port-dot">首</span>
+            <span class="port-label">连接首端</span>
+          </button>
+          <button class="flow-port flow-port-out" type="button" data-connect-port="out" data-connect-node="${nodeId}" title="${shotId} 连接尾端">
+            <span class="port-dot">尾</span>
+            <span class="port-label">连接尾端</span>
+          </button>
         </div>
       `;
     }
@@ -2252,12 +3008,50 @@
       `;
     }
 
+    function renderShotImagePanel(node, copyImageDisabled) {
+      const image = node.image ? `<img src="${node.image}" alt="${escapeHtml(node.title)}">` : `<span>暂无分镜图</span>`;
+      return `
+        <div class="node-thumb adaptive-shot-media shot-media-top shot-image-wrap">
+          ${image}
+          <div class="shot-image-actions" aria-label="分镜图操作">
+            <button class="shot-image-action" type="button" data-open-image="${escapeHtml(node.image || "")}"${copyImageDisabled}>查看原图</button>
+            <button class="shot-image-action" type="button" data-copy-image="${escapeHtml(node.image || "")}"${copyImageDisabled}>复制图片</button>
+            <button class="shot-image-action" type="button" data-shot-operation="replace_image" data-shot-operation-node="${escapeHtml(node.id)}">替换图片</button>
+            <button class="shot-image-action" type="button" data-shot-operation="regenerate_image" data-shot-operation-node="${escapeHtml(node.id)}">重生成</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderShotCopyActions(node, copyImageDisabled) {
+      return `
+        <div class="shot-actions">
+          <button class="shot-action" type="button" data-copy-image="${escapeHtml(node.image || "")}"${copyImageDisabled}>复制图片</button>
+          <button class="shot-action" type="button" data-copy-prompt="${escapeHtml(node.id)}">复制提示词</button>
+          <button class="shot-action" type="button" data-shot-edit="${escapeHtml(node.id)}">画布内编辑</button>
+        </div>
+      `;
+    }
+
+    function renderShotOperationButtons(node) {
+      return `
+        <div class="shot-local-actions" aria-label="当前分镜局部重写">
+          <button class="shot-action" type="button" data-shot-operation="rewrite_prompt" data-shot-operation-node="${escapeHtml(node.id)}">只重写提示词</button>
+          <button class="shot-action" type="button" data-shot-operation="replace_image" data-shot-operation-node="${escapeHtml(node.id)}">只换分镜图</button>
+          <button class="shot-action" type="button" data-shot-operation="image_variant" data-shot-operation-node="${escapeHtml(node.id)}">基于当前图生成变体</button>
+          <button class="shot-action" type="button" data-shot-operation="locked_rewrite" data-shot-operation-node="${escapeHtml(node.id)}">保留角色/风格锁定后再重写</button>
+        </div>
+      `;
+    }
+
     function renderShotBody(node) {
       const shot = node.shot || {};
-      const image = node.image ? `<img src="${node.image}" alt="${escapeHtml(node.title)}">` : `<span>暂无分镜图</span>`;
       const prompt = shot.video_prompt || "暂无视频提示词。";
       const editor = state.editingShot?.anchorId === node.id ? renderShotEditor(node) : "";
       const copyImageDisabled = node.image ? "" : " disabled";
+      const density = CARD_DENSITIES.has(state.cardDensity) ? state.cardDensity : "standard";
+      const imagePanel = renderShotImagePanel(node, copyImageDisabled);
+      const copyActions = renderShotCopyActions(node, copyImageDisabled);
       if (state.frameworkOnly) {
         return `
           <div class="node-body storyboard-frame-only">
@@ -2273,10 +3067,23 @@
           </div>
         `;
       }
+      if (density === "thumbnail") {
+        return `
+          <div class="node-body density-thumbnail">
+            ${imagePanel}
+            <div class="node-meta">
+              ${badge(shot.duration_seconds !== undefined ? `${shot.duration_seconds} 秒` : "时长待定")}
+              ${badge(shot.start || "起点待定")}
+              ${badge(shot.beat || "分镜", "complete")}
+            </div>
+            ${editor}
+          </div>
+        `;
+      }
       return `
-        <div class="node-body">
+        <div class="node-body density-${escapeHtml(density)}">
           <div class="shot-layout">
-            <div class="node-thumb adaptive-shot-media shot-media-top">${image}</div>
+            ${imagePanel}
             <div class="shot-content shot-details">
               <div class="shot-toolbar">
                 <div class="node-meta">
@@ -2285,21 +3092,23 @@
                   ${badge("最终分镜图", "complete")}
                   ${badge("视频提示词", shot.video_prompt ? "guided" : "missing")}
                 </div>
-                <div class="shot-actions">
-                  <button class="shot-action" type="button" data-copy-image="${escapeHtml(node.image || "")}"${copyImageDisabled}>复制图片</button>
-                  <button class="shot-action" type="button" data-copy-prompt="${escapeHtml(node.id)}">复制提示词</button>
-                  <button class="shot-action" type="button" data-shot-edit="${escapeHtml(node.id)}">画布内编辑</button>
-                </div>
+                ${copyActions}
               </div>
               <div>
                 <div class="shot-section-label">画面说明</div>
                 <div class="node-text">${escapeHtml(node.text || "")}</div>
               </div>
-              ${renderShotBindings(shot)}
-              <div>
-                <div class="shot-section-label">视频提示词</div>
-                <div class="shot-prompt">${escapeHtml(prompt)}</div>
-              </div>
+              ${density === "full" ? `
+                <div>
+                  <div class="shot-section-label">局部重写</div>
+                  ${renderShotOperationButtons(node)}
+                </div>
+                ${renderShotBindings(shot)}
+                <div>
+                  <div class="shot-section-label">视频提示词</div>
+                  <div class="shot-prompt">${escapeHtml(prompt)}</div>
+                </div>
+              ` : ""}
             </div>
           </div>
           ${editor}
@@ -2386,8 +3195,23 @@
     function renderInspector() {
       const node = findCanvasNode(state.selectedNodeId);
       if (!node) {
+        if (state.selectedEdgeKey) {
+          const [fromNodeId, toNodeId] = state.selectedEdgeKey.split("->");
+          const fromNode = findCanvasNode(fromNodeId);
+          const toNode = findCanvasNode(toNodeId);
+          els.inspectorType.textContent = "流程连线";
+          els.inspector.innerHTML = `
+            <div class="detail-block">
+              <h3>选中连线</h3>
+              ${kv("起点", fromNode?.title || fromNodeId || "-")}
+              ${kv("终点", toNode?.title || toNodeId || "-")}
+              ${kv("操作", "拖动黄点调整弯曲，按 Delete 删除，按 Esc 取消选择")}
+            </div>
+          `;
+          return;
+        }
         els.inspectorType.textContent = "";
-        els.inspector.innerHTML = `<div class="empty">点击画布节点查看详情</div>`;
+        els.inspector.innerHTML = `<div class="empty">点击画布节点或连线查看详情</div>`;
         return;
       }
 
@@ -2420,6 +3244,13 @@
     }
 
     function bindShotCanvasActions() {
+      els.nodeLayer.querySelectorAll("[data-open-image]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          openOriginalImage(button.dataset.openImage);
+        });
+      });
       els.nodeLayer.querySelectorAll("[data-copy-image]").forEach((button) => {
         button.addEventListener("click", (event) => {
           event.preventDefault();
@@ -2432,6 +3263,13 @@
           event.preventDefault();
           event.stopPropagation();
           copyShotPrompt(button.dataset.copyPrompt, button).catch(showError);
+        });
+      });
+      els.nodeLayer.querySelectorAll("[data-shot-operation]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          submitShotOperation(button).catch(showError);
         });
       });
       els.nodeLayer.querySelectorAll("[data-shot-edit]").forEach((button) => {
@@ -2566,8 +3404,223 @@
         state.manualEdges = [...(state.manualEdges || []), [fromNodeId, toNodeId, "manual"]];
         saveManualEdges();
       }
+      const controlId = manualEdgeControlId(fromNodeId, toNodeId);
+      if ((state.deletedEdges || []).includes(controlId)) {
+        state.deletedEdges = (state.deletedEdges || []).filter((edgeId) => edgeId !== controlId);
+        saveDeletedEdges();
+      }
+      if (!state.manualEdgeControls?.[controlId]) {
+        const start = edgeEndpoint(fromNode, "out");
+        const end = edgeEndpoint(toNode, "in");
+        state.manualEdgeControls = {
+          ...(state.manualEdgeControls || {}),
+          [controlId]: defaultManualEdgeControl(start, end),
+        };
+        saveManualEdgeControls();
+      }
       renderBoard();
       renderInspector();
+    }
+
+    function setManualEdgeControlActive(controlId, active) {
+      els.connectionLayer.querySelectorAll("[data-edge-control]").forEach((item) => {
+        if (item.dataset.edgeControl === controlId) item.classList.toggle("active", active);
+      });
+    }
+
+    function updateManualEdgeControlShape(fromNodeId, toNodeId) {
+      const nodes = filteredNodes();
+      const from = nodes.find((node) => node.id === fromNodeId);
+      const to = nodes.find((node) => node.id === toNodeId);
+      const edge = currentEdgeForControl(fromNodeId, toNodeId, nodes);
+      const group = findEdgeGroup(edge);
+      if (!from || !to || !group) {
+        renderEdgesOnly(nodes);
+        return;
+      }
+      const start = edgeEndpoint(from, "out");
+      const end = edgeEndpoint(to, "in");
+      const control = manualEdgeControlPoint(edge, start, end);
+      const path = group.querySelector(".edge-path");
+      if (!path) {
+        renderEdgesOnly(nodes);
+        return;
+      }
+      path.setAttribute("d", edgePathWithControl(start.x, start.y, control.x, control.y, end.x, end.y));
+      const dots = group.querySelectorAll(".edge-dot");
+      if (dots[0]) {
+        dots[0].setAttribute("cx", start.x);
+        dots[0].setAttribute("cy", start.y);
+      }
+      if (dots[1]) {
+        dots[1].setAttribute("cx", end.x);
+        dots[1].setAttribute("cy", end.y);
+      }
+      group.querySelectorAll("[data-edge-control]").forEach((handle) => {
+        handle.setAttribute("cx", control.x);
+        handle.setAttribute("cy", control.y);
+      });
+      group.querySelectorAll("[data-edge-delete]").forEach((button) => {
+        button.setAttribute("transform", `translate(${control.x + 28} ${control.y - 24})`);
+      });
+    }
+
+    function startEdgeControlDrag(event) {
+      const handle = event.target.closest?.("[data-edge-control]");
+      if (!handle || event.button !== 0) return;
+      const fromNodeId = handle.dataset.edgeControlFrom || "";
+      const toNodeId = handle.dataset.edgeControlTo || "";
+      if (!fromNodeId || !toNodeId) return;
+      event.preventDefault();
+      event.stopPropagation();
+      cancelNodeInertia();
+      closeCanvasContextMenu();
+      const point = canvasPointFromEvent(event);
+      const controlId = manualEdgeControlId(fromNodeId, toNodeId);
+      state.manualEdgeControls = {
+        ...(state.manualEdgeControls || {}),
+        [controlId]: { x: point.x, y: point.y },
+      };
+      state.edgeControlDrag = {
+        pointerId: event.pointerId,
+        controlId,
+        fromNodeId,
+        toNodeId,
+        handle,
+        frameId: 0,
+      };
+      setManualEdgeControlActive(controlId, true);
+      handle.setPointerCapture?.(event.pointerId);
+      updateManualEdgeControlShape(fromNodeId, toNodeId);
+    }
+
+    function requestEdgeControlFrame() {
+      const drag = state.edgeControlDrag;
+      if (!drag || drag.frameId) return;
+      drag.frameId = requestAnimationFrame(applyEdgeControlFrame);
+    }
+
+    function applyEdgeControlFrame() {
+      const drag = state.edgeControlDrag;
+      if (!drag) return;
+      drag.frameId = 0;
+      updateManualEdgeControlShape(drag.fromNodeId, drag.toNodeId);
+    }
+
+    function moveEdgeControlDrag(event) {
+      const drag = state.edgeControlDrag;
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const point = canvasPointFromEvent(event);
+      state.manualEdgeControls = {
+        ...(state.manualEdgeControls || {}),
+        [drag.controlId]: { x: point.x, y: point.y },
+      };
+      requestEdgeControlFrame();
+    }
+
+    function finishEdgeControlDrag(event) {
+      const drag = state.edgeControlDrag;
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      event.preventDefault();
+      event.stopPropagation();
+      clearEdgeControlDrag({ save: true });
+    }
+
+    function clearEdgeControlDrag(options = {}) {
+      const drag = state.edgeControlDrag;
+      if (!drag) return;
+      const { save = false } = options;
+      if (drag.frameId) {
+        cancelAnimationFrame(drag.frameId);
+        drag.frameId = 0;
+        updateManualEdgeControlShape(drag.fromNodeId, drag.toNodeId);
+      }
+      setManualEdgeControlActive(drag.controlId, false);
+      if (drag.handle?.hasPointerCapture?.(drag.pointerId)) {
+        drag.handle.releasePointerCapture(drag.pointerId);
+      }
+      state.edgeControlDrag = null;
+      if (save) saveManualEdgeControls();
+      renderInspector();
+    }
+
+    function deleteCanvasEdge(fromNodeId, toNodeId) {
+      const controlId = manualEdgeControlId(fromNodeId, toNodeId);
+      state.manualEdges = (state.manualEdges || []).filter(([from, to]) => from !== fromNodeId || to !== toNodeId);
+      if (!(state.deletedEdges || []).includes(controlId)) {
+        state.deletedEdges = [...(state.deletedEdges || []), controlId];
+        saveDeletedEdges();
+      }
+      if (state.manualEdgeControls?.[controlId]) {
+        const nextControls = { ...(state.manualEdgeControls || {}) };
+        delete nextControls[controlId];
+        state.manualEdgeControls = nextControls;
+        saveManualEdgeControls();
+      }
+      if (state.selectedEdgeKey === controlId) {
+        state.selectedEdgeKey = "";
+      }
+      saveManualEdges();
+      renderBoard();
+      renderInspector();
+    }
+
+    function deleteManualEdge(fromNodeId, toNodeId) {
+      deleteCanvasEdge(fromNodeId, toNodeId);
+    }
+
+    function selectCanvasEdge(fromNodeId, toNodeId) {
+      if (!fromNodeId || !toNodeId) return;
+      state.selectedEdgeKey = manualEdgeControlId(fromNodeId, toNodeId);
+      state.selectedNodeId = "";
+      renderEdgesOnly();
+      renderInspector();
+    }
+
+    function deleteSelectedEdge() {
+      if (!state.selectedEdgeKey) return false;
+      const [fromNodeId, toNodeId] = state.selectedEdgeKey.split("->");
+      if (!fromNodeId || !toNodeId) return false;
+      deleteCanvasEdge(fromNodeId, toNodeId);
+      return true;
+    }
+
+    function handleEdgeSelectClick(event) {
+      if (isEdgeDeleteTarget(event.target)) return;
+      const target = event.target.closest?.("[data-edge-select], [data-edge-control]");
+      if (!target) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const fromNodeId = target.dataset.edgeSelectFrom || target.dataset.edgeControlFrom || "";
+      const toNodeId = target.dataset.edgeSelectTo || target.dataset.edgeControlTo || "";
+      selectCanvasEdge(fromNodeId, toNodeId);
+    }
+
+    function handleEdgeDeleteClick(event) {
+      const button = event.target.closest?.("[data-edge-delete]");
+      if (!button) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const fromNodeId = button.dataset.edgeDeleteFrom || "";
+      const toNodeId = button.dataset.edgeDeleteTo || "";
+      if (fromNodeId && toNodeId) deleteCanvasEdge(fromNodeId, toNodeId);
+    }
+
+    function isEdgeDeleteTarget(target) {
+      return Boolean(target?.closest?.("[data-edge-delete]"));
+    }
+
+    function stopEdgeDeletePointerDown(event) {
+      if (!isEdgeDeleteTarget(event.target)) return;
+      event.stopPropagation();
+      closeCanvasContextMenu();
+    }
+
+    function handleEdgeDeleteKeydown(event) {
+      if (!["Enter", " "].includes(event.key)) return;
+      handleEdgeDeleteClick(event);
     }
 
     async function copyShotPrompt(nodeId, button) {
@@ -2598,6 +3651,54 @@
         const absoluteUrl = new URL(imageUrl, window.location.href).href;
         await copyText(absoluteUrl);
         flashShotAction(button, "已复制地址");
+      }
+    }
+
+    function openOriginalImage(imageUrl) {
+      if (!imageUrl) throw new Error("当前分镜还没有分镜图");
+      window.open(new URL(imageUrl, window.location.href).href, "_blank", "noopener,noreferrer");
+    }
+
+    function shotOperationLabel(operation) {
+      const labels = {
+        rewrite_prompt: "只重写当前分镜提示词",
+        replace_image: "只换当前分镜图",
+        image_variant: "基于当前图生成变体",
+        locked_rewrite: "保留角色/风格锁定后再重写",
+        regenerate_image: "重生成当前分镜图",
+      };
+      return labels[operation] || operation || "局部分镜操作";
+    }
+
+    async function submitShotOperation(button) {
+      if (!state.currentProject) return;
+      const node = findCanvasNode(button.dataset.shotOperationNode || state.selectedNodeId);
+      if (!node?.shot?.shot_id) throw new Error("未找到当前分镜");
+      const operation = button.dataset.shotOperation || "";
+      const payload = {
+        project: state.currentProject,
+        shot_id: node.shot.shot_id,
+        operation,
+        note: shotOperationLabel(operation),
+        preserve_locks: operation === "locked_rewrite",
+        shot: jsonSnapshot(node.shot, {}),
+      };
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "已提交";
+      els.serverState.textContent = "已回传当前分镜操作";
+      try {
+        const result = await writeJson("/api/shot-operation", payload);
+        state.project = result.state;
+        state.graph = buildGraph(state.project);
+        state.selectedNodeId = `shot_${node.shot.shot_id}`;
+        renderProjectList();
+        renderProject();
+      } finally {
+        window.setTimeout(() => {
+          button.disabled = false;
+          button.textContent = originalText;
+        }, 1000);
       }
     }
 
@@ -2730,8 +3831,20 @@
       return `video-master-node-layout-v3-media-top:${state.currentProject}`;
     }
 
+    function layoutPinsKey() {
+      return `video-master-node-layout-pins-v2:${state.currentProject}`;
+    }
+
     function manualEdgesKey() {
       return `video-master-manual-edges-v1:${state.currentProject}`;
+    }
+
+    function manualEdgeControlKey() {
+      return `video-master-manual-edge-controls-v1:${state.currentProject}`;
+    }
+
+    function deletedEdgesKey() {
+      return `video-master-deleted-edges-v1:${state.currentProject}`;
     }
 
     function loadManualEdges() {
@@ -2752,6 +3865,40 @@
       localStorage.setItem(manualEdgesKey(), JSON.stringify(state.manualEdges || []));
     }
 
+    function loadDeletedEdges() {
+      if (!state.currentProject) return [];
+      try {
+        const raw = JSON.parse(localStorage.getItem(deletedEdgesKey()) || "[]");
+        if (!Array.isArray(raw)) return [];
+        return Array.from(new Set(raw.map((edgeId) => String(edgeId || "")).filter(Boolean)));
+      } catch {
+        return [];
+      }
+    }
+
+    function saveDeletedEdges() {
+      if (!state.currentProject) return;
+      localStorage.setItem(deletedEdgesKey(), JSON.stringify(state.deletedEdges || []));
+    }
+
+    function loadManualEdgeControls() {
+      if (!state.currentProject) return {};
+      try {
+        const raw = JSON.parse(localStorage.getItem(manualEdgeControlKey()) || "{}");
+        if (!raw || Array.isArray(raw) || typeof raw !== "object") return {};
+        return Object.fromEntries(Object.entries(raw)
+          .map(([key, point]) => [key, { x: Number(point?.x), y: Number(point?.y) }])
+          .filter(([, point]) => Number.isFinite(point.x) && Number.isFinite(point.y)));
+      } catch {
+        return {};
+      }
+    }
+
+    function saveManualEdgeControls() {
+      if (!state.currentProject) return;
+      localStorage.setItem(manualEdgeControlKey(), JSON.stringify(state.manualEdgeControls || {}));
+    }
+
     function loadSavedLayout() {
       try {
         return JSON.parse(localStorage.getItem(layoutKey()) || "{}");
@@ -2760,11 +3907,53 @@
       }
     }
 
-    function saveNodeLayout(node) {
+    function loadLayoutPins() {
+      if (!state.currentProject) return [];
+      try {
+        const raw = JSON.parse(localStorage.getItem(layoutPinsKey()) || "[]");
+        return Array.isArray(raw) ? raw.map(String).filter(Boolean) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveLayoutPins(pins) {
+      if (!state.currentProject) return;
+      localStorage.setItem(layoutPinsKey(), JSON.stringify(Array.from(new Set(pins || []))));
+    }
+
+    function pinNodeLayout(nodeId) {
+      if (!nodeId) return;
+      saveLayoutPins([...loadLayoutPins(), nodeId]);
+    }
+
+    function toggleNodePin(nodeId) {
+      if (!nodeId) return;
+      const pins = new Set(loadLayoutPins());
+      const node = findCanvasNode(nodeId);
+      if (pins.has(nodeId)) {
+        pins.delete(nodeId);
+        els.serverState.textContent = "已取消固定节点";
+      } else {
+        pins.add(nodeId);
+        if (node) saveNodeLayout(node, { pin: false });
+        els.serverState.textContent = "已固定节点";
+      }
+      saveLayoutPins([...pins]);
+      renderProject();
+    }
+
+    function isNodeLayoutPinned(nodeId) {
+      return loadLayoutPins().includes(nodeId);
+    }
+
+    function saveNodeLayout(node, options = {}) {
       if (!state.currentProject || !node) return;
+      const { pin = false } = options;
       const layout = loadSavedLayout();
       layout[node.id] = { x: Math.round(node.x), y: Math.round(node.y) };
       localStorage.setItem(layoutKey(), JSON.stringify(layout));
+      if (pin) pinNodeLayout(node.id);
     }
 
     function applySavedLayout(project, nodes) {
@@ -2780,6 +3969,85 @@
           node.y = saved.y;
         }
       });
+    }
+
+    function nodeLayoutRect(node, x = node?.x || 0, y = node?.y || 0) {
+      return {
+        id: node?.id || "",
+        x,
+        y,
+        width: Number(node?.width) || 0,
+        height: nodeDisplayHeight(node) || Number(node?.height) || 0,
+      };
+    }
+
+    function layoutRectsOverlap(a, b, padding = 22) {
+      return (
+        a.x < b.x + b.width + padding &&
+        a.x + a.width + padding > b.x &&
+        a.y < b.y + b.height + padding &&
+        a.y + a.height + padding > b.y
+      );
+    }
+
+    function avoidPinnedLayoutCollision(node, x, y, placedRects, stepY) {
+      let nextY = Math.max(0, Math.round(y));
+      const nextX = Math.max(0, Math.round(x));
+      const spacingY = Math.max(120, Math.round(stepY || nodeDisplayHeight(node) + 72));
+      let attempts = 0;
+      while (
+        attempts < 80 &&
+        placedRects.some((rect) => layoutRectsOverlap(nodeLayoutRect(node, nextX, nextY), rect))
+      ) {
+        nextY += spacingY;
+        attempts += 1;
+      }
+      return { x: nextX, y: nextY };
+    }
+
+    function organizeCanvasLayout() {
+      if (!state.project) return;
+      const pins = new Set(loadLayoutPins());
+      const nodes = state.graph.nodes || [];
+      const shots = nodes.filter((node) => node.type === "shot");
+      const leftNodes = nodes.filter((node) => ["source", "style", "character"].includes(node.type));
+      const rightNodes = nodes.filter((node) => ["copywriting", "packaging", "deliverable"].includes(node.type));
+      const shotGapX = 44;
+      const shotGapY = state.cardDensity === "thumbnail" ? 72 : 96;
+      const shotHeight = Math.max(260, nodeDisplayHeight({ type: "shot", height: SHOT_CARD_HEIGHT }));
+      const placedRects = nodes
+        .filter((node) => pins.has(node.id))
+        .map((node) => nodeLayoutRect(node));
+      const moveNode = (node, x, y, stepY) => {
+        if (!node || pins.has(node.id)) return;
+        const next = avoidPinnedLayoutCollision(node, x, y, placedRects, stepY);
+        node.x = next.x;
+        node.y = next.y;
+        saveNodeLayout(node, { pin: false });
+        placedRects.push(nodeLayoutRect(node));
+      };
+      leftNodes.forEach((node, index) => {
+        moveNode(node, SOURCE_COLUMN_X, SHOT_GRID_START_Y + index * 132, 132);
+      });
+      shots.forEach((node, index) => {
+        const row = Math.floor(index / SHOT_GRID_COLUMNS);
+        const col = index % SHOT_GRID_COLUMNS;
+        const visualCol = row % 2 === 0 ? col : SHOT_GRID_COLUMNS - 1 - col;
+        moveNode(
+          node,
+          SHOT_GRID_START_X + visualCol * (SHOT_CARD_WIDTH + shotGapX),
+          SHOT_GRID_START_Y + row * (shotHeight + shotGapY),
+          shotHeight + shotGapY,
+        );
+      });
+      const usedColumns = Math.min(Math.max(shots.length, 1), SHOT_GRID_COLUMNS);
+      const rightX = SHOT_GRID_START_X + usedColumns * (SHOT_CARD_WIDTH + shotGapX) + 24;
+      rightNodes.forEach((node, index) => {
+        moveNode(node, rightX, SHOT_GRID_START_Y + index * 190, 190);
+      });
+      state.selectedEdgeKey = "";
+      els.serverState.textContent = pins.size ? "已整理画布，已避开固定节点" : "已整理画布";
+      renderProject();
     }
 
     function packagingStatus(project) {
@@ -2847,29 +4115,29 @@
       return map[value] || value || "待定";
     }
 
-    function updateFrameworkButton() {
-      els.toggleFrameworkButton.textContent = state.frameworkOnly ? "显示完整" : "只看框架";
-      els.toggleFrameworkButton.classList.toggle("active", state.frameworkOnly);
-      els.toggleFrameworkButton.setAttribute("aria-pressed", String(state.frameworkOnly));
-    }
-
-    function toggleFrameworkOnly() {
-      state.frameworkOnly = !state.frameworkOnly;
+    function setFilter(filter) {
+      state.filter = filter;
+      state.frameworkOnly = filter === "framework";
       if (state.frameworkOnly) {
         state.editingShot = null;
         state.selectedNodeId = "";
       }
+      els.canvasModeSelect.value = filter;
+      saveUiPreferences();
       renderProject();
     }
 
-    function setFilter(filter) {
-      state.filter = filter;
-      els.canvasModeSelect.value = filter;
-      renderBoard();
+    function setCardDensity(density) {
+      state.cardDensity = CARD_DENSITIES.has(density) ? density : "standard";
+      els.cardDensitySelect.value = state.cardDensity;
+      saveUiPreferences();
+      renderProject();
     }
 
     function setZoom(value) {
       state.zoom = Math.max(0.35, Math.min(2.2, value));
+      state.hasZoomPreference = true;
+      saveUiPreferences();
       renderBoard();
     }
 
@@ -2883,19 +4151,28 @@
       const worldX = (els.viewport.scrollLeft + localX) / oldZoom;
       const worldY = (els.viewport.scrollTop + localY) / oldZoom;
       state.zoom = nextZoom;
+      state.hasZoomPreference = true;
+      saveUiPreferences();
       renderBoard();
       els.viewport.scrollLeft = worldX * nextZoom - localX;
       els.viewport.scrollTop = worldY * nextZoom - localY;
     }
 
-    function fitCanvas() {
+    function fitCanvas(options = {}) {
+      const { persist = true } = options;
       state.zoom = 0.82;
+      state.hasZoomPreference = true;
+      if (persist) saveUiPreferences();
       renderBoard();
       els.viewport.scrollTo({ left: 0, top: 0, behavior: "smooth" });
     }
 
     function isInteractiveTarget(target) {
-      return Boolean(target.closest("button, input, textarea, select, a"));
+      return Boolean(target?.closest?.("button, input, textarea, select, a, [data-edge-delete], [data-edge-control], [data-edge-select]"));
+    }
+
+    function isTypingTarget(target) {
+      return Boolean(target?.closest?.("input, textarea, select, [contenteditable='true']"));
     }
 
     function canvasPointFromEvent(event) {
@@ -2945,6 +4222,7 @@
       const insertAfterShotId = nearestShotIdForPoint(point, state.graph.nodes || []);
       state.frameworkOnly = false;
       state.filter = "all";
+      saveUiPreferences();
       state.editingShot = null;
       state.draftIdea = {
         id,
@@ -2973,6 +4251,8 @@
     function startCanvasPan(event) {
       if (event.button !== 0 || event.target.closest(".graph-node") || isInteractiveTarget(event.target)) return;
       closeCanvasContextMenu();
+      state.selectedEdgeKey = "";
+      renderInspector();
       event.preventDefault();
       state.pan = {
         pointerId: event.pointerId,
@@ -3010,6 +4290,7 @@
       event.preventDefault();
       event.stopPropagation();
       const now = performance.now();
+      state.selectedEdgeKey = "";
       state.selectedNodeId = nodeId;
       state.nodeDrag = {
         pointerId: event.pointerId,
@@ -3181,11 +4462,23 @@
       return Array.from(els.nodeLayer.querySelectorAll("[data-node]")).find((item) => item.dataset.node === nodeId);
     }
 
-    function updatePanelVisibility() {
+    function updatePanelVisibility(options = {}) {
+      const { persist = true } = options;
       const app = document.querySelector(".app");
       app.classList.toggle("side-hidden", state.sideHidden);
       app.classList.toggle("inspector-hidden", state.inspectorHidden);
+      const sideVisible = !state.sideHidden;
+      els.toggleProjectPanelButton.classList.toggle("active", sideVisible);
+      els.toggleProjectPanelButton.title = sideVisible ? "隐藏项目栏" : "显示项目栏";
+      els.toggleProjectPanelButton.setAttribute("aria-label", sideVisible ? "隐藏项目栏" : "显示项目栏");
+      els.toggleProjectPanelButton.setAttribute("aria-pressed", String(sideVisible));
+      if (persist) saveUiPreferences();
       setTimeout(renderBoard, 0);
+    }
+
+    function toggleProjectPanel() {
+      state.sideHidden = !state.sideHidden;
+      updatePanelVisibility();
     }
 
     function showError(error) {
@@ -3206,11 +4499,17 @@
       showIntroFallback();
     });
     els.fitButton.addEventListener("click", fitCanvas);
+    els.toggleProjectPanelButton.addEventListener("click", toggleProjectPanel);
     els.zoomInButton.addEventListener("click", () => setZoom(state.zoom + 0.1));
     els.zoomOutButton.addEventListener("click", () => setZoom(state.zoom - 0.1));
     els.resetZoomButton.addEventListener("click", () => setZoom(1));
-    els.toggleFrameworkButton.addEventListener("click", toggleFrameworkOnly);
+    els.projectQuickSelect.addEventListener("change", handleProjectQuickSelect);
+    els.syncCanvasButton.addEventListener("click", openCanvasSyncReview);
+    els.cancelCanvasSyncButton.addEventListener("click", closeCanvasSyncReview);
+    els.confirmCanvasSyncButton.addEventListener("click", () => syncCanvasToBackend().catch(showError));
     els.canvasModeSelect.addEventListener("change", () => setFilter(els.canvasModeSelect.value));
+    els.cardDensitySelect.addEventListener("change", () => setCardDensity(els.cardDensitySelect.value));
+    els.organizeCanvasButton.addEventListener("click", organizeCanvasLayout);
     els.rootInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") loadProjects(true).catch(showError);
     });
@@ -3224,6 +4523,11 @@
       if (addButton) openIdeaNodeAt(state.contextMenu);
     });
     els.canvasContextMenu.addEventListener("pointerdown", (event) => event.stopPropagation());
+    els.connectionLayer.addEventListener("pointerdown", stopEdgeDeletePointerDown);
+    els.connectionLayer.addEventListener("pointerdown", startEdgeControlDrag);
+    els.connectionLayer.addEventListener("click", handleEdgeSelectClick);
+    els.connectionLayer.addEventListener("click", handleEdgeDeleteClick);
+    els.connectionLayer.addEventListener("keydown", handleEdgeDeleteKeydown);
     els.viewport.addEventListener("contextmenu", openCanvasContextMenu);
     els.viewport.addEventListener("pointerdown", startCanvasPan);
     els.viewport.addEventListener("pointermove", moveCanvasPan);
@@ -3241,18 +4545,33 @@
     window.addEventListener("pointermove", moveConnectionDrag);
     window.addEventListener("pointerup", finishConnectionDrag);
     window.addEventListener("pointercancel", finishConnectionDrag);
+    window.addEventListener("pointermove", moveEdgeControlDrag);
+    window.addEventListener("pointerup", finishEdgeControlDrag);
+    window.addEventListener("pointercancel", finishEdgeControlDrag);
     window.addEventListener("click", closeCanvasContextMenu);
-    window.addEventListener("keydown", (event) => {
+    function handleCanvasKeydown(event) {
+      if ((event.key === "Delete" || event.key === "Backspace") && state.selectedEdgeKey && !isTypingTarget(event.target)) {
+        event.preventDefault();
+        deleteSelectedEdge();
+        return;
+      }
       if (event.key === "Escape") {
         clearConnectionDrag();
+        clearEdgeControlDrag();
+        state.selectedEdgeKey = "";
+        closeCanvasSyncReview();
         closeCanvasContextMenu();
         renderEdgesOnly();
+        renderInspector();
       }
-    });
+    }
+
+    window.addEventListener("keydown", handleCanvasKeydown);
     if (sessionStorage.getItem("video-master-intro-seen") === "1") {
       els.intro.classList.add("hidden");
     }
-    updatePanelVisibility();
+    applyUiPreferences();
+    updatePanelVisibility({ persist: false });
 
     loadProjects(true).catch(showError);
   </script>

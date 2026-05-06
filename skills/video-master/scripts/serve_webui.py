@@ -29,6 +29,8 @@ VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov"}
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 HERO_MEDIA_OVERRIDE: Path | None = None
 CODEX_SHOT_REQUESTS = Path("qa") / "metadata" / "codex_shot_requests.json"
+CODEX_SHOT_OPERATION_REQUESTS = Path("qa") / "metadata" / "codex_shot_operation_requests.json"
+CODEX_CANVAS_SYNC_REQUESTS = Path("qa") / "metadata" / "codex_canvas_sync_requests.json"
 
 
 def json_bytes(payload: object, status: int = 200) -> tuple[int, bytes, str]:
@@ -288,6 +290,67 @@ def append_codex_shot_request(project: Path, payload: dict[str, object]) -> dict
     return request
 
 
+def append_codex_shot_operation_request(project: Path, payload: dict[str, object]) -> dict[str, object]:
+    shot_id = str(payload.get("shot_id") or "").strip()
+    operation = str(payload.get("operation") or "").strip()
+    if not shot_id:
+        raise ValueError("shot_id is required")
+    if not operation:
+        raise ValueError("operation is required")
+    allowed_operations = {
+        "rewrite_prompt",
+        "replace_image",
+        "image_variant",
+        "locked_rewrite",
+        "regenerate_image",
+    }
+    if operation not in allowed_operations:
+        raise ValueError(f"unsupported operation: {operation}")
+    shot = payload.get("shot")
+    if shot is not None and not isinstance(shot, dict):
+        raise ValueError("shot must be an object")
+    request_path = project / CODEX_SHOT_OPERATION_REQUESTS
+    raw_requests = read_json_file(request_path, [])
+    requests = raw_requests if isinstance(raw_requests, list) else []
+    now = datetime.now(timezone.utc)
+    request = {
+        "request_id": f"shotop_{now.strftime('%Y%m%dT%H%M%S%fZ')}",
+        "status": "pending",
+        "source": "webui_shot_card",
+        "shot_id": shot_id,
+        "operation": operation,
+        "note": str(payload.get("note") or "").strip(),
+        "preserve_locks": bool(payload.get("preserve_locks")),
+        "shot": shot or {},
+        "created_at": now.isoformat(),
+    }
+    requests.append(request)
+    write_json_file(request_path, requests)
+    return request
+
+
+def append_canvas_sync_request(project: Path, payload: dict[str, object]) -> dict[str, object]:
+    canvas_state = payload.get("canvas_state")
+    if not isinstance(canvas_state, dict):
+        raise ValueError("canvas_state must be an object")
+    note = str(payload.get("note") or "").strip()
+    request_path = project / CODEX_CANVAS_SYNC_REQUESTS
+    raw_requests = read_json_file(request_path, [])
+    requests = raw_requests if isinstance(raw_requests, list) else []
+    now = datetime.now(timezone.utc)
+    request = {
+        "request_id": f"canvas_{now.strftime('%Y%m%dT%H%M%S%fZ')}",
+        "status": "pending",
+        "source": "webui_canvas",
+        "note": note,
+        "canvas_state": canvas_state,
+        "created_at": now.isoformat(),
+    }
+    requests.append(request)
+    write_json_file(request_path, requests)
+    return request
+
+
 class VideoMasterHandler(BaseHTTPRequestHandler):
     server_version = "VideoMasterWebUI/0.1"
 
@@ -449,6 +512,36 @@ class VideoMasterHandler(BaseHTTPRequestHandler):
                     self.send_json({"error": "project path not found"}, 404)
                     return
                 request = append_codex_shot_request(project, payload)
+                state = build_project_state(project)
+            except (ProjectStateError, ValueError) as exc:
+                self.send_json({"error": str(exc)}, 400)
+                return
+            self.send_json({"ok": True, "request": request, "state": state})
+            return
+
+        if route == "/api/shot-operation":
+            try:
+                payload = self.read_json_body()
+                project = resolve_local_path(str(payload.get("project") or ""))
+                if not project.is_dir():
+                    self.send_json({"error": "project path not found"}, 404)
+                    return
+                request = append_codex_shot_operation_request(project, payload)
+                state = build_project_state(project)
+            except (ProjectStateError, ValueError) as exc:
+                self.send_json({"error": str(exc)}, 400)
+                return
+            self.send_json({"ok": True, "request": request, "state": state})
+            return
+
+        if route == "/api/canvas-sync":
+            try:
+                payload = self.read_json_body()
+                project = resolve_local_path(str(payload.get("project") or ""))
+                if not project.is_dir():
+                    self.send_json({"error": "project path not found"}, 404)
+                    return
+                request = append_canvas_sync_request(project, payload)
                 state = build_project_state(project)
             except (ProjectStateError, ValueError) as exc:
                 self.send_json({"error": str(exc)}, 400)

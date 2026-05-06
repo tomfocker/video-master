@@ -33,11 +33,12 @@ Use for the default workflow and for users who name Seedance, Seedance 2.0, 豆�
 
 - Final prompts default to Chinese-first, with optional English camera tags only when they add precision.
 - Write one copy-ready block per shot, not one long film prompt.
+- Put model, duration, aspect ratio, and reference-frame path in the shot heading. Do not repeat them as standalone body fields.
 - Inside each shot, add a `动态时间切片` section with time-coded segments such as `(00-1.5s)` and `(1.5-3.0s)`.
-- Every time slice should combine camera movement, changing light/environment, subject action, and micro-expression or material motion where relevant.
+- Every time slice should be inferred from the storyboard beat: vary the framing, camera movement, subject action, prop interaction, and environment motion according to the shot. Do not reuse a generic motion template across shots.
 - Keep motion continuous and physically plausible: slow, smooth, connected, natural, not abrupt unless the shot deliberately calls for impact.
 - Add stability constraints: clear face when a face appears, stable identity, normal anatomy, consistent wardrobe/product, no flicker, no ghosting, no watermarks or accidental text.
-- Keep external VO, subtitles, background music policy, and SFX as separate fields; do not paste narration lines into the video prompt.
+- Keep final prompt bodies compact. Use only simple model-facing policies such as `背景音乐：不要生成背景音乐`, `字幕：不要生成字幕、caption、对白文字或烧录文字`, and shot-specific `SFX音效`; do not add subtitle-file paths, packaging-file notes, or external-VO explanations.
 
 ### `model-agnostic`
 

@@ -25,12 +25,15 @@ class CopyLanguageAndSubtitlePolicyTest(unittest.TestCase):
         quality_check = (SKILL_ROOT / "references" / "quality-check.md").read_text(encoding="utf-8")
 
         for text in [prompt_reference, audio_reference, quality_check]:
-            self.assertIn("post-production only", text)
-            self.assertIn("do not generate subtitles", text)
+            self.assertIn("字幕：不要生成字幕", text)
 
-        self.assertIn("声音/口播", prompt_reference)
-        self.assertIn("画面文字策略", prompt_reference)
-        self.assertNotIn("声音/字幕", prompt_reference)
+        self.assertIn("字幕：不要生成字幕", prompt_reference)
+        self.assertIn("Do not add standalone `目标模型`, `时长`, `画幅`, or `参考图` lines", prompt_reference)
+        self.assertIn("packaging-file notes", prompt_reference)
+        self.assertIn("not a prompt instruction", audio_reference)
+        self.assertIn("explanatory post-production note", quality_check)
+        self.assertIn("copy-ready final prompts should not include", prompt_reference)
+        self.assertIn("mixed labels such as `声音/字幕`", prompt_reference)
 
 
 if __name__ == "__main__":

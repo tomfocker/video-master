@@ -241,7 +241,16 @@ Keep this short and data-oriented. Downstream phases re-read it before writing e
 - character_lock_status: confirmed | assumed | required | pending | not_needed
 - fixed_characters: <comma-separated stable character ids, e.g. host_a, founder_b>
 - character_reference_dir: characters/
+- character_anchor: characters/reference_images/<primary_anchor_file> | none
 - character_prompt_rules: <rules each storyboard/video prompt must follow for fixed-character identity>
+
+## style_confirmation_gate
+- style_confirmation_gate: required_after_character_anchor_and_s01 | skipped_for_simulation | not_needed
+- style_gate_status: pending | approved | revise_requested | skipped | not_needed
+- character_anchor: characters/reference_images/<primary_anchor_file> | none
+- first_storyboard_frame: storyboard/frames/S01.png | none
+- gate_decision_log: qa/metadata/workflow_events.jsonl
+- gate_rule: formal projects must show the character anchor and first storyboard frame to the user; do not batch-generate remaining storyboard frames while style_gate_status: pending.
 
 ## reference_style
 - source_assets:
@@ -458,7 +467,7 @@ High-motion work must include director rhythm, not only beat math. For racing, s
 
 `captions_en.srt` and `captions_zh.srt`: optional source subtitle files when the project needs both VO-language transcript subtitles and localized Chinese subtitles.
 
-Captions are a post-production subtitle asset by default. Unless `burned_subtitles_allowed` is `true`, final video prompts must treat subtitles as `post-production only` and must say the model-generated picture should not include subtitles in the video frames.
+Captions are a post-production subtitle asset by default. Unless `burned_subtitles_allowed` is `true`, final video prompts must use compact model-facing wording such as `字幕：不要生成字幕、caption、对白文字或烧录文字。`; do not include subtitle file paths or post-production explanations in the prompt body.
 For domestic Chinese workflows, include a Chinese `.srt` even when the voiceover is English.
 
 `music_sfx_cue_sheet.md`:
@@ -560,6 +569,12 @@ Use valid JSON.
     "character_lock_enabled": "false",
     "character_lock_status": "not_needed"
   },
+  "style_confirmation_gate": {
+    "style_confirmation_gate": "not_needed",
+    "style_gate_status": "not_needed",
+    "character_anchor": "none",
+    "first_storyboard_frame": "none"
+  },
   "flow_nodes": [
     {
       "id": "storyboard_images",
@@ -613,7 +628,7 @@ Use valid JSON.
 - ...
 ```
 
-`最终交付/02_提示词/视频生成提示词.md` should contain only final prompts meant to be copied into the video generator. The default target model is `seedance-2.0` / Seedance 2.0 unless the user explicitly names another video model. For Seedance 2.0, each shot block must include `目标模型：Seedance 2.0` and a `动态时间切片` section with time-coded motion segments such as `(00-1.5s)` and `(1.5-3.0s)`. It must separate external voiceover/audio from visual text instructions. Use `声音/口播` or `Voiceover/audio` for narration that will be added outside the video model, and use `画面文字策略` or `On-screen text policy` for allowed/forbidden generated text. Do not use mixed fields such as `声音/字幕`. When narration is external VO, do not paste the actual VO sentence into the video prompt; keep exact copy in audio/SRT files. When `subtitle_rendering_policy` is `post-production-only`, each prompt should say the model-generated picture should not include subtitles, captions, dialogue text, lyrics, or burned-in text. Each shot block must include `背景音乐：不要生成背景音乐；整片音乐后期统一处理。` and `SFX音效：...`. Do not include a `Negative prompt` or `负面提示词` field in final video prompts.
+`最终交付/02_提示词/视频生成提示词.md` should contain only final prompts meant to be copied into the video generator. The default target model is `seedance-2.0` / Seedance 2.0 unless the user explicitly names another video model. For Seedance 2.0, keep model, duration, aspect ratio, and reference-frame path in the shot heading, not as standalone body lines. Each shot block must include a `动态时间切片` section with time-coded motion segments such as `(00-1.5s)` and `(1.5-3.0s)`, but the slice content must be derived from that specific storyboard's framing, actions, props, and emotional beat instead of reusing a fixed template. Keep final prompt bodies compact: no packaging-file notes, no subtitle-file paths, no external-VO explanations, and no mixed fields such as `声音/字幕`. When `subtitle_rendering_policy` is `post-production-only`, each prompt only needs a simple instruction such as `字幕：不要生成字幕、caption、对白文字或烧录文字`. Each shot block must include `背景音乐：不要生成背景音乐` and `SFX音效：...`. Do not include a `Negative prompt` or `负面提示词` field in final video prompts.
 
 `最终交付/02_提示词/图片生成提示词.md` should contain copy-ready image prompts.
 

@@ -100,6 +100,16 @@ NEGATIVE_PROMPT_FIELDS = [
     "Negative prompt",
     "negative prompt",
 ]
+STANDALONE_COPY_METADATA_PATTERNS = [
+    r"^\s*目标模型\s*[:：]",
+    r"^\s*时长\s*[:：]",
+    r"^\s*画幅\s*[:：]",
+    r"^\s*参考图\s*[:：]",
+    r"^\s*Target model\s*:",
+    r"^\s*Duration\s*:",
+    r"^\s*Aspect ratio\s*:",
+    r"^\s*Reference image\s*:",
+]
 NO_BACKGROUND_MUSIC_TERMS = [
     "不要生成背景音乐",
     "不生成背景音乐",
@@ -131,6 +141,14 @@ TITLE_PACKAGING_VIDEO_PROMPT_MARKERS = [
     "透明mov",
     "透明通道mov",
 ]
+COPY_READY_EXPLANATION_MARKERS = [
+    "audio/captions.srt",
+    "audio\\captions.srt",
+    "post-production only",
+    "字幕使用",
+    "包装文字由后期",
+    "后期包装文件",
+]
 SEEDANCE2_TARGET_MODEL = "seedance-2.0"
 SEEDANCE2_MODEL_TERMS = [
     "seedance",
@@ -142,6 +160,13 @@ SEEDANCE2_MODEL_TERMS = [
 SEEDANCE_TIME_SLICE_PATTERN = re.compile(
     r"(?m)^\s*\(\s*\d+(?:\.\d+)?\s*[-–]\s*\d+(?:\.\d+)?s\s*\)\s*:"
 )
+GENERIC_SEEDANCE_TIME_SLICE_PHRASES = [
+    "gentle dolly 或 tabletop camera movement",
+    "镜头继续完成本镜头节拍",
+    "角色或道具产生明确但平滑的位移",
+    "发丝/衣摆/液体/反射/尘埃",
+    "纸片树叶、稻草、木棍或炉火",
+]
 HIGH_MOTION_TERMS = [
     "高速",
     "快切",
@@ -480,6 +505,10 @@ def validate_final_video_prompt_audio_contract(project: Path, errors: list[str])
     blocks = split_final_prompt_blocks(prompt_text)
     for label, block in blocks:
         block_lower = block.lower()
+        if any(re.search(pattern, block, re.MULTILINE | re.IGNORECASE) for pattern in STANDALONE_COPY_METADATA_PATTERNS):
+            errors.append(f"{label} copy-ready prompt must keep model/reference metadata in the heading, not standalone fields")
+        if any(marker.lower() in block_lower for marker in COPY_READY_EXPLANATION_MARKERS):
+            errors.append(f"{label} copy-ready prompt contains explanatory post-production notes; keep only concise model-facing instructions")
         if not any(term.lower() in block_lower for term in NO_BACKGROUND_MUSIC_TERMS):
             errors.append(f"{label} missing no-background-music instruction")
         if not any(term.lower() in block for term in SFX_TERMS):
@@ -517,6 +546,9 @@ def validate_seedance2_prompt_contract(project: Path, spec: dict[str, str], erro
     for label, block in split_final_prompt_blocks(prompt_text):
         if len(SEEDANCE_TIME_SLICE_PATTERN.findall(block)) < 2:
             errors.append(f"{label} Seedance 2.0 prompts require time-coded motion slices")
+        block_lower = block.lower()
+        if any(phrase.lower() in block_lower for phrase in GENERIC_SEEDANCE_TIME_SLICE_PHRASES):
+            errors.append(f"{label} Seedance 2.0 time slices must be shot-specific, not generic template text")
 
 
 def validate_style_template(project: Path, spec: dict[str, str], errors: list[str]) -> None:

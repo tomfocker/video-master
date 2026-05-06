@@ -6,7 +6,7 @@ import unittest
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+from urllib.request import ProxyHandler, Request, build_opener
 
 from tests.test_validate_video_project import make_project, write
 
@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "skills" / "video-master" / "scripts" / "serve_webui.py"
 WEBUI = ROOT / "skills" / "video-master" / "webui" / "index.html"
 INTRO_BACKGROUND_VIDEO = ROOT / "skills" / "video-master" / "webui" / "assets" / "intro-background-20260427-v2.mp4"
+LOCAL_OPENER = build_opener(ProxyHandler({}))
 
 
 def load_module():
@@ -26,7 +27,7 @@ def load_module():
 
 
 def read_json(url: str):
-    with urlopen(url, timeout=10) as response:
+    with LOCAL_OPENER.open(url, timeout=10) as response:
         return json.loads(response.read().decode("utf-8"))
 
 
@@ -37,7 +38,7 @@ def post_json(url: str, payload: dict):
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urlopen(request, timeout=10) as response:
+    with LOCAL_OPENER.open(request, timeout=10) as response:
         return json.loads(response.read().decode("utf-8"))
 
 
@@ -50,6 +51,8 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("/api/hero-media", html)
         self.assertIn("/api/file", html)
         self.assertIn("/api/shot-request", html)
+        self.assertIn("/api/shot-operation", html)
+        self.assertIn("/api/canvas-sync", html)
         self.assertIn("workflow_mode", html)
         self.assertIn("videomaster", html)
         self.assertIn("把想法变成可编辑的影像工作流", html)
@@ -74,9 +77,66 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("文案绑定", html)
         self.assertIn("包装绑定", html)
         self.assertIn("只看框架", html)
-        self.assertIn("显示完整", html)
         self.assertIn("frameworkOnly", html)
-        self.assertIn("toggleFrameworkOnly", html)
+        self.assertIn("完整制作", html)
+        self.assertIn("包装交付", html)
+        self.assertIn('value="framework"', html)
+        self.assertIn("projectQuickSelect", html)
+        self.assertIn("renderProjectQuickSelect", html)
+        self.assertIn("handleProjectQuickSelect", html)
+        self.assertIn("syncReviewPanel", html)
+        self.assertIn("变更清单", html)
+        self.assertIn("交给 Codex 处理", html)
+        self.assertIn("collectCanvasChangeSummary", html)
+        self.assertIn("openCanvasSyncReview", html)
+        self.assertIn("confirmCanvasSyncButton", html)
+        self.assertIn("selectedEdgeKey", html)
+        self.assertIn("selectCanvasEdge", html)
+        self.assertIn("deleteSelectedEdge", html)
+        self.assertIn(".edge-path.selected", html)
+        self.assertIn("data-edge-select", html)
+        self.assertIn("handleCanvasKeydown", html)
+        self.assertIn("UI_PREFS_KEY", html)
+        self.assertIn("loadUiPreferences", html)
+        self.assertIn("saveUiPreferences", html)
+        self.assertIn("applyUiPreferences", html)
+        self.assertIn("video-master-ui-prefs-v1", html)
+        self.assertIn("hasZoomPreference", html)
+        self.assertIn("captureCanvasBaseline", html)
+        self.assertIn("canvasStateFingerprint", html)
+        self.assertIn("canvasHasMeaningfulChanges", html)
+        self.assertIn("当前还没有检测到新的画布修改", html)
+        self.assertIn("同步完成后会把当前画布作为新的对照版本", html)
+        self.assertIn("edge-selection-label", html)
+        self.assertIn("拖动黄点调整", html)
+        self.assertIn("cardDensitySelect", html)
+        self.assertIn("setCardDensity", html)
+        self.assertIn("density-thumbnail", html)
+        self.assertIn("density-standard", html)
+        self.assertIn("density-full", html)
+        self.assertIn("缩略", html)
+        self.assertIn("标准", html)
+        self.assertIn("完整", html)
+        self.assertIn("查看原图", html)
+        self.assertIn("替换图片", html)
+        self.assertIn("重生成", html)
+        self.assertIn("基于当前图生成变体", html)
+        self.assertIn("只重写提示词", html)
+        self.assertIn("保留角色/风格锁定后再重写", html)
+        self.assertIn("data-shot-operation", html)
+        self.assertIn("submitShotOperation", html)
+        self.assertIn("openOriginalImage", html)
+        self.assertIn("organizeCanvasButton", html)
+        self.assertIn("整理画布", html)
+        self.assertIn("organizeCanvasLayout", html)
+        self.assertIn("layoutPinsKey", html)
+        self.assertIn("pinNodeLayout", html)
+        self.assertIn("video-master-node-layout-pins-v2", html)
+        self.assertIn('["source", "style", "character"]', html)
+        self.assertIn("data-pin-node", html)
+        self.assertIn("toggleNodePin", html)
+        self.assertIn("固定节点", html)
+        self.assertIn("avoidPinnedLayoutCollision", html)
         self.assertIn("storyboard-frame-only", html)
         self.assertIn("renderShotBindings", html)
         self.assertIn("最终交付包", html)
@@ -100,10 +160,39 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("startConnectionDrag", html)
         self.assertIn("finishConnectionDrag", html)
         self.assertIn("manualEdgesKey", html)
+        self.assertIn("manualEdgeControlKey", html)
+        self.assertIn("saveManualEdgeControls", html)
         self.assertIn("saveManualEdge", html)
         self.assertIn("manualEdges", html)
         self.assertIn("connection-preview", html)
         self.assertIn("edge-path.manual", html)
+        self.assertIn("edge-control-handle", html)
+        self.assertIn("data-edge-control", html)
+        self.assertIn("startEdgeControlDrag", html)
+        self.assertIn("isAdjustableEdge", html)
+        self.assertIn("deleteManualEdge", html)
+        self.assertIn("deleteCanvasEdge", html)
+        self.assertIn("deletedEdgesKey", html)
+        self.assertIn("saveDeletedEdges", html)
+        self.assertIn("data-edge-delete", html)
+        self.assertIn("edge-delete-button", html)
+        self.assertIn("edge-delete-hit", html)
+        self.assertIn("edge-delete-icon", html)
+        self.assertIn(".edge-delete-button:hover .edge-delete-icon", html)
+        self.assertIn(".edge-delete-button {\n      opacity: 0.76;\n      pointer-events: auto;\n      cursor: pointer;\n      transition: opacity 140ms ease;\n    }", html)
+        self.assertNotIn(".edge-delete-button:hover {\n      opacity: 1;\n      transform: scale(1.08);\n    }", html)
+        self.assertIn("删除连线", html)
+        self.assertIn("pointer-events: auto;\n      z-index: 0;", html)
+        self.assertIn("function isEdgeDeleteTarget", html)
+        self.assertIn("function stopEdgeDeletePointerDown", html)
+        self.assertIn("[data-edge-delete], [data-edge-control]", html)
+        self.assertIn('els.connectionLayer.addEventListener("pointerdown", stopEdgeDeletePointerDown);', html)
+        self.assertIn(".node-layer {\n      position: absolute;\n      inset: 0;\n      z-index: 1;\n      pointer-events: none;", html)
+        self.assertIn(".graph-node {\n      position: absolute;\n      pointer-events: auto;", html)
+        self.assertIn("edgePathWithControl", html)
+        self.assertIn("port-label", html)
+        self.assertIn("连接首端", html)
+        self.assertIn("连接尾端", html)
         self.assertIn("marker-end", html)
         self.assertNotIn("data-shot-add-after", html)
         self.assertIn("复制图片", html)
@@ -113,6 +202,15 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("copyShotImage", html)
         self.assertIn("copyShotPrompt", html)
         self.assertIn("ClipboardItem", html)
+        self.assertIn("rewrite_prompt", html)
+        self.assertIn("replace_image", html)
+        self.assertIn("image_variant", html)
+        self.assertIn("locked_rewrite", html)
+        self.assertIn("regenerate_image", html)
+        self.assertIn("syncCanvasButton", html)
+        self.assertIn("同步修改", html)
+        self.assertIn("collectCanvasSyncState", html)
+        self.assertIn("syncCanvasToBackend", html)
         self.assertIn("分镜图提示词种子", html)
         self.assertIn("视频提示词种子", html)
         self.assertIn("openShotEditor", html)
@@ -143,7 +241,13 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn('<div class="app side-hidden inspector-hidden">', html)
         self.assertIn("sideHidden: true", html)
         self.assertIn("inspectorHidden: true", html)
+        self.assertIn("toggleProjectPanelButton", html)
+        self.assertIn("project-panel-icon", html)
+        self.assertIn("toggleProjectPanel", html)
+        self.assertIn("显示项目栏", html)
+        self.assertIn("隐藏项目栏", html)
         self.assertIn("canvasModeSelect", html)
+        self.assertNotIn('id="toggleFrameworkButton"', html)
         self.assertNotIn('id="toggleSideButton"', html)
         self.assertNotIn('id="toggleInspectorButton"', html)
         self.assertNotIn('id="reloadCanvasButton"', html)
@@ -187,7 +291,7 @@ class WebUIServerTest(unittest.TestCase):
                 self.assertEqual(override_media["url"], "/api/hero-file")
 
                 hero_request = Request(f"{base_url}/api/hero-file", headers={"Range": "bytes=0-3"})
-                with urlopen(hero_request, timeout=10) as response:
+                with LOCAL_OPENER.open(hero_request, timeout=10) as response:
                     self.assertEqual(response.status, 206)
                     self.assertEqual(response.read(), b"fake")
 
@@ -203,7 +307,7 @@ class WebUIServerTest(unittest.TestCase):
                 self.assertTrue((project / "qa" / "metadata" / "project_state.json").is_file())
 
                 frame_path = state["shots"][0]["frame"]["path"]
-                with urlopen(
+                with LOCAL_OPENER.open(
                     f"{base_url}/api/file?{urlencode({'project': str(project), 'path': frame_path})}",
                     timeout=10,
                 ) as response:
@@ -213,7 +317,7 @@ class WebUIServerTest(unittest.TestCase):
                     f"{base_url}/api/file?{urlencode({'project': str(project), 'path': frame_path})}",
                     headers={"Range": "bytes=0-3"},
                 )
-                with urlopen(request, timeout=10) as response:
+                with LOCAL_OPENER.open(request, timeout=10) as response:
                     self.assertEqual(response.status, 206)
                     self.assertEqual(response.read(), b"fake")
 
@@ -238,6 +342,51 @@ class WebUIServerTest(unittest.TestCase):
                 queued_requests = json.loads(request_file.read_text(encoding="utf-8"))
                 self.assertEqual(queued_requests[0]["request_id"], queued["request"]["request_id"])
                 self.assertIn("粉底液滴落", queued["state"]["shot_requests"][0]["idea"])
+
+                operation = post_json(
+                    f"{base_url}/api/shot-operation",
+                    {
+                        "project": str(project),
+                        "shot_id": "S02",
+                        "operation": "rewrite_prompt",
+                        "note": "只重写当前分镜提示词",
+                        "preserve_locks": True,
+                        "shot": {"beat": "肌肤近景", "video_prompt": "old prompt"},
+                    },
+                )
+                self.assertTrue(operation["ok"])
+                self.assertEqual(operation["request"]["status"], "pending")
+                self.assertEqual(operation["request"]["operation"], "rewrite_prompt")
+                self.assertEqual(operation["request"]["shot_id"], "S02")
+                self.assertTrue(operation["request"]["preserve_locks"])
+                operation_file = project / "qa" / "metadata" / "codex_shot_operation_requests.json"
+                self.assertTrue(operation_file.is_file())
+                operation_requests = json.loads(operation_file.read_text(encoding="utf-8"))
+                self.assertEqual(operation_requests[0]["request_id"], operation["request"]["request_id"])
+                self.assertEqual(operation_requests[0]["shot"]["beat"], "肌肤近景")
+
+                synced = post_json(
+                    f"{base_url}/api/canvas-sync",
+                    {
+                        "project": str(project),
+                        "note": "重构分镜流程",
+                        "canvas_state": {
+                            "manual_edges": [["shot_S01", "shot_S03", "manual"]],
+                            "deleted_edges": ["shot_S02->shot_S03"],
+                            "edge_controls": {"shot_S01->shot_S03": {"x": 720, "y": 240}},
+                            "draft_idea": {"idea": "补一个产品微距镜头"},
+                        },
+                    },
+                )
+                self.assertTrue(synced["ok"])
+                self.assertEqual(synced["request"]["status"], "pending")
+                self.assertEqual(synced["request"]["note"], "重构分镜流程")
+                self.assertIn("manual_edges", synced["request"]["canvas_state"])
+                sync_file = project / "qa" / "metadata" / "codex_canvas_sync_requests.json"
+                self.assertTrue(sync_file.is_file())
+                sync_requests = json.loads(sync_file.read_text(encoding="utf-8"))
+                self.assertEqual(sync_requests[0]["request_id"], synced["request"]["request_id"])
+                self.assertEqual(sync_requests[0]["canvas_state"]["deleted_edges"], ["shot_S02->shot_S03"])
 
                 updated = post_json(
                     f"{base_url}/api/shot",

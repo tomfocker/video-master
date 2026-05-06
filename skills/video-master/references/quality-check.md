@@ -8,6 +8,7 @@ Run this checklist before final delivery.
 - `strategy/video_mode.md` exists.
 - `brief/creative_brief.md` exists.
 - `brief/spec_lock.md` exists and contains workflow, format, production mode, story, rhythm, visual style, visual style preset lock, character design policy, continuity, audio, and safety sections.
+- For projects with generated storyboard images, `brief/spec_lock.md` records `style_confirmation_gate` and `style_gate_status: pending | approved | skipped`.
 - `qa/metadata/project_state.json` can be generated with `scripts/project_state.py` for WebUI inspection.
 - `strategy/creative_strategy.md` exists.
 - `strategy/rhythm_map.md` exists.
@@ -62,6 +63,7 @@ Run this checklist before final delivery.
 - Character names, appearance, wardrobe, and props stay consistent.
 - If fixed characters are enabled, `character_design` in `spec_lock.md` records stable character IDs, reference directory, lock status, and prompt rules before storyboard generation.
 - If fixed characters are enabled, storyboard image prompts and video prompts reference the locked character IDs and do not reinvent face, age, hairstyle, body type, or signature wardrobe.
+- For formal projects, the character anchor and first storyboard frame have been shown to the user, `style_gate_status: pending` is held during review, and the workflow follows this rule: do not batch-generate remaining storyboard frames until style approval.
 - Product and brand details stay consistent.
 - Locations and time of day do not drift accidentally.
 - Visual style matches `spec_lock.md` across all prompts.
@@ -76,6 +78,7 @@ Run this checklist before final delivery.
 - Every planned frame is marked `Generated`, `Needs-Generation`, or `Skipped`.
 - Generated frame paths are verified before being referenced.
 - Missing images have final prompts and clear reasons.
+- `Needs-Generation` is used only after a real native image-generation attempt fails or the user explicitly pauses generation; do not infer unavailable generation from missing CLI credentials, environment variables, or tool listings.
 - Image prompts describe still frames, not video clips.
 - Storyboard image prompts include the locked visual style preset, medium, realism level, art direction, palette, lighting, texture/material rules, and storyboard prompt rules.
 - If reference keyframes exist, storyboard image prompts cite safe style rules and reference paths, and native image generation uses reference images when available.
@@ -93,14 +96,16 @@ Run this checklist before final delivery.
 - Final video prompts preserve the selected visual style preset through camera language, lighting, texture, and `video_prompt_rules`.
 - Final copy-ready prompts are easy to paste into a model.
 - If `prompt_language` is `zh-CN`, final prompts are Chinese-first.
-- Final prompts separate external voiceover/audio from visual text using `声音/口播` or `Voiceover/audio`, plus `画面文字策略` or `On-screen text policy`.
-- If `burned_subtitles_allowed` is false, final prompts say `do not generate subtitles`, captions, dialogue text, or burned-in text.
+- Final prompts keep external voiceover/audio and subtitle deliverables out of the copy-ready prompt body unless the user explicitly asks for a model-facing audio note.
+- If `burned_subtitles_allowed` is false, final prompts use compact wording such as `字幕：不要生成字幕、caption、对白文字或烧录文字。`.
 - Final prompts do not use mixed labels such as `声音/字幕`.
-- External VO prompts do not paste the actual narration sentence into the video model prompt.
+- External VO prompts do not paste the actual narration sentence, subtitle file path, or explanatory post-production note into the video model prompt.
 - Final prompts include no `Negative prompt` or `负面提示词` field; use positive generation requirements instead.
 - Final prompts include per-shot SFX and a no-background-music policy.
 - Seedance 2.0 is the default target model/profile unless the user explicitly named another video model.
-- For Seedance 2.0, each copy-ready shot block includes `目标模型：Seedance 2.0`, a `动态时间切片` section, and at least two time-coded motion slices such as `(00-1.5s)` and `(1.5-3.0s)`.
+- For Seedance 2.0, each copy-ready shot heading includes the model/duration/aspect/reference metadata, the body avoids standalone `目标模型` or `参考图` fields, and the body includes a `动态时间切片` section with at least two time-coded motion slices such as `(00-1.5s)` and `(1.5-3.0s)`.
+- Time-slice descriptions are shot-specific. They do not reuse generic template text such as `gentle dolly 或 tabletop camera movement` or `镜头继续完成本镜头节拍`.
+- Final prompt bodies stay compact: no `audio/captions.srt`, no `post-production only`, no packaging-file notes, and no external-VO explanation unless the user explicitly asks for that model-facing instruction.
 - Model-specific language for non-default models appears only when the user named or confirmed that target model/profile.
 
 ## Optional Title Packaging

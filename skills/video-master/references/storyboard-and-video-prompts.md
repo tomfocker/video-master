@@ -32,6 +32,8 @@ Avoid: <watermarks, unwanted text, unsafe or off-brand elements>
 
 One prompt creates one still frame. Avoid words like "video", "motion", or "animation" unless describing implied direction.
 
+Video Master defaults to Codex native image generation. Do not treat missing CLI/API credentials or a missing tool listing as proof that image generation is unavailable; attempt the native image path first and only then record a failure if the generation call itself fails.
+
 ```text
 Use case: ads-marketing
 Asset type: storyboard frame for <project name>, shot <shot id>
@@ -60,18 +62,17 @@ Text (verbatim): "<exact short text>"
 
 Keep text short. Prefer adding captions in post-production rather than inside generated images.
 
+## Style Confirmation Gate
+
+For formal projects with generated storyboard images, use `style_confirmation_gate` before batch image generation. Create or confirm the character anchor first, then generate only the first storyboard frame (S01). Present the character anchor and first storyboard frame to the user, record `style_gate_status: pending`, and do not batch-generate remaining storyboard frames until the user approves the style. Explicit simulation/test runs may record `style_gate_status: skipped` with a reason before continuing.
+
 ## Copy Language And Subtitle Policy
 
 Prompt language and copy language are separate decisions. Confirm whether the video copy/VO should be Chinese, English, bilingual, or user-supplied before writing script, TTS, captions, or final prompts.
 
-Default subtitle policy: `post-production only`. `audio/captions.srt` is for preview/post-production subtitle workflows, not an instruction for the video model to create text in the picture. Unless `burned_subtitles_allowed` is explicitly true, every final video prompt must say `do not generate subtitles`, captions, dialogue text, lyrics, or burned-in text.
+Default subtitle policy: `post-production only`. `audio/captions.srt` is for preview/post-production subtitle workflows, not an instruction for the video model to create text in the picture. Unless `burned_subtitles_allowed` is explicitly true, every copy-ready final video prompt should use the compact line `字幕：不要生成字幕、caption、对白文字或烧录文字`.
 
-Use separate fields:
-
-- `Voiceover/audio` / `声音/口播`: external narration, TTS, or post-production audio.
-- `On-screen text policy` / `画面文字策略`: whether generated visual text is allowed. Default is none.
-
-Avoid a single mixed field that combines narration and subtitles; video models often read that as a request to burn VO lines into the generated clip.
+Keep VO, TTS, caption, and packaging details in their own files. For review-only prompt drafts you may keep separate audio or visual-text notes, but copy-ready final prompts should not include external VO explanations, subtitle file paths, packaging file paths, or mixed labels such as `声音/字幕`.
 
 ## Reference Style Transfer
 
@@ -167,20 +168,16 @@ Use this for `prompts/video_prompts.md`.
 Use this for `最终交付/02_提示词/视频生成提示词.md` when `prompt_language` is `zh-CN` and the user has explicitly selected a non-Seedance model-agnostic format. Otherwise use the Seedance 2.0 block below.
 
 ```markdown
-## S01 - <镜头名>
+## S01 - <镜头名>（<秒数> / <比例> / <目标模型或平台> / 参考图：<相对路径>）
 
-时长：<秒数>
-参考图：<相对路径>
 画面：<中文描述主体、场景、构图、风格>
 动作：<中文描述人物/产品/环境运动>
 镜头：<中文描述机位、景别、运动，可保留 macro close-up / shallow depth of field 等英文标签>
 光线与风格：<中文描述光线、色彩、质感、统一性>
 参考风格：<如有 reference_style，写明参考风格规则和安全关键帧路径；只迁移调色、构图、镜头语言和剪辑节奏，不复制原片内容>
-声音/口播：<外部配音或后期音频说明；如果是画外音，不写具体台词，只写后期添加>
-背景音乐：不要生成背景音乐；整片音乐后期统一处理
+背景音乐：不要生成背景音乐
 SFX音效：<本镜头需要的现场声/拟音/冲击音，例如引擎、雨声、手套摩擦、按钮声、呼吸声>
-画面文字策略：<默认无；如需片内文字，写明准确文字和用户授权>
-字幕策略：post-production only；字幕使用 audio/captions.srt 后期添加，模型生成画面不添加字幕、caption、对白文字或烧录字幕
+字幕：不要生成字幕、caption、对白文字或烧录文字
 生成要求：<用正向约束描述稳定主体、连续动作、清晰构图、授权标识策略；不要写“负面提示词”字段>
 ```
 
@@ -193,32 +190,28 @@ Per-clip background music should stay off. Current segmented video models often 
 Seedance 2.0 is the default target video model/profile. Use this for `最终交付/02_提示词/视频生成提示词.md` unless the user explicitly names another video model. It keeps the single-shot prompt easy to paste while adding the motion detail Seedance expects.
 
 ```markdown
-## S01 - <镜头名>
+## S01 - <镜头名>（<秒数> / <比例> / Seedance 2.0 / 参考图：<相对路径>）
 
-目标模型：Seedance 2.0
-时长：<秒数>
-画幅：<比例>
-参考图：<相对路径>
 画面：<中文描述主体、场景、构图、风格>
 视觉连续性：<固定角色/产品/服装/场景/材质规则>
 
 动态时间切片：
-(00-1.5s): <运镜方式>，<光影/环境发生变化>，<主体起势动作和微表情/材质运动>，动作自然连续。
-(1.5-3.0s): <运镜变化>，<主体位移或产品转动>，<发丝/衣摆/液体/反射/尘埃等物理互动>，保持稳定。
-(3.0-4.0s): <关键视觉高潮或特写推进>，<面部/产品细节>，<环境余韵或光线扫过>。
+(00-1.0s): <根据该分镜分析出的起势动作、景别和第一段运镜，不复用固定模板>。
+(1.0-2.2s): <该分镜最重要的动作推进、道具/角色/环境互动和机位变化>。
+(2.2-3.0s): <收束到本镜头的关键视觉点、表情/材质/产品细节或转场方向>。
 
 运镜与焦段：<景别、机位、镜头运动，可保留 slow dolly in / handheld / macro close-up / shallow depth of field 等英文标签>
 光线与风格：<中文描述光线、色彩、质感、统一性>
 稳定性要求：五官清晰、面部稳定、人体结构正常、同一角色、服装一致、发型不变；产品造型、材质和比例稳定；无闪烁、无重影。
-声音/口播：<外部配音或后期音频说明；如果是画外音，不写具体台词，只写后期添加>
-背景音乐：不要生成背景音乐；整片音乐后期统一处理
+背景音乐：不要生成背景音乐
 SFX音效：<本镜头需要的现场声/拟音/冲击音>
-画面文字策略：<默认无；如需片内文字，写明准确文字和用户授权>
-字幕策略：post-production only；字幕使用 audio/captions.srt 后期添加，模型生成画面不添加字幕、caption、对白文字或烧录字幕
+字幕：不要生成字幕、caption、对白文字或烧录文字
 生成要求：连续运动、真实物理惯性、清晰主体、稳定构图、自然表情或材质变化；不要写“负面提示词”字段
 ```
 
-Time-slice count should follow duration: 2s can use 2 slices, 3-5s usually uses 3-4 slices, 10s uses about 8 slices, and 15s uses about 12 slices. Do not make every slice a new scene; the slices describe how one shot evolves over time.
+Keep the prompt body compact. Do not add standalone `目标模型`, `时长`, `画幅`, or `参考图` lines; keep those in the heading so users can copy the useful prompt body quickly. Do not add packaging-file notes, subtitle-file paths, or external-VO explanations inside the copy-ready video prompt.
+
+Time-slice count should follow duration: 2s can use 2 slices, 3-5s usually uses 3-4 slices, 10s uses about 8 slices, and 15s uses about 12 slices. Do not make every slice a new scene; the slices describe how one shot evolves over time. Each slice must be inferred from that specific storyboard: choose shot-specific framing, camera movement, action beats, prop interaction, and environmental motion. Do not reuse generic phrases such as `gentle dolly 或 tabletop camera movement` or `镜头继续完成本镜头节拍`.
 
 ## Prompt Dialect Notes
 
