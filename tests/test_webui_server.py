@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 import tempfile
 import threading
 import unittest
@@ -50,6 +51,9 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("/api/project", html)
         self.assertIn("/api/hero-media", html)
         self.assertIn("/api/file", html)
+        self.assertIn("/api/auth/codex/status", html)
+        self.assertIn("/api/auth/codex/device/start", html)
+        self.assertIn("/api/storyboard-image/generate", html)
         self.assertIn("/api/shot-request", html)
         self.assertIn("/api/shot-operation", html)
         self.assertIn("/api/canvas-sync", html)
@@ -197,8 +201,12 @@ class WebUIServerTest(unittest.TestCase):
         self.assertNotIn("data-shot-add-after", html)
         self.assertIn("复制图片", html)
         self.assertIn("复制提示词", html)
+        self.assertIn("Codex 登录", html)
+        self.assertIn("直接生成分镜图", html)
+        self.assertIn("generateStoryboardImage", html)
         self.assertIn("data-copy-image", html)
         self.assertIn("data-copy-prompt", html)
+        self.assertIn("data-generate-storyboard-image", html)
         self.assertIn("copyShotImage", html)
         self.assertIn("copyShotPrompt", html)
         self.assertIn("ClipboardItem", html)
@@ -260,6 +268,8 @@ class WebUIServerTest(unittest.TestCase):
         module = load_module()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            previous_auth_file = os.environ.get("VIDEO_MASTER_CODEX_AUTH_FILE")
+            os.environ["VIDEO_MASTER_CODEX_AUTH_FILE"] = str(root / "codex_auth.json")
             project = make_project(root, durations=[3, 4, 4, 6, 5, 3, 5])
             write(
                 project / "audio" / "voiceover_script.md",
@@ -278,6 +288,10 @@ class WebUIServerTest(unittest.TestCase):
                 projects = read_json(f"{base_url}/api/projects?{urlencode({'root': str(root)})}")
                 self.assertEqual(len(projects["projects"]), 1)
                 self.assertEqual(projects["projects"][0]["name"], "sample_project")
+
+                auth = read_json(f"{base_url}/api/auth/codex/status")
+                self.assertEqual(auth["provider"], "none")
+                self.assertFalse(auth["codex"]["available"])
 
                 hero_media = read_json(f"{base_url}/api/hero-media?{urlencode({'root': str(root)})}")
                 self.assertEqual(hero_media["kind"], "video")
@@ -365,6 +379,43 @@ class WebUIServerTest(unittest.TestCase):
                 self.assertEqual(operation_requests[0]["request_id"], operation["request"]["request_id"])
                 self.assertEqual(operation_requests[0]["shot"]["beat"], "肌肤近景")
 
+                original_generator = module.generate_storyboard_image_for_project
+
+                def fake_generator(project_path, shot_id, operation="regenerate_image", prompt=None):
+                    frame = project_path / "最终交付" / "01_分镜图" / f"{shot_id}.png"
+                    frame.parent.mkdir(parents=True, exist_ok=True)
+                    frame.write_bytes(b"newpng")
+                    return {
+                        "job": {
+                            "job_id": "image_test",
+                            "status": "succeeded",
+                            "shot_id": shot_id,
+                            "operation": operation,
+                        },
+                        "asset": {
+                            "path": f"最终交付/01_分镜图/{shot_id}.png",
+                            "url": "",
+                        },
+                    }
+
+                module.generate_storyboard_image_for_project = fake_generator
+                try:
+                    generated = post_json(
+                        f"{base_url}/api/storyboard-image/generate",
+                        {
+                            "project": str(project),
+                            "shot_id": "S02",
+                            "operation": "regenerate_image",
+                        },
+                    )
+                finally:
+                    module.generate_storyboard_image_for_project = original_generator
+
+                self.assertTrue(generated["ok"])
+                self.assertEqual(generated["result"]["job"]["status"], "succeeded")
+                self.assertEqual(generated["state"]["shots"][1]["frame"]["path"], "最终交付/01_分镜图/S02.png")
+                self.assertEqual((project / "最终交付" / "01_分镜图" / "S02.png").read_bytes(), b"newpng")
+
                 synced = post_json(
                     f"{base_url}/api/canvas-sync",
                     {
@@ -435,6 +486,10 @@ class WebUIServerTest(unittest.TestCase):
                 self.assertEqual(shots[1]["beat"], "补充分镜")
                 self.assertEqual(shots[1]["video_prompt_seed"], "新增分镜的视频动势")
             finally:
+                if previous_auth_file is None:
+                    os.environ.pop("VIDEO_MASTER_CODEX_AUTH_FILE", None)
+                else:
+                    os.environ["VIDEO_MASTER_CODEX_AUTH_FILE"] = previous_auth_file
                 module.HERO_MEDIA_OVERRIDE = None
                 server.shutdown()
                 server.server_close()

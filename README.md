@@ -16,6 +16,7 @@ video-master/
         make_storyboard_overview.py
         make_animatic.py
         render_title_packaging.py
+        codex_image_generation.py
         project_state.py
         serve_webui.py
         generate_voiceover_tts.py
@@ -46,13 +47,13 @@ video-master/
 
 - 判断用户输入是纯想法、半成品素材，还是已经锁定的品牌/文案资料。
 - 入口支持 `autopilot` 全委托模式和 `guided` 协作导演模式；前者自动推进并记录假设，后者逐阶段确认和头脑风暴。
-- 提供只读本地 WebUI，用于浏览项目入口模式、流程节点、分镜图、提示词片段、包装状态和最终交付状态。
+- 提供本地 WebUI，用于浏览项目入口模式、流程节点、分镜图、提示词片段、包装状态和最终交付状态，并支持局部分镜编辑、画布同步和 Codex 登录后的分镜图直接生成。
 - 在写剧本前确认视频类型，例如广告 TVC、产品宣传短视频、故事短片、动画、教程讲解、品牌片或电商转化短视频。
 - 分开确认提示词语言、口播语言、字幕语言和字幕渲染策略，避免视频模型误生成内嵌字幕。
 - 设计非均匀镜头节奏，不再默认平均分配时长；高速、运动、竞速类主题会加入快切组、冲击镜头和呼吸镜头。
 - 提取并集中管理口播稿、TTS 行、字幕、整片音乐方向、逐镜头 SFX 音效和音频生成提示。
 - 面向国内用户交付中文优先的最终提示词；英文口播项目也会在 `最终交付/03_口播与字幕/` 中保留 `英文字幕.srt` 和 `中文字幕.srt`。
-- 需要分镜图时，使用 Codex 原生生图能力生成 storyboard frames。
+- 需要分镜图时，使用 Codex 原生生图能力生成 storyboard frames；WebUI 可通过 Codex 设备登录直接生成当前分镜图，并把原图写回 `最终交付/01_分镜图/`。
 - 支持把用户提供的参考图片或视频作为 `reference_style` 分析，提炼可迁移的色彩、光影、节奏、镜头语言和包装规则，但不复制原片人物、品牌、台词、水印或具体画面。
 - 默认把字幕作为后期资产处理；最终视频提示词会明确要求视频模型不要生成或烧录字幕，除非用户明确允许。
 - 把用户真正需要使用的结果集中放到 `最终交付/`。
@@ -146,6 +147,13 @@ python3 skills/video-master/scripts/validate_video_project.py video_projects/<pr
 ```bash
 python3 skills/video-master/scripts/serve_webui.py --host 127.0.0.1 --port 8765
 ```
+
+WebUI 原生生图：
+
+- 打开 WebUI 后点击 `Codex 登录`，按浏览器页面提示完成授权。
+- 登录 token 默认保存在 `~/.codex/video-master/codex_oauth.json`，不会写入项目仓库；如需改位置，可设置 `VIDEO_MASTER_CODEX_AUTH_FILE`。
+- 在分镜卡片中点击 `直接生成分镜图`，图片会保存到 `最终交付/01_分镜图/Sxx.png`。
+- 每次生成状态会写入 `qa/metadata/image_generation_manifest.json`，便于排查失败和断点续跑。
 
 分镜预览视频模式：
 

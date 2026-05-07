@@ -19,6 +19,14 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from project_state import ProjectStateError, build_project_state, write_project_state
+from codex_image_generation import (
+    CodexImageGenerationError,
+    generate_storyboard_image_for_project,
+    get_auth_status,
+    logout_codex,
+    poll_codex_device_login,
+    start_codex_device_login,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -448,6 +456,10 @@ class VideoMasterHandler(BaseHTTPRequestHandler):
             self.send_file(HERO_MEDIA_OVERRIDE)
             return
 
+        if route == "/api/auth/codex/status":
+            self.send_json(get_auth_status())
+            return
+
         if route == "/api/project":
             project = resolve_local_path(query.get("path", [""])[0])
             try:
@@ -547,6 +559,54 @@ class VideoMasterHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": str(exc)}, 400)
                 return
             self.send_json({"ok": True, "request": request, "state": state})
+            return
+
+        if route == "/api/auth/codex/device/start":
+            try:
+                self.send_json(start_codex_device_login())
+            except CodexImageGenerationError as exc:
+                self.send_json({"error": str(exc)}, 502)
+            return
+
+        if route == "/api/auth/codex/device/poll":
+            try:
+                payload = self.read_json_body()
+                device_auth_id = str(payload.get("deviceAuthId") or payload.get("device_auth_id") or "").strip()
+                user_code = str(payload.get("userCode") or payload.get("user_code") or "").strip()
+                if not device_auth_id or not user_code:
+                    self.send_json({"error": "Codex 登录轮询缺少设备码"}, 400)
+                    return
+                self.send_json(poll_codex_device_login(device_auth_id, user_code))
+            except (ValueError, CodexImageGenerationError) as exc:
+                self.send_json({"error": str(exc)}, 502)
+            return
+
+        if route == "/api/auth/codex/logout":
+            self.send_json(logout_codex())
+            return
+
+        if route == "/api/storyboard-image/generate":
+            try:
+                payload = self.read_json_body()
+                project = resolve_local_path(str(payload.get("project") or ""))
+                if not project.is_dir():
+                    self.send_json({"error": "project path not found"}, 404)
+                    return
+                shot_id = str(payload.get("shot_id") or "").strip()
+                if not shot_id:
+                    self.send_json({"error": "shot_id is required"}, 400)
+                    return
+                result = generate_storyboard_image_for_project(
+                    project,
+                    shot_id,
+                    operation=str(payload.get("operation") or "regenerate_image"),
+                    prompt=str(payload.get("prompt") or "").strip() or None,
+                )
+                state = build_project_state(project)
+            except (ProjectStateError, ValueError, CodexImageGenerationError) as exc:
+                self.send_json({"error": str(exc)}, 400)
+                return
+            self.send_json({"ok": True, "result": result, "state": state})
             return
 
         self.send_json({"error": "not found"}, 404)

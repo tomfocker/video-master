@@ -259,7 +259,7 @@
     .topbar {
       grid-column: 1 / -1;
       display: grid;
-      grid-template-columns: 350px minmax(260px, 1fr) auto auto auto;
+      grid-template-columns: 350px minmax(260px, 1fr) auto auto auto auto;
       gap: 10px;
       align-items: center;
       padding: 12px 16px;
@@ -1575,7 +1575,7 @@
       }
 
       .topbar {
-        grid-template-columns: 310px minmax(220px, 1fr) auto auto auto;
+        grid-template-columns: 310px minmax(220px, 1fr) auto auto auto auto;
       }
 
       .inspector {
@@ -1653,6 +1653,7 @@
       </div>
       <button id="showIntroButton" class="top-button" type="button">开场</button>
       <button id="fitButton" class="top-button" type="button">适配画布</button>
+      <button id="codexLoginButton" class="top-button" type="button">Codex 登录</button>
       <button id="writeStateButton" class="top-button primary-button" type="button">写入状态</button>
     </header>
 
@@ -1747,6 +1748,8 @@
       currentProject: "",
       project: null,
       heroMedia: null,
+      authStatus: null,
+      codexPollTimer: 0,
       graph: { nodes: [], edges: [] },
       selectedNodeId: "",
       zoom: 1,
@@ -1787,6 +1790,7 @@
       refreshButton: document.querySelector("#refreshButton"),
       showIntroButton: document.querySelector("#showIntroButton"),
       fitButton: document.querySelector("#fitButton"),
+      codexLoginButton: document.querySelector("#codexLoginButton"),
       writeStateButton: document.querySelector("#writeStateButton"),
       toggleProjectPanelButton: document.querySelector("#toggleProjectPanelButton"),
       zoomInButton: document.querySelector("#zoomInButton"),
@@ -1918,6 +1922,62 @@
         throw new Error(result.error || response.statusText);
       }
       return result;
+    }
+
+    function updateCodexLoginButton() {
+      const available = Boolean(state.authStatus?.codex?.available);
+      els.codexLoginButton.textContent = available ? "Codex 已登录" : "Codex 登录";
+      els.codexLoginButton.classList.toggle("active", available);
+      els.codexLoginButton.title = available ? "Codex 原生生图会话可用" : "登录后可直接生成分镜图";
+    }
+
+    async function loadCodexAuthStatus() {
+      state.authStatus = await readJson("/api/auth/codex/status");
+      updateCodexLoginButton();
+      return state.authStatus;
+    }
+
+    function scheduleCodexPoll(device, intervalSeconds) {
+      window.clearTimeout(state.codexPollTimer);
+      state.codexPollTimer = window.setTimeout(() => {
+        pollCodexLogin(device).catch(showError);
+      }, Math.max(1, Number(intervalSeconds) || 5) * 1000);
+    }
+
+    async function pollCodexLogin(device) {
+      const result = await writeJson("/api/auth/codex/device/poll", {
+        deviceAuthId: device.deviceAuthId,
+        userCode: device.userCode,
+      });
+      if (result.status === "authorized") {
+        state.authStatus = result.auth || await loadCodexAuthStatus();
+        updateCodexLoginButton();
+        els.serverState.textContent = "Codex 已登录，可直接生成分镜图";
+        return;
+      }
+      if (result.status === "pending") {
+        els.serverState.textContent = `等待 Codex 授权，授权码：${device.userCode}`;
+        scheduleCodexPoll(device, result.interval || device.interval);
+        return;
+      }
+      els.serverState.textContent = result.message || "Codex 登录未完成";
+      await loadCodexAuthStatus();
+    }
+
+    async function startCodexLogin() {
+      window.clearTimeout(state.codexPollTimer);
+      els.codexLoginButton.disabled = true;
+      els.serverState.textContent = "正在启动 Codex 登录";
+      try {
+        const device = await writeJson("/api/auth/codex/device/start", {});
+        window.open(device.verificationUrl, "_blank", "noopener,noreferrer");
+        els.serverState.textContent = `请在打开的页面输入授权码：${device.userCode}`;
+        scheduleCodexPoll(device, device.interval);
+      } finally {
+        window.setTimeout(() => {
+          els.codexLoginButton.disabled = false;
+        }, 700);
+      }
     }
 
     async function loadProjects(selectFirst = true) {
@@ -3016,6 +3076,7 @@
           <div class="shot-image-actions" aria-label="分镜图操作">
             <button class="shot-image-action" type="button" data-open-image="${escapeHtml(node.image || "")}"${copyImageDisabled}>查看原图</button>
             <button class="shot-image-action" type="button" data-copy-image="${escapeHtml(node.image || "")}"${copyImageDisabled}>复制图片</button>
+            <button class="shot-image-action" type="button" data-generate-storyboard-image="${escapeHtml(node.id)}">直接生成分镜图</button>
             <button class="shot-image-action" type="button" data-shot-operation="replace_image" data-shot-operation-node="${escapeHtml(node.id)}">替换图片</button>
             <button class="shot-image-action" type="button" data-shot-operation="regenerate_image" data-shot-operation-node="${escapeHtml(node.id)}">重生成</button>
           </div>
@@ -3263,6 +3324,13 @@
           event.preventDefault();
           event.stopPropagation();
           copyShotPrompt(button.dataset.copyPrompt, button).catch(showError);
+        });
+      });
+      els.nodeLayer.querySelectorAll("[data-generate-storyboard-image]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          generateStoryboardImage(button).catch(showError);
         });
       });
       els.nodeLayer.querySelectorAll("[data-shot-operation]").forEach((button) => {
@@ -3668,6 +3736,34 @@
         regenerate_image: "重生成当前分镜图",
       };
       return labels[operation] || operation || "局部分镜操作";
+    }
+
+    async function generateStoryboardImage(button) {
+      if (!state.currentProject) return;
+      const node = findCanvasNode(button.dataset.generateStoryboardImage || state.selectedNodeId);
+      if (!node?.shot?.shot_id) throw new Error("未找到当前分镜");
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "生成中";
+      els.serverState.textContent = `正在生成 ${node.shot.shot_id} 分镜图`;
+      try {
+        const result = await writeJson("/api/storyboard-image/generate", {
+          project: state.currentProject,
+          shot_id: node.shot.shot_id,
+          operation: node.image ? "regenerate_image" : "generate_image",
+        });
+        state.project = result.state;
+        state.graph = buildGraph(state.project);
+        state.selectedNodeId = `shot_${node.shot.shot_id}`;
+        els.serverState.textContent = `${node.shot.shot_id} 分镜图已生成`;
+        renderProjectList();
+        renderProject();
+      } finally {
+        window.setTimeout(() => {
+          button.disabled = false;
+          button.textContent = originalText;
+        }, 700);
+      }
     }
 
     async function submitShotOperation(button) {
@@ -4499,6 +4595,7 @@
       showIntroFallback();
     });
     els.fitButton.addEventListener("click", fitCanvas);
+    els.codexLoginButton.addEventListener("click", () => startCodexLogin().catch(showError));
     els.toggleProjectPanelButton.addEventListener("click", toggleProjectPanel);
     els.zoomInButton.addEventListener("click", () => setZoom(state.zoom + 0.1));
     els.zoomOutButton.addEventListener("click", () => setZoom(state.zoom - 0.1));
@@ -4573,6 +4670,7 @@
     applyUiPreferences();
     updatePanelVisibility({ persist: false });
 
+    loadCodexAuthStatus().catch(() => updateCodexLoginButton());
     loadProjects(true).catch(showError);
   </script>
 </body>
