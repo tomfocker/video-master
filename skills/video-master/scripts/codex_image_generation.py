@@ -33,6 +33,7 @@ DEFAULT_ORCHESTRATOR_MODEL = "gpt-5.4"
 DEFAULT_IMAGE_TIMEOUT_SECONDS = 20 * 60
 TOKEN_REFRESH_SKEW_SECONDS = 5 * 60
 IMAGE_GENERATION_MANIFEST = METADATA_DIR / "image_generation_manifest.json"
+CODEX_USER_AGENT = "codex_cli_rs/0.0.0 (video-master)"
 
 
 class CodexImageGenerationError(RuntimeError):
@@ -119,7 +120,7 @@ def post_json(url: str, payload: dict[str, Any], *, headers: dict[str, str] | No
     request = Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json", **(headers or {})},
+        headers={"Content-Type": "application/json", "User-Agent": CODEX_USER_AGENT, **(headers or {})},
         method="POST",
     )
     try:
@@ -303,7 +304,7 @@ def exchange_authorization_code(authorization_code: str, code_verifier: str) -> 
     request = Request(
         f"{issuer}/oauth/token",
         data=body.encode("utf-8"),
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        headers={"Content-Type": "application/x-www-form-urlencoded", "User-Agent": CODEX_USER_AGENT},
         method="POST",
     )
     try:
@@ -323,7 +324,7 @@ def poll_codex_device_login(device_auth_id: str, user_code: str) -> dict[str, An
     request = Request(
         f"{issuer}/api/accounts/deviceauth/token",
         data=json.dumps({"device_auth_id": device_auth_id, "user_code": user_code}).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "User-Agent": CODEX_USER_AGENT},
         method="POST",
     )
     try:
@@ -449,7 +450,7 @@ def codex_request_headers(session: dict[str, Any]) -> dict[str, str]:
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {session['access_token']}",
-        "User-Agent": "codex_cli_rs/0.0.0 (video-master)",
+        "User-Agent": CODEX_USER_AGENT,
         "originator": "codex_cli_rs",
     }
     account_id = session.get("account_id")

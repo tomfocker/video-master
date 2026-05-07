@@ -68,6 +68,45 @@ class CodexImageGenerationTest(unittest.TestCase):
         events = module.parse_codex_responses_events_from_sse(sse)
         self.assertEqual(module.extract_codex_image_base64_from_response_events(events), [image_base64])
 
+    def test_codex_device_login_sends_user_agent_header(self):
+        module = load_module()
+        captured = {}
+
+        class FakeResponse:
+            status = 200
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                return False
+
+            def read(self):
+                return json.dumps(
+                    {
+                        "device_auth_id": "deviceauth_test",
+                        "user_code": "ABCD-1234",
+                        "interval": "5",
+                        "expires_in": 900,
+                    }
+                ).encode("utf-8")
+
+        def fake_urlopen(request, timeout=30):
+            captured["headers"] = dict(request.header_items())
+            captured["timeout"] = timeout
+            return FakeResponse()
+
+        original_urlopen = module.urlopen
+        module.urlopen = fake_urlopen
+        try:
+            response = module.start_codex_device_login()
+        finally:
+            module.urlopen = original_urlopen
+
+        self.assertEqual(response["deviceAuthId"], "deviceauth_test")
+        self.assertIn("User-agent", captured["headers"])
+        self.assertIn("video-master", captured["headers"]["User-agent"])
+
     def test_project_image_size_uses_video_aspect_ratio(self):
         module = load_module()
 
