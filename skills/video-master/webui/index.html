@@ -341,6 +341,18 @@
       font-weight: 700;
     }
 
+    .top-button.active {
+      color: #ecfdf5;
+      border-color: rgba(74, 222, 128, 0.54);
+      background: rgba(21, 128, 61, 0.22);
+    }
+
+    .top-button.waiting {
+      color: #fff7ed;
+      border-color: rgba(248, 184, 78, 0.62);
+      background: rgba(180, 83, 9, 0.24);
+    }
+
     .primary-button {
       background: linear-gradient(135deg, #1d4ed8, #0f766e);
       border-color: rgba(125, 165, 255, 0.56);
@@ -580,6 +592,90 @@
     .sync-review-actions button {
       height: 34px;
       padding: 0 12px;
+      font-weight: 760;
+    }
+
+    .codex-login-panel {
+      position: fixed;
+      right: 18px;
+      top: 78px;
+      z-index: 15;
+      width: min(430px, calc(100vw - 36px));
+      border: 1px solid rgba(91, 140, 255, 0.74);
+      border-radius: var(--radius);
+      background: rgba(11, 16, 24, 0.98);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .codex-login-panel.hidden {
+      display: none;
+    }
+
+    .codex-login-body {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .codex-login-status {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      padding: 9px 11px;
+      border: 1px solid rgba(91, 140, 255, 0.36);
+      border-radius: 7px;
+      background: rgba(91, 140, 255, 0.12);
+      color: #dce7fb;
+      font-weight: 780;
+      line-height: 1.35;
+    }
+
+    .codex-login-help {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .codex-login-code-wrap {
+      display: grid;
+      gap: 7px;
+      padding: 11px;
+      border: 1px solid rgba(77, 95, 121, 0.62);
+      border-radius: 7px;
+      background: rgba(20, 29, 42, 0.8);
+    }
+
+    .codex-login-code-wrap span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .codex-login-code {
+      width: 100%;
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      color: #f8fbff;
+      background: rgba(3, 6, 11, 0.56);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 22px;
+      letter-spacing: 0.14em;
+      overflow-wrap: anywhere;
+    }
+
+    .codex-login-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .codex-login-actions button,
+    .codex-login-panel .sync-review-head button {
+      min-height: 36px;
+      padding: 0 10px;
       font-weight: 760;
     }
 
@@ -1726,6 +1822,25 @@
           <button id="confirmCanvasSyncButton" class="primary-button" type="button">交给 Codex 处理</button>
         </div>
       </div>
+      <div id="codexLoginPanel" class="codex-login-panel hidden" role="dialog" aria-label="Codex 登录状态">
+        <div class="sync-review-head">
+          <h2>Codex 登录</h2>
+          <button id="closeCodexLoginPanelButton" type="button" aria-label="关闭 Codex 登录面板">关闭</button>
+        </div>
+        <div class="codex-login-body">
+          <div id="codexLoginStatus" class="codex-login-status">未登录</div>
+          <div class="codex-login-help">点击“开始登录”后，在打开的授权页输入验证码。若授权页没有自动打开，可以手动点击“打开授权页”。</div>
+          <div class="codex-login-code-wrap">
+            <span>验证码</span>
+            <strong id="codexLoginCode" class="codex-login-code">等待生成</strong>
+          </div>
+          <div class="codex-login-actions">
+            <button id="openCodexVerifyButton" type="button" disabled>打开授权页</button>
+            <button id="copyCodexCodeButton" type="button" disabled>复制验证码</button>
+            <button id="restartCodexLoginButton" class="primary-button" type="button">开始登录</button>
+          </div>
+        </div>
+      </div>
     </main>
 
     <aside class="inspector">
@@ -1749,6 +1864,7 @@
       project: null,
       heroMedia: null,
       authStatus: null,
+      codexDevice: null,
       codexPollTimer: 0,
       graph: { nodes: [], edges: [] },
       selectedNodeId: "",
@@ -1804,6 +1920,13 @@
       syncReviewList: document.querySelector("#syncReviewList"),
       cancelCanvasSyncButton: document.querySelector("#cancelCanvasSyncButton"),
       confirmCanvasSyncButton: document.querySelector("#confirmCanvasSyncButton"),
+      codexLoginPanel: document.querySelector("#codexLoginPanel"),
+      codexLoginStatus: document.querySelector("#codexLoginStatus"),
+      codexLoginCode: document.querySelector("#codexLoginCode"),
+      openCodexVerifyButton: document.querySelector("#openCodexVerifyButton"),
+      copyCodexCodeButton: document.querySelector("#copyCodexCodeButton"),
+      restartCodexLoginButton: document.querySelector("#restartCodexLoginButton"),
+      closeCodexLoginPanelButton: document.querySelector("#closeCodexLoginPanelButton"),
       projectList: document.querySelector("#projectList"),
       projectCount: document.querySelector("#projectCount"),
       projectTitle: document.querySelector("#projectTitle"),
@@ -1924,11 +2047,52 @@
       return result;
     }
 
-    function updateCodexLoginButton() {
+    function renderCodexLoginPanel(statusText = "") {
       const available = Boolean(state.authStatus?.codex?.available);
-      els.codexLoginButton.textContent = available ? "Codex 已登录" : "Codex 登录";
+      const device = state.codexDevice;
+      const hasDevice = Boolean(device?.userCode);
+      let status = statusText || "未登录：登录后可直接生成分镜图";
+      if (!statusText && available) status = "Codex 已登录，可直接生成分镜图";
+      if (!statusText && hasDevice) status = "等待授权：请在授权页输入下方验证码";
+      els.codexLoginStatus.textContent = status;
+      els.codexLoginCode.textContent = hasDevice ? device.userCode : "等待生成";
+      els.openCodexVerifyButton.disabled = !device?.verificationUrl;
+      els.copyCodexCodeButton.disabled = !hasDevice;
+      els.restartCodexLoginButton.textContent = hasDevice ? "重新获取" : available ? "重新登录" : "开始登录";
+    }
+
+    function updateCodexLoginButton(statusText = "") {
+      const available = Boolean(state.authStatus?.codex?.available);
+      const waiting = Boolean(state.codexDevice?.userCode);
+      els.codexLoginButton.textContent = available ? "Codex 已登录" : waiting ? "等待授权" : "Codex 登录";
       els.codexLoginButton.classList.toggle("active", available);
-      els.codexLoginButton.title = available ? "Codex 原生生图会话可用" : "登录后可直接生成分镜图";
+      els.codexLoginButton.classList.toggle("waiting", !available && waiting);
+      els.codexLoginButton.title = available
+        ? "Codex 原生生图会话可用"
+        : waiting
+          ? "打开登录面板查看验证码"
+          : "登录后可直接生成分镜图";
+      renderCodexLoginPanel(statusText);
+    }
+
+    function openCodexLoginPanel(statusText = "") {
+      els.codexLoginPanel.classList.remove("hidden");
+      renderCodexLoginPanel(statusText);
+    }
+
+    function closeCodexLoginPanel() {
+      els.codexLoginPanel.classList.add("hidden");
+    }
+
+    function openCodexVerificationPage() {
+      if (!state.codexDevice?.verificationUrl) return;
+      window.open(state.codexDevice.verificationUrl, "_blank", "noopener,noreferrer");
+    }
+
+    async function copyCodexLoginCode() {
+      if (!state.codexDevice?.userCode) return;
+      await copyText(state.codexDevice.userCode);
+      renderCodexLoginPanel("验证码已复制，请在授权页粘贴或输入");
     }
 
     async function loadCodexAuthStatus() {
@@ -1950,29 +2114,44 @@
         userCode: device.userCode,
       });
       if (result.status === "authorized") {
-        state.authStatus = result.auth || await loadCodexAuthStatus();
-        updateCodexLoginButton();
+        state.authStatus = result.auth || await readJson("/api/auth/codex/status");
+        state.codexDevice = null;
+        updateCodexLoginButton("Codex 已登录，可直接生成分镜图");
         els.serverState.textContent = "Codex 已登录，可直接生成分镜图";
         return;
       }
       if (result.status === "pending") {
+        state.codexDevice = {
+          ...device,
+          interval: result.interval || device.interval,
+        };
+        updateCodexLoginButton("等待授权：请在授权页输入下方验证码");
         els.serverState.textContent = `等待 Codex 授权，授权码：${device.userCode}`;
         scheduleCodexPoll(device, result.interval || device.interval);
         return;
       }
-      els.serverState.textContent = result.message || "Codex 登录未完成";
-      await loadCodexAuthStatus();
+      const message = result.message || "Codex 登录未完成，请重新获取验证码";
+      state.codexDevice = null;
+      state.authStatus = await readJson("/api/auth/codex/status");
+      updateCodexLoginButton(message);
+      els.serverState.textContent = message;
     }
 
     async function startCodexLogin() {
       window.clearTimeout(state.codexPollTimer);
       els.codexLoginButton.disabled = true;
+      openCodexLoginPanel("正在获取 Codex 登录验证码");
       els.serverState.textContent = "正在启动 Codex 登录";
       try {
         const device = await writeJson("/api/auth/codex/device/start", {});
-        window.open(device.verificationUrl, "_blank", "noopener,noreferrer");
+        state.codexDevice = device;
+        updateCodexLoginButton("等待授权：请在授权页输入下方验证码");
+        openCodexVerificationPage();
         els.serverState.textContent = `请在打开的页面输入授权码：${device.userCode}`;
         scheduleCodexPoll(device, device.interval);
+      } catch (error) {
+        updateCodexLoginButton(`Codex 登录服务异常：${error.message || error}`);
+        throw error;
       } finally {
         window.setTimeout(() => {
           els.codexLoginButton.disabled = false;
@@ -4595,7 +4774,17 @@
       showIntroFallback();
     });
     els.fitButton.addEventListener("click", fitCanvas);
-    els.codexLoginButton.addEventListener("click", () => startCodexLogin().catch(showError));
+    els.codexLoginButton.addEventListener("click", () => {
+      if (state.authStatus?.codex?.available || state.codexDevice?.userCode) {
+        openCodexLoginPanel();
+        return;
+      }
+      startCodexLogin().catch(showError);
+    });
+    els.closeCodexLoginPanelButton.addEventListener("click", closeCodexLoginPanel);
+    els.restartCodexLoginButton.addEventListener("click", () => startCodexLogin().catch(showError));
+    els.openCodexVerifyButton.addEventListener("click", openCodexVerificationPage);
+    els.copyCodexCodeButton.addEventListener("click", () => copyCodexLoginCode().catch(showError));
     els.toggleProjectPanelButton.addEventListener("click", toggleProjectPanel);
     els.zoomInButton.addEventListener("click", () => setZoom(state.zoom + 0.1));
     els.zoomOutButton.addEventListener("click", () => setZoom(state.zoom - 0.1));
@@ -4657,6 +4846,7 @@
         clearEdgeControlDrag();
         state.selectedEdgeKey = "";
         closeCanvasSyncReview();
+        closeCodexLoginPanel();
         closeCanvasContextMenu();
         renderEdgesOnly();
         renderInspector();
