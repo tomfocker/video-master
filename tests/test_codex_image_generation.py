@@ -1,4 +1,5 @@
 import base64
+import io
 import importlib.util
 import json
 import os
@@ -106,6 +107,23 @@ class CodexImageGenerationTest(unittest.TestCase):
         self.assertEqual(response["deviceAuthId"], "deviceauth_test")
         self.assertIn("User-agent", captured["headers"])
         self.assertIn("video-master", captured["headers"]["User-agent"])
+
+    def test_codex_device_poll_handles_structured_pending_error(self):
+        module = load_module()
+
+        def fake_urlopen(request, timeout=30):
+            body = json.dumps({"error": {"code": "authorization_pending", "message": "pending"}}).encode("utf-8")
+            raise module.HTTPError(request.full_url, 403, "Forbidden", {}, io.BytesIO(body))
+
+        original_urlopen = module.urlopen
+        module.urlopen = fake_urlopen
+        try:
+            result = module.poll_codex_device_login("deviceauth_test", "ABCD-1234")
+        finally:
+            module.urlopen = original_urlopen
+
+        self.assertEqual(result["status"], "pending")
+        self.assertEqual(result["interval"], 5)
 
     def test_project_image_size_uses_video_aspect_ratio(self):
         module = load_module()

@@ -319,6 +319,20 @@ def exchange_authorization_code(authorization_code: str, code_verifier: str) -> 
     return store_auth_tokens(payload)
 
 
+def codex_error_code(payload: Any) -> str:
+    if not isinstance(payload, dict):
+        return ""
+    error = payload.get("error")
+    if isinstance(error, str):
+        return error
+    if isinstance(error, dict):
+        for key in ("code", "error", "type"):
+            value = error.get(key)
+            if isinstance(value, str):
+                return value
+    return ""
+
+
 def poll_codex_device_login(device_auth_id: str, user_code: str) -> dict[str, Any]:
     issuer = codex_issuer()
     request = Request(
@@ -348,13 +362,15 @@ def poll_codex_device_login(device_auth_id: str, user_code: str) -> dict[str, An
             exchange_authorization_code(str(authorization_code), str(code_verifier))
             return {"status": "authorized", "auth": get_auth_status()}
 
-    error_code = payload.get("error") if isinstance(payload, dict) else ""
-    if error_code in {"authorization_pending", "slow_down"} or status in {403, 404}:
+    error_code = codex_error_code(payload)
+    if error_code in {"authorization_pending", "slow_down"}:
         return {"status": "pending", "interval": int(payload.get("interval") or 5) if isinstance(payload, dict) else 5}
     if error_code == "expired_token":
         return {"status": "expired", "message": "Codex 登录码已过期，请重新开始登录。"}
     if error_code == "access_denied":
         return {"status": "denied", "message": "Codex 登录已被取消。"}
+    if status in {403, 404}:
+        return {"status": "pending", "interval": int(payload.get("interval") or 5) if isinstance(payload, dict) else 5}
     raise CodexImageGenerationError("Codex 登录轮询失败，请稍后重试。")
 
 
