@@ -259,7 +259,7 @@
     .topbar {
       grid-column: 1 / -1;
       display: grid;
-      grid-template-columns: 350px minmax(260px, 1fr) auto auto auto auto;
+      grid-template-columns: minmax(260px, 1fr) repeat(4, auto);
       gap: 10px;
       align-items: center;
       padding: 12px 16px;
@@ -312,9 +312,15 @@
 
     .root-control {
       display: grid;
-      grid-template-columns: minmax(180px, 1fr) minmax(170px, 240px) auto;
+      grid-template-columns: 1fr;
       gap: 8px;
       min-width: 0;
+    }
+
+    .project-control-shell {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(77, 95, 121, 0.34);
     }
 
     .root-control input,
@@ -331,6 +337,56 @@
 
     .root-control select {
       color: #dce7fb;
+    }
+
+    .voiceover-controls {
+      display: grid;
+      gap: 9px;
+    }
+
+    .voiceover-controls label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 740;
+    }
+
+    .voiceover-controls input,
+    .voiceover-controls select,
+    .voiceover-controls textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(20, 29, 42, 0.9);
+      color: var(--ink);
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .voiceover-controls input,
+    .voiceover-controls select {
+      height: 36px;
+    }
+
+    .voiceover-controls textarea {
+      min-height: 72px;
+    }
+
+    .voiceover-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 76px;
+      gap: 8px;
+    }
+
+    .voiceover-actions {
+      display: grid;
+      gap: 8px;
+    }
+
+    .voiceover-actions .top-button {
+      width: 100%;
     }
 
     .top-button,
@@ -351,6 +407,10 @@
       color: #fff7ed;
       border-color: rgba(248, 184, 78, 0.62);
       background: rgba(180, 83, 9, 0.24);
+    }
+
+    .project-library-button {
+      min-width: 74px;
     }
 
     .primary-button {
@@ -708,6 +768,10 @@
       cursor: grabbing;
     }
 
+    body.canvas-space-panning .viewport {
+      cursor: grab;
+    }
+
     .viewport.connecting {
       cursor: crosshair;
     }
@@ -717,7 +781,7 @@
       min-width: 100%;
       min-height: 100%;
       transform-origin: 0 0;
-      transition: transform 120ms ease;
+      will-change: transform;
     }
 
     .connection-layer {
@@ -1229,11 +1293,67 @@
     .shot-content {
       min-width: 0;
       display: grid;
-      gap: 8px;
+      gap: 9px;
     }
 
     .shot-details {
       align-content: start;
+    }
+
+    .shot-card-brief {
+      color: #e8f0ff;
+      font-size: 12px;
+      line-height: 1.48;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .shot-tech-line {
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .shot-prompt-preview {
+      padding: 8px 9px;
+      border: 1px solid rgba(91, 140, 255, 0.24);
+      border-radius: 7px;
+      background: rgba(91, 140, 255, 0.08);
+      color: #c7d2e4;
+      font-size: 11px;
+      line-height: 1.42;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .shot-prompt-preview strong {
+      color: #dbeafe;
+      font-weight: 820;
+    }
+
+    .shot-card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(77, 95, 121, 0.42);
+    }
+
+    .shot-card-hint {
+      color: var(--faint);
+      font-size: 11px;
+      line-height: 1.35;
+      white-space: nowrap;
     }
 
     .shot-toolbar {
@@ -1339,11 +1459,18 @@
     }
 
     .density-thumbnail .adaptive-shot-media {
-      min-height: 150px;
+      min-height: 142px;
     }
 
     .density-thumbnail .node-meta {
       gap: 5px;
+    }
+
+    .density-thumbnail .shot-card-brief,
+    .density-thumbnail .shot-tech-line,
+    .density-thumbnail .shot-prompt-preview,
+    .density-thumbnail .shot-card-foot {
+      display: none;
     }
 
     .density-standard .shot-prompt,
@@ -1508,6 +1635,14 @@
       background: rgba(167, 139, 250, 0.14);
     }
 
+    .badge.project-context {
+      max-width: min(520px, 46vw);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #dce7fb;
+      background: rgba(20, 29, 42, 0.82);
+    }
+
     .side-section,
     .detail-block {
       border: 1px solid rgba(77, 95, 121, 0.55);
@@ -1667,19 +1802,15 @@
 
     @media (max-width: 1220px) {
       .app {
-        grid-template-columns: 60px 260px minmax(420px, 1fr);
+        grid-template-columns: 60px 260px minmax(360px, 1fr) 340px;
+      }
+
+      .app.side-hidden {
+        grid-template-columns: 60px 0 minmax(360px, 1fr) 340px;
       }
 
       .topbar {
-        grid-template-columns: 310px minmax(220px, 1fr) auto auto auto auto;
-      }
-
-      .inspector {
-        display: none;
-      }
-
-      .canvas {
-        grid-column: 3;
+        grid-template-columns: minmax(220px, 1fr) repeat(4, auto);
       }
     }
 
@@ -1731,7 +1862,7 @@
     </div>
   </section>
 
-  <div class="app side-hidden inspector-hidden">
+  <div class="app side-hidden">
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark">VM</div>
@@ -1740,17 +1871,10 @@
           <span id="serverState">正在连接本地工作流</span>
         </div>
       </div>
-      <div class="root-control">
-        <input id="rootInput" type="text" spellcheck="false" aria-label="项目根目录">
-        <select id="projectQuickSelect" aria-label="快捷切换项目">
-          <option value="">快捷切换项目</option>
-        </select>
-        <button id="refreshButton" class="top-button" type="button">刷新项目</button>
-      </div>
+      <button id="projectLibraryButton" class="top-button project-library-button" type="button">项目库</button>
       <button id="showIntroButton" class="top-button" type="button">开场</button>
       <button id="fitButton" class="top-button" type="button">适配画布</button>
       <button id="codexLoginButton" class="top-button" type="button">Codex 登录</button>
-      <button id="writeStateButton" class="top-button primary-button" type="button">写入状态</button>
     </header>
 
     <nav class="rail" aria-label="画布工具">
@@ -1768,6 +1892,14 @@
           <h2>项目库</h2>
           <span id="projectCount" class="small">0 个项目</span>
         </div>
+        <div class="root-control project-control-shell">
+          <input id="rootInput" type="text" spellcheck="false" aria-label="项目根目录">
+          <select id="projectQuickSelect" aria-label="快捷切换项目">
+            <option value="">快捷切换项目</option>
+          </select>
+          <button id="refreshButton" class="top-button" type="button">刷新项目</button>
+          <button id="writeStateButton" class="top-button" type="button">更新项目状态</button>
+        </div>
         <div id="projectList" class="project-list"></div>
       </section>
 
@@ -1778,6 +1910,39 @@
         </div>
         <div id="miniMap" class="mini-map"></div>
       </section>
+
+      <section class="side-section">
+        <div class="section-head">
+          <h2>口播生成</h2>
+          <span id="voiceoverStatus" class="small">未选择项目</span>
+        </div>
+        <div class="voiceover-controls">
+          <label>语音入口
+            <select id="voiceoverEngine" aria-label="口播语音入口">
+              <option value="voxcpm2" selected>VoxCPM2 本地服务</option>
+              <option value="edge-tts">edge-tts</option>
+            </select>
+          </label>
+          <label>服务地址
+            <input id="voiceoverBaseUrl" type="text" spellcheck="false" value="http://100.64.0.3:8808/ui/">
+          </label>
+          <div class="voiceover-grid">
+            <label>人设/声音
+              <input id="voiceoverPersona" type="text" value="小潮院长">
+            </label>
+            <label>步数
+              <input id="voiceoverSteps" type="number" min="1" step="1" value="10">
+            </label>
+          </div>
+          <label>声音控制
+            <textarea id="voiceoverControlInstruction">中文口播，语速中等，清晰稳定，自然有表现力。</textarea>
+          </label>
+          <div class="voiceover-actions">
+            <button id="generateVoiceoverButton" class="top-button primary-button" type="button">生成口播</button>
+            <button id="dryRunVoiceoverButton" class="top-button" type="button">只打包文本</button>
+          </div>
+        </div>
+      </section>
     </aside>
 
     <main class="canvas">
@@ -1787,15 +1952,15 @@
           <div id="modeBadges" class="badge-row"></div>
         </div>
         <div class="canvas-tools">
-          <button id="syncCanvasButton" type="button">同步修改</button>
+          <button id="syncCanvasButton" type="button" title="先检查画布到底改了什么，再决定是否交给 Codex 处理">检查改动</button>
           <button id="organizeCanvasButton" type="button">整理画布</button>
           <select id="cardDensitySelect" aria-label="卡片显示密度">
-            <option value="thumbnail">缩略</option>
+            <option value="thumbnail">摘要</option>
             <option value="standard" selected>标准</option>
-            <option value="full">完整</option>
+            <option value="full">详细</option>
           </select>
           <select id="canvasModeSelect" aria-label="画布视图">
-            <option value="all">完整制作</option>
+            <option value="all">全部节点</option>
             <option value="shots">分镜流程</option>
             <option value="framework">只看框架</option>
             <option value="packaging">包装交付</option>
@@ -1814,7 +1979,7 @@
       <div id="syncReviewPanel" class="sync-review-panel hidden" role="dialog" aria-label="同步当前修改确认">
         <div class="sync-review-head">
           <h2>变更清单</h2>
-          <span class="small">同步到后台前确认</span>
+          <span id="syncReviewHint" class="small">提交前确认</span>
         </div>
         <ul id="syncReviewList" class="sync-review-list"></ul>
         <div class="sync-review-actions">
@@ -1845,7 +2010,7 @@
 
     <aside class="inspector">
       <div class="section-head">
-        <h2>节点检查器</h2>
+        <h2>详情检查器</h2>
         <span id="inspectorType" class="small"></span>
       </div>
       <div id="inspector" class="inspector-panel"></div>
@@ -1856,6 +2021,10 @@
     const UI_PREFS_KEY = "video-master-ui-prefs-v1";
     const CANVAS_FILTERS = new Set(["all", "shots", "framework", "packaging"]);
     const CARD_DENSITIES = new Set(["thumbnail", "standard", "full"]);
+    const MIN_CANVAS_ZOOM = 0.35;
+    const MAX_CANVAS_ZOOM = 2.2;
+    const WHEEL_ZOOM_SENSITIVITY = 0.00072;
+    const ZOOM_EASING = 0.24;
 
     const state = {
       root: "",
@@ -1869,6 +2038,12 @@
       graph: { nodes: [], edges: [] },
       selectedNodeId: "",
       zoom: 1,
+      targetZoom: 1,
+      canvasBounds: { maxX: 1500, maxY: 820 },
+      zoomFrame: 0,
+      zoomAnchor: null,
+      zoomAnimationActive: false,
+      preferenceSaveTimer: 0,
       filter: "all",
       cardDensity: "standard",
       frameworkOnly: false,
@@ -1879,15 +2054,19 @@
       manualEdgeControls: {},
       selectedEdgeKey: "",
       canvasBaseline: "",
+      canvasBaselineState: null,
+      pendingCanvasSyncReport: null,
       hasZoomPreference: false,
       sideHidden: true,
-      inspectorHidden: true,
+      inspectorHidden: false,
       pan: null,
+      spacePanning: false,
       nodeDrag: null,
       nodeInertia: null,
       connectionDrag: null,
       edgeControlDrag: null,
       editingShot: null,
+      voiceoverBusy: false,
       suppressClickUntil: 0,
     };
 
@@ -1901,6 +2080,7 @@
       enterWorkbenchButton: document.querySelector("#enterWorkbenchButton"),
       pickProjectButton: document.querySelector("#pickProjectButton"),
       serverState: document.querySelector("#serverState"),
+      projectLibraryButton: document.querySelector("#projectLibraryButton"),
       rootInput: document.querySelector("#rootInput"),
       projectQuickSelect: document.querySelector("#projectQuickSelect"),
       refreshButton: document.querySelector("#refreshButton"),
@@ -1917,6 +2097,7 @@
       cardDensitySelect: document.querySelector("#cardDensitySelect"),
       organizeCanvasButton: document.querySelector("#organizeCanvasButton"),
       syncReviewPanel: document.querySelector("#syncReviewPanel"),
+      syncReviewHint: document.querySelector("#syncReviewHint"),
       syncReviewList: document.querySelector("#syncReviewList"),
       cancelCanvasSyncButton: document.querySelector("#cancelCanvasSyncButton"),
       confirmCanvasSyncButton: document.querySelector("#confirmCanvasSyncButton"),
@@ -1933,6 +2114,14 @@
       modeBadges: document.querySelector("#modeBadges"),
       graphSummary: document.querySelector("#graphSummary"),
       miniMap: document.querySelector("#miniMap"),
+      voiceoverStatus: document.querySelector("#voiceoverStatus"),
+      voiceoverEngine: document.querySelector("#voiceoverEngine"),
+      voiceoverBaseUrl: document.querySelector("#voiceoverBaseUrl"),
+      voiceoverPersona: document.querySelector("#voiceoverPersona"),
+      voiceoverSteps: document.querySelector("#voiceoverSteps"),
+      voiceoverControlInstruction: document.querySelector("#voiceoverControlInstruction"),
+      generateVoiceoverButton: document.querySelector("#generateVoiceoverButton"),
+      dryRunVoiceoverButton: document.querySelector("#dryRunVoiceoverButton"),
       viewport: document.querySelector("#viewport"),
       world: document.querySelector("#world"),
       canvasContextMenu: document.querySelector("#canvasContextMenu"),
@@ -2002,15 +2191,20 @@
         inspectorHidden: Boolean(state.inspectorHidden),
         filter: CANVAS_FILTERS.has(state.filter) ? state.filter : "all",
         cardDensity: CARD_DENSITIES.has(state.cardDensity) ? state.cardDensity : "standard",
-        zoom: Number(state.zoom.toFixed(2)),
+        zoom: Number((Number.isFinite(state.targetZoom) ? state.targetZoom : state.zoom).toFixed(2)),
       };
       localStorage.setItem(UI_PREFS_KEY, JSON.stringify(prefs));
+    }
+
+    function scheduleUiPreferenceSave() {
+      window.clearTimeout(state.preferenceSaveTimer);
+      state.preferenceSaveTimer = window.setTimeout(saveUiPreferences, 160);
     }
 
     function applyUiPreferences() {
       const prefs = loadUiPreferences();
       if (typeof prefs.sideHidden === "boolean") state.sideHidden = prefs.sideHidden;
-      if (typeof prefs.inspectorHidden === "boolean") state.inspectorHidden = prefs.inspectorHidden;
+      state.inspectorHidden = false;
       if (CANVAS_FILTERS.has(prefs.filter)) {
         state.filter = prefs.filter;
         state.frameworkOnly = prefs.filter === "framework";
@@ -2021,7 +2215,8 @@
       const savedZoom = Number(prefs.zoom);
       state.hasZoomPreference = Number.isFinite(savedZoom);
       if (state.hasZoomPreference) {
-        state.zoom = Math.max(0.35, Math.min(2.2, savedZoom));
+        state.zoom = clamp(savedZoom, MIN_CANVAS_ZOOM, MAX_CANVAS_ZOOM);
+        state.targetZoom = state.zoom;
       }
     }
 
@@ -2190,6 +2385,7 @@
         state.selectedEdgeKey = "";
         state.canvasBaseline = "";
         renderProjectQuickSelect();
+        renderVoiceoverPanel();
         renderProject();
       }
     }
@@ -2221,6 +2417,65 @@
         }
         fitCanvas({ persist: false });
       }, 20);
+    }
+
+    function voiceoverStatusText(project) {
+      if (!project) return "未选择项目";
+      const audio = project.copywriting?.voiceover_audio;
+      const manifest = project.copywriting?.tts_manifest;
+      if (audio?.exists) return audio.path?.endsWith(".wav") ? "WAV 已生成" : "口播已生成";
+      if (manifest?.exists) return "文本已打包";
+      return "等待生成";
+    }
+
+    function renderVoiceoverPanel() {
+      const hasProject = Boolean(state.currentProject && state.project);
+      els.voiceoverStatus.textContent = state.voiceoverBusy ? "生成中" : voiceoverStatusText(state.project);
+      els.generateVoiceoverButton.disabled = !hasProject || state.voiceoverBusy;
+      els.dryRunVoiceoverButton.disabled = !hasProject || state.voiceoverBusy;
+    }
+
+    function voiceoverPayload(dryRun = false) {
+      const engine = els.voiceoverEngine.value || "voxcpm2";
+      const personaOrVoice = els.voiceoverPersona.value.trim();
+      const payload = {
+        project: state.currentProject,
+        engine,
+        dry_run: dryRun,
+        dit_steps: Number(els.voiceoverSteps.value || 10),
+      };
+      if (engine === "voxcpm2") {
+        payload.tts_base_url = els.voiceoverBaseUrl.value.trim();
+        payload.persona = personaOrVoice || "小潮院长";
+        payload.control_instruction = els.voiceoverControlInstruction.value.trim();
+      } else {
+        payload.voice = personaOrVoice || "zh-CN-XiaoxiaoNeural";
+      }
+      return payload;
+    }
+
+    async function generateVoiceover(dryRun = false) {
+      if (!state.currentProject) throw new Error("请先选择项目");
+      const button = dryRun ? els.dryRunVoiceoverButton : els.generateVoiceoverButton;
+      const originalText = button.textContent;
+      const previousSelection = state.selectedNodeId;
+      state.voiceoverBusy = true;
+      renderVoiceoverPanel();
+      button.textContent = dryRun ? "打包中" : "生成中";
+      els.serverState.textContent = dryRun ? "正在打包口播文本" : "正在生成口播音频";
+      try {
+        const result = await writeJson("/api/voiceover/generate", voiceoverPayload(dryRun));
+        state.project = result.state;
+        state.graph = buildGraph(state.project);
+        state.selectedNodeId = previousSelection || state.graph.nodes[0]?.id || "";
+        els.serverState.textContent = dryRun ? "口播文本已打包" : "口播音频已生成";
+        renderProjectList();
+        renderProject();
+      } finally {
+        state.voiceoverBusy = false;
+        button.textContent = originalText;
+        renderVoiceoverPanel();
+      }
     }
 
     function jsonSnapshot(value, fallback) {
@@ -2319,70 +2574,206 @@
     }
 
     function captureCanvasBaseline() {
-      state.canvasBaseline = canvasStateFingerprint();
+      const normalized = normalizeCanvasStateForDiff(collectCanvasSyncState());
+      state.canvasBaseline = JSON.stringify(normalized);
+      state.canvasBaselineState = normalized;
+      state.pendingCanvasSyncReport = null;
     }
 
-    function canvasHasMeaningfulChanges() {
-      return Boolean(state.canvasBaseline && canvasStateFingerprint() !== state.canvasBaseline);
+    function baselineCanvasState() {
+      if (state.canvasBaselineState) return state.canvasBaselineState;
+      if (!state.canvasBaseline) return null;
+      try {
+        state.canvasBaselineState = JSON.parse(state.canvasBaseline);
+        return state.canvasBaselineState;
+      } catch {
+        return null;
+      }
     }
 
-    function collectCanvasChangeSummary() {
+    function stableCanvasPart(value) {
+      return JSON.stringify(value ?? null);
+    }
+
+    function canvasPartChanged(current, baseline, key) {
+      return stableCanvasPart(current?.[key]) !== stableCanvasPart(baseline?.[key]);
+    }
+
+    function countNodeLayoutChanges(currentNodes = [], baselineNodes = []) {
+      const baselineMap = new Map((baselineNodes || []).map((node) => [String(node.id), node]));
+      const currentMap = new Map((currentNodes || []).map((node) => [String(node.id), node]));
+      let count = 0;
+      currentMap.forEach((node, id) => {
+        const previous = baselineMap.get(id);
+        if (!previous || previous.x !== node.x || previous.y !== node.y) count += 1;
+      });
+      baselineMap.forEach((_, id) => {
+        if (!currentMap.has(id)) count += 1;
+      });
+      return count;
+    }
+
+    function countShotContentChanges(currentShots = [], baselineShots = []) {
+      const keyFor = (shot, index) => String(shot?.shot_id || `shot-${index}`);
+      const baselineMap = new Map((baselineShots || []).map((shot, index) => [keyFor(shot, index), shot]));
+      const currentMap = new Map((currentShots || []).map((shot, index) => [keyFor(shot, index), shot]));
+      let count = 0;
+      currentMap.forEach((shot, key) => {
+        if (stableCanvasPart(shot) !== stableCanvasPart(baselineMap.get(key))) count += 1;
+      });
+      baselineMap.forEach((_, key) => {
+        if (!currentMap.has(key)) count += 1;
+      });
+      return count;
+    }
+
+    function countEdgeControlChanges(currentControls = {}, baselineControls = {}) {
+      const keys = new Set([...Object.keys(currentControls || {}), ...Object.keys(baselineControls || {})]);
+      return Array.from(keys).filter((key) => stableCanvasPart(currentControls?.[key]) !== stableCanvasPart(baselineControls?.[key])).length;
+    }
+
+    function collectCanvasChangeReport() {
       const project = state.project || {};
       const nodes = state.graph.nodes || [];
       const shots = project.shots || [];
-      const items = [`同步 ${shots.length} 个分镜、${nodes.length} 个节点布局和当前视图状态。`];
-      if (!canvasHasMeaningfulChanges()) {
-        items.push("当前还没有检测到新的画布修改，可先调整分镜、连线或编辑卡片后再同步。");
-      } else {
-        items.push("检测到画布修改，Codex 会按当前画布状态处理。");
+      const baseline = baselineCanvasState();
+      const current = normalizeCanvasStateForDiff(collectCanvasSyncState());
+      const report = {
+        items: [],
+        hasChanges: false,
+        hasActionable: false,
+        canConfirm: false,
+        confirmLabel: "交给 Codex 处理",
+        hint: "提交前确认",
+        note: "同步画布当前修改",
+      };
+
+      if (!baseline) {
+        report.items.push(`当前画布包含 ${shots.length} 个分镜、${nodes.length} 个节点。`);
+        report.items.push("还没有建立对照版本，这次只会把当前画布记为初始状态。");
+        report.hasChanges = true;
+        report.canConfirm = true;
+        report.confirmLabel = "记为当前状态";
+        report.hint = "建立画布基线";
+        report.note = "记录画布初始状态";
+        return report;
       }
-      if ((state.manualEdges || []).length) {
-        items.push(`手动新增或重连 ${state.manualEdges.length} 条分镜流程线。`);
+
+      report.hasChanges = stableCanvasPart(current) !== stableCanvasPart(baseline);
+      if (!report.hasChanges) {
+        report.items.push("未检测到新的画布修改。");
+        report.items.push("不需要提交 Codex；可以继续调整分镜、连线或卡片内容。");
+        report.confirmLabel = "无改动可提交";
+        report.hint = "没有变化";
+        return report;
       }
-      if ((state.deletedEdges || []).length) {
-        items.push(`删除 ${state.deletedEdges.length} 条流程线，后台会按当前画布关系重构。`);
+
+      const layoutChanges = countNodeLayoutChanges(current.nodes, baseline.nodes);
+      const shotContentChanges = countShotContentChanges(current.shots, baseline.shots);
+      const flowChanged = canvasPartChanged(current, baseline, "manual_edges") || canvasPartChanged(current, baseline, "deleted_edges");
+      const edgeControlChanges = countEdgeControlChanges(current.edge_controls, baseline.edge_controls);
+      const viewChanged = ["filter", "card_density", "framework_only"].some((key) => canvasPartChanged(current, baseline, key));
+      const draftChanged = canvasPartChanged(current, baseline, "draft_idea");
+      const editingChanged = canvasPartChanged(current, baseline, "editing_shot");
+
+      report.hasActionable = Boolean(shotContentChanges || flowChanged || draftChanged || editingChanged);
+
+      if (shotContentChanges) {
+        report.items.push(`修改了 ${shotContentChanges} 个分镜的内容、提示词种子或视频提示词。`);
       }
-      const adjustedEdges = Object.keys(state.manualEdgeControls || {}).length;
-      if (adjustedEdges) {
-        items.push(`调整 ${adjustedEdges} 条连线的弯曲位置。`);
+      if (flowChanged) {
+        report.items.push("分镜流程线发生变化，包含新增、删除或重连关系。");
       }
-      if (state.draftIdea) {
-        items.push("包含 1 个待 Codex 生成的新分镜想法。");
+      if (draftChanged && current.draft_idea) {
+        report.items.push("包含 1 个待 Codex 生成的新分镜想法。");
       }
-      if (state.editingShot?.shot_id || state.editingShot?.anchorId) {
-        items.push("包含当前画布内正在编辑的分镜信息。");
+      if (editingChanged && current.editing_shot) {
+        report.items.push("包含当前画布内正在编辑的分镜信息。");
       }
-      if (state.filter === "framework" || state.frameworkOnly) {
-        items.push("当前处于只看框架视图，后台仍会收到完整画布状态。");
+      if (layoutChanges) {
+        report.items.push(`${report.hasActionable ? "同时" : "仅"}调整了 ${layoutChanges} 个节点的位置/排版。`);
       }
-      items.push("同步完成后会把当前画布作为新的对照版本。");
-      return items;
+      if (edgeControlChanges) {
+        report.items.push(`${report.hasActionable ? "同时" : "仅"}调整了 ${edgeControlChanges} 条连线的弯曲位置。`);
+      }
+      if (viewChanged) {
+        report.items.push(`${report.hasActionable ? "同时" : "仅"}切换了画布视图或卡片显示密度。`);
+      }
+
+      if (!report.hasActionable) {
+        report.items.push("没有检测到分镜文案、提示词、图片或流程关系变化。");
+        report.items.push("这类变化只影响本机画布排版/查看方式，无需交给 Codex 改写项目内容。");
+        report.canConfirm = true;
+        report.confirmLabel = "记为当前状态";
+        report.hint = "仅本地画布变化";
+        report.note = "记录本地画布状态";
+        return report;
+      }
+
+      report.items.push("提交后 Codex 只会按上面列出的内容处理，不会自动改写未列出的分镜。");
+      report.canConfirm = true;
+      report.confirmLabel = "交给 Codex 处理";
+      report.hint = "需要 Codex 处理";
+      return report;
+    }
+
+    function canvasHasMeaningfulChanges() {
+      return collectCanvasChangeReport().hasChanges;
+    }
+
+    function collectCanvasChangeSummary() {
+      return collectCanvasChangeReport().items;
     }
 
     function openCanvasSyncReview() {
       if (!state.currentProject) return;
-      const items = collectCanvasChangeSummary();
-      els.syncReviewList.innerHTML = items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+      const report = collectCanvasChangeReport();
+      state.pendingCanvasSyncReport = report;
+      els.syncReviewHint.textContent = report.hint;
+      els.syncReviewList.innerHTML = report.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+      els.confirmCanvasSyncButton.textContent = report.confirmLabel;
+      els.confirmCanvasSyncButton.disabled = !report.canConfirm;
       els.syncReviewPanel.classList.remove("hidden");
     }
 
     function closeCanvasSyncReview() {
       els.syncReviewPanel.classList.add("hidden");
+      state.pendingCanvasSyncReport = null;
     }
 
     async function syncCanvasToBackend() {
       if (!state.currentProject) return;
+      const report = state.pendingCanvasSyncReport || collectCanvasChangeReport();
       const originalText = els.syncCanvasButton.textContent;
       const originalConfirmText = els.confirmCanvasSyncButton.textContent;
       els.syncCanvasButton.disabled = true;
       els.confirmCanvasSyncButton.disabled = true;
-      els.syncCanvasButton.textContent = "同步中";
-      els.confirmCanvasSyncButton.textContent = "同步中";
-      els.serverState.textContent = "同步画布修改中";
+      const progressText = report.hasActionable ? "同步中" : "记录中";
+      els.syncCanvasButton.textContent = progressText;
+      els.confirmCanvasSyncButton.textContent = progressText;
+      els.serverState.textContent = report.hasActionable ? "同步画布修改中" : "记录画布状态中";
       try {
+        if (!report.canConfirm || !report.hasChanges) {
+          els.serverState.textContent = "没有需要提交的画布改动";
+          closeCanvasSyncReview();
+          return;
+        }
+        if (!report.hasActionable) {
+          captureCanvasBaseline();
+          els.serverState.textContent = "已记为当前画布状态";
+          els.syncCanvasButton.textContent = "已记录";
+          els.confirmCanvasSyncButton.textContent = "已记录";
+          closeCanvasSyncReview();
+          setTimeout(() => {
+            if (els.syncCanvasButton.textContent === "已记录") {
+              els.syncCanvasButton.textContent = originalText;
+            }
+          }, 1200);
+          return;
+        }
         await writeJson("/api/canvas-sync", {
           project: state.currentProject,
-          note: "同步画布当前修改",
+          note: report.note,
           canvas_state: collectCanvasSyncState(),
         });
         els.serverState.textContent = "画布修改已同步";
@@ -2404,8 +2795,8 @@
         throw error;
       } finally {
         els.syncCanvasButton.disabled = false;
-        els.confirmCanvasSyncButton.disabled = false;
-        if (els.confirmCanvasSyncButton.textContent === "同步中") {
+        els.confirmCanvasSyncButton.disabled = !((state.pendingCanvasSyncReport || report).canConfirm);
+        if (els.confirmCanvasSyncButton.textContent === "同步中" || els.confirmCanvasSyncButton.textContent === "记录中") {
           els.confirmCanvasSyncButton.textContent = originalConfirmText;
         }
       }
@@ -2523,7 +2914,7 @@
 
     const SHOT_GRID_COLUMNS = 4;
     const SHOT_CARD_WIDTH = 392;
-    const SHOT_CARD_HEIGHT = 470;
+    const SHOT_CARD_HEIGHT = 390;
     const SHOT_GRID_START_X = 330;
     const SHOT_GRID_START_Y = 72;
     const SHOT_GRID_GAP_X = 40;
@@ -2537,8 +2928,9 @@
 
     function nodeDisplayHeight(node) {
       if (node?.type !== "shot" || state.frameworkOnly) return node?.height || 0;
-      if (state.cardDensity === "thumbnail") return 272;
-      if (state.cardDensity === "standard") return 380;
+      if (state.editingShot?.anchorId === node.id) return SHOT_CARD_HEIGHT + 360;
+      if (state.cardDensity === "thumbnail") return 254;
+      if (state.cardDensity === "standard") return 332;
       return node?.height || SHOT_CARD_HEIGHT;
     }
 
@@ -2633,7 +3025,7 @@
               "时间": `${shot.start || "-"} 至 ${shot.end || "-"}`,
               "时长": `${shot.duration_seconds ?? "-"} 秒`,
               "画面文件": shot.frame?.path || "未生成",
-              "视频提示词": shot.video_prompt ? "已合并到卡片" : "暂无",
+              "视频提示词": shot.video_prompt ? "右侧检查器查看" : "暂无",
             },
             text: shot.visual_action || shot.purpose || "最终分镜图节点。",
           };
@@ -2740,6 +3132,7 @@
         els.miniMap.innerHTML = `<div class="empty">暂无项目</div>`;
         renderBoard();
         renderInspector();
+        renderVoiceoverPanel();
         return;
       }
 
@@ -2748,8 +3141,9 @@
       const shots = project.shots || [];
       const nodes = state.graph.nodes || [];
       const edges = canvasEdges();
-      els.projectTitle.textContent = project.project?.name || "未命名项目";
+      els.projectTitle.textContent = "分镜工作台";
       els.modeBadges.innerHTML = [
+        badge(project.project?.name || "未命名项目", "project-context"),
         badge(tWorkflow(workflow.workflow_mode), statusClass(workflow.workflow_mode || "guided")),
         badge(`${shots.length} 个分镜`),
         badge(style.visual_style_preset_id ? tStyle(style.visual_style_preset_id) : "视觉风格待定", "style"),
@@ -2759,6 +3153,7 @@
       renderMiniMap(project);
       renderBoard();
       renderInspector();
+      renderVoiceoverPanel();
     }
 
     function renderMiniMap(project) {
@@ -2782,20 +3177,30 @@
       `).join("");
     }
 
+    function measureCanvasBounds(nodes = filteredNodes()) {
+      const maxX = Math.max(1500, ...nodes.map((node) => node.x + node.width + 100));
+      const maxY = Math.max(820, ...nodes.map((node) => node.y + nodeDisplayHeight(node) + 100));
+      return { maxX, maxY };
+    }
+
+    function applyCanvasZoom() {
+      const bounds = state.canvasBounds || measureCanvasBounds();
+      const scaledWidth = Math.max(bounds.maxX * state.zoom, els.viewport.clientWidth + 120);
+      const scaledHeight = Math.max(bounds.maxY * state.zoom, els.viewport.clientHeight + 120);
+      els.world.style.width = `${scaledWidth}px`;
+      els.world.style.height = `${scaledHeight}px`;
+      els.connectionLayer.setAttribute("width", bounds.maxX);
+      els.connectionLayer.setAttribute("height", bounds.maxY);
+      els.world.style.transform = `translate3d(0, 0, 0) scale(${state.zoom})`;
+    }
+
     function renderBoard() {
       cancelNodeInertia();
       const visibleNodes = filteredNodes();
       const visibleIds = new Set(visibleNodes.map((node) => node.id));
       const visibleEdges = canvasEdges().filter(([from, to]) => visibleIds.has(from) && visibleIds.has(to));
-      const maxX = Math.max(1500, ...visibleNodes.map((node) => node.x + node.width + 100));
-      const maxY = Math.max(820, ...visibleNodes.map((node) => node.y + nodeDisplayHeight(node) + 100));
-      const scaledWidth = Math.max(maxX * state.zoom, els.viewport.clientWidth + 120);
-      const scaledHeight = Math.max(maxY * state.zoom, els.viewport.clientHeight + 120);
-      els.world.style.width = `${scaledWidth}px`;
-      els.world.style.height = `${scaledHeight}px`;
-      els.connectionLayer.setAttribute("width", maxX);
-      els.connectionLayer.setAttribute("height", maxY);
-      els.world.style.transform = `scale(${state.zoom})`;
+      state.canvasBounds = measureCanvasBounds(visibleNodes);
+      applyCanvasZoom();
       state.frameworkOnly = state.filter === "framework";
       els.world.classList.toggle("framework-only", state.frameworkOnly);
       els.canvasModeSelect.value = state.filter;
@@ -3273,6 +3678,45 @@
       `;
     }
 
+    function renderShotPrimaryActions(node, copyImageDisabled) {
+      return `
+        <div class="shot-actions">
+          <button class="shot-action" type="button" data-copy-image="${escapeHtml(node.image || "")}"${copyImageDisabled}>复制图</button>
+          <button class="shot-action" type="button" data-copy-prompt="${escapeHtml(node.id)}">复制提示词</button>
+          <button class="shot-action" type="button" data-shot-edit="${escapeHtml(node.id)}">编辑</button>
+        </div>
+      `;
+    }
+
+    function renderShotSummary(node, shot) {
+      return escapeHtml(shot.visual_action || node.text || shot.purpose || "这个分镜还没有画面说明。");
+    }
+
+    function renderShotTechLine(shot) {
+      const parts = [
+        shot.framing || "",
+        shot.camera || "",
+        shot.movement || "",
+      ].filter(Boolean);
+      return escapeHtml(parts.length ? parts.slice(0, 3).join(" / ") : "镜头参数待补充，选中后可在右侧检查器查看完整提示词。");
+    }
+
+    function renderShotPromptPreview(shot) {
+      const prompt = String(shot.video_prompt || "").trim();
+      return `
+        <div class="shot-prompt-preview">
+          <strong>视频提示词</strong> ${escapeHtml(prompt || "暂无视频提示词，生成后会在这里显示摘要。")}
+        </div>
+      `;
+    }
+
+    function renderShotCompletionBadges(shot) {
+      return [
+        badge(shot.frame?.exists ? "图已就绪" : "待生图", shot.frame?.exists ? "complete" : "missing"),
+        badge(shot.video_prompt ? "提示词已就绪" : "待提示词", shot.video_prompt ? "guided" : "missing"),
+      ].join("");
+    }
+
     function renderShotOperationButtons(node) {
       return `
         <div class="shot-local-actions" aria-label="当前分镜局部重写">
@@ -3286,12 +3730,11 @@
 
     function renderShotBody(node) {
       const shot = node.shot || {};
-      const prompt = shot.video_prompt || "暂无视频提示词。";
       const editor = state.editingShot?.anchorId === node.id ? renderShotEditor(node) : "";
       const copyImageDisabled = node.image ? "" : " disabled";
       const density = CARD_DENSITIES.has(state.cardDensity) ? state.cardDensity : "standard";
       const imagePanel = renderShotImagePanel(node, copyImageDisabled);
-      const copyActions = renderShotCopyActions(node, copyImageDisabled);
+      const primaryActions = renderShotPrimaryActions(node, copyImageDisabled);
       if (state.frameworkOnly) {
         return `
           <div class="node-body storyboard-frame-only">
@@ -3316,6 +3759,7 @@
               ${badge(shot.start || "起点待定")}
               ${badge(shot.beat || "分镜", "complete")}
             </div>
+            <div class="shot-card-brief">${renderShotSummary(node, shot)}</div>
             ${editor}
           </div>
         `;
@@ -3329,26 +3773,17 @@
                 <div class="node-meta">
                   ${badge(shot.duration_seconds !== undefined ? `${shot.duration_seconds} 秒` : "时长待定")}
                   ${badge(shot.start || "起点待定")}
-                  ${badge("最终分镜图", "complete")}
-                  ${badge("视频提示词", shot.video_prompt ? "guided" : "missing")}
+                  ${badge(shot.beat || "分镜", "complete")}
                 </div>
-                ${copyActions}
+                ${density === "full" ? primaryActions : ""}
               </div>
-              <div>
-                <div class="shot-section-label">画面说明</div>
-                <div class="node-text">${escapeHtml(node.text || "")}</div>
+              <div class="shot-card-brief">${renderShotSummary(node, shot)}</div>
+              <div class="shot-tech-line">${renderShotTechLine(shot)}</div>
+              ${renderShotPromptPreview(shot)}
+              <div class="shot-card-foot">
+                <div class="node-meta">${renderShotCompletionBadges(shot)}</div>
+                <span class="shot-card-hint">详情见右侧检查器</span>
               </div>
-              ${density === "full" ? `
-                <div>
-                  <div class="shot-section-label">局部重写</div>
-                  ${renderShotOperationButtons(node)}
-                </div>
-                ${renderShotBindings(shot)}
-                <div>
-                  <div class="shot-section-label">视频提示词</div>
-                  <div class="shot-prompt">${escapeHtml(prompt)}</div>
-                </div>
-              ` : ""}
             </div>
           </div>
           ${editor}
@@ -4409,36 +4844,82 @@
       renderProject();
     }
 
-    function setZoom(value) {
-      state.zoom = Math.max(0.35, Math.min(2.2, value));
+    function requestCanvasZoomFrame() {
+      if (state.zoomFrame) return;
+      state.zoomAnimationActive = true;
+      state.zoomFrame = requestAnimationFrame(flushCanvasZoom);
+    }
+
+    function syncZoomAnchorScroll() {
+      if (!state.zoomAnchor) return;
+      els.viewport.scrollLeft = state.zoomAnchor.worldX * state.zoom - state.zoomAnchor.localX;
+      els.viewport.scrollTop = state.zoomAnchor.worldY * state.zoom - state.zoomAnchor.localY;
+    }
+
+    function flushCanvasZoom() {
+      state.zoomFrame = 0;
+      const diff = state.targetZoom - state.zoom;
+      if (Math.abs(diff) < 0.001) {
+        state.zoom = state.targetZoom;
+        applyCanvasZoom();
+        syncZoomAnchorScroll();
+        state.zoomAnchor = null;
+        state.zoomAnimationActive = false;
+        return;
+      }
+      state.zoom += diff * ZOOM_EASING;
+      applyCanvasZoom();
+      syncZoomAnchorScroll();
+      state.zoomFrame = requestAnimationFrame(flushCanvasZoom);
+    }
+
+    function setCanvasZoom(value, options = {}) {
+      const oldZoom = state.zoom;
+      const baseZoom = Number.isFinite(state.targetZoom) ? state.targetZoom : oldZoom;
+      const nextZoom = clamp(value, MIN_CANVAS_ZOOM, MAX_CANVAS_ZOOM);
+      if (Math.abs(nextZoom - baseZoom) < 0.001) return;
+      if (Number.isFinite(options.clientX) && Number.isFinite(options.clientY)) {
+        const rect = els.viewport.getBoundingClientRect();
+        const localX = options.clientX - rect.left;
+        const localY = options.clientY - rect.top;
+        state.zoomAnchor = {
+          localX,
+          localY,
+          worldX: (els.viewport.scrollLeft + localX) / oldZoom,
+          worldY: (els.viewport.scrollTop + localY) / oldZoom,
+        };
+      } else {
+        state.zoomAnchor = null;
+      }
+      state.targetZoom = nextZoom;
       state.hasZoomPreference = true;
-      saveUiPreferences();
-      renderBoard();
+      scheduleUiPreferenceSave();
+      if (options.smooth === false) {
+        state.zoom = state.targetZoom;
+        applyCanvasZoom();
+        syncZoomAnchorScroll();
+        state.zoomAnchor = null;
+        state.zoomAnimationActive = false;
+        return;
+      }
+      requestCanvasZoomFrame();
+    }
+
+    function setZoom(value) {
+      setCanvasZoom(value, { smooth: true });
     }
 
     function setZoomAt(value, clientX, clientY) {
-      const oldZoom = state.zoom;
-      const nextZoom = Math.max(0.35, Math.min(2.2, value));
-      if (Math.abs(nextZoom - oldZoom) < 0.001) return;
-      const rect = els.viewport.getBoundingClientRect();
-      const localX = clientX - rect.left;
-      const localY = clientY - rect.top;
-      const worldX = (els.viewport.scrollLeft + localX) / oldZoom;
-      const worldY = (els.viewport.scrollTop + localY) / oldZoom;
-      state.zoom = nextZoom;
-      state.hasZoomPreference = true;
-      saveUiPreferences();
-      renderBoard();
-      els.viewport.scrollLeft = worldX * nextZoom - localX;
-      els.viewport.scrollTop = worldY * nextZoom - localY;
+      setCanvasZoom(value, { clientX, clientY, smooth: true });
     }
 
     function fitCanvas(options = {}) {
       const { persist = true } = options;
       state.zoom = 0.82;
+      state.targetZoom = state.zoom;
       state.hasZoomPreference = true;
       if (persist) saveUiPreferences();
-      renderBoard();
+      applyCanvasZoom();
       els.viewport.scrollTo({ left: 0, top: 0, behavior: "smooth" });
     }
 
@@ -4524,7 +5005,8 @@
     }
 
     function startCanvasPan(event) {
-      if (event.button !== 0 || event.target.closest(".graph-node") || isInteractiveTarget(event.target)) return;
+      const wantsPan = event.button === 1 || (event.button === 0 && (state.spacePanning || !event.target.closest(".graph-node")));
+      if (!wantsPan || isInteractiveTarget(event.target)) return;
       closeCanvasContextMenu();
       state.selectedEdgeKey = "";
       renderInspector();
@@ -4554,6 +5036,11 @@
       if (els.viewport.hasPointerCapture(event.pointerId)) {
         els.viewport.releasePointerCapture(event.pointerId);
       }
+    }
+
+    function setSpacePanning(enabled) {
+      state.spacePanning = enabled;
+      document.body.classList.toggle("canvas-space-panning", enabled);
     }
 
     function startNodeDrag(event, nodeId) {
@@ -4756,6 +5243,11 @@
       updatePanelVisibility();
     }
 
+    function openProjectLibrary() {
+      state.sideHidden = false;
+      updatePanelVisibility();
+    }
+
     function showError(error) {
       els.serverState.textContent = "服务异常";
       els.inspectorType.textContent = "错误";
@@ -4763,6 +5255,7 @@
     }
 
     els.refreshButton.addEventListener("click", () => loadProjects(false).catch(showError));
+    els.projectLibraryButton.addEventListener("click", openProjectLibrary);
     els.enterWorkbenchButton.addEventListener("click", hideIntro);
     els.pickProjectButton.addEventListener("click", () => {
       state.sideHidden = false;
@@ -4803,6 +5296,8 @@
       if (!state.currentProject) return;
       loadProject(state.currentProject, true).catch(showError);
     });
+    els.generateVoiceoverButton.addEventListener("click", () => generateVoiceover(false).catch(showError));
+    els.dryRunVoiceoverButton.addEventListener("click", () => generateVoiceover(true).catch(showError));
     els.canvasContextMenu.addEventListener("click", (event) => {
       event.stopPropagation();
       const addButton = event.target.closest("[data-context-add-idea]");
@@ -4822,8 +5317,10 @@
     els.viewport.addEventListener("wheel", (event) => {
       if (isInteractiveTarget(event.target)) return;
       event.preventDefault();
-      const delta = event.deltaY > 0 ? -0.08 : 0.08;
-      setZoomAt(state.zoom + delta, event.clientX, event.clientY);
+      const wheelDelta = clamp(event.deltaY, -180, 180);
+      const zoomBase = Number.isFinite(state.targetZoom) ? state.targetZoom : state.zoom;
+      const nextZoom = zoomBase * Math.exp(-wheelDelta * WHEEL_ZOOM_SENSITIVITY);
+      setCanvasZoom(nextZoom, { clientX: event.clientX, clientY: event.clientY, smooth: true });
     }, { passive: false });
     window.addEventListener("pointermove", moveNodeDrag);
     window.addEventListener("pointerup", endNodeDrag);
@@ -4851,9 +5348,17 @@
         renderEdgesOnly();
         renderInspector();
       }
+      if (event.code === "Space" && !isTypingTarget(event.target)) {
+        event.preventDefault();
+        setSpacePanning(true);
+      }
     }
 
     window.addEventListener("keydown", handleCanvasKeydown);
+    window.addEventListener("keyup", (event) => {
+      if (event.code === "Space") setSpacePanning(false);
+    });
+    window.addEventListener("blur", () => setSpacePanning(false));
     if (sessionStorage.getItem("video-master-intro-seen") === "1") {
       els.intro.classList.add("hidden");
     }

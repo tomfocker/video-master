@@ -55,8 +55,9 @@ Run this checklist before final delivery.
 - For domestic Chinese workflows, a Chinese SRT is included even when the VO is English; English VO projects should package both `captions_en.srt` and `captions_zh.srt`.
 - Music/SFX cues map to the rhythm map.
 - Every shot has an SFX cue. Per-clip video prompts explicitly say not to generate background music; whole-film music remains a post-production direction.
-- If a voiced preview is requested, `最终交付/03_口播与字幕/口播音频.mp3` or a user-supplied narration file is used by `make_animatic.py`.
-- Music/SFX are documented as cues only; they are not mixed into the animatic in the current workflow.
+- If a voiced preview is requested, `最终交付/03_口播与字幕/口播音频.mp3`, `口播音频.wav`, or a user-supplied narration file is used by `make_animatic.py`.
+- If a BGM preview bed is requested, an approved local BGM file exists at `最终交付/03_口播与字幕/背景音乐.mp3`, `audio/background_music.mp3`, or `audio/bgm.mp3`, or an Eagle item ID is passed with `--eagle-background-music-id`, `make_animatic.py` records `background_music` and `background_music_source` in `qa/metadata/preview_manifest.json`.
+- Per-shot SFX are documented as cues only; they are not mixed into the animatic in the current workflow.
 
 ## Continuity
 

@@ -62,6 +62,7 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
       中文字幕.srt
       英文字幕.srt
       口播音频.mp3
+      口播音频.wav
     04_分镜总览/
       分镜总览图.png
     05_预览视频/
@@ -662,7 +663,7 @@ python3 ${SKILL_DIR}/scripts/export_production_workbook.py <project_path>
 python3 ${SKILL_DIR}/scripts/make_animatic.py <project_path>
 ```
 
-The default profile is `draft`: 12fps and an output size inferred from `brief/spec_lock.md` `aspect_ratio` such as `1280x720` for `16:9` or `720x1280` for `9:16`. Use `--preview-profile smooth` for a higher-polish 15fps preview using the same project ratio, or `--preview-profile off` to skip MP4 generation while still writing a skip manifest. The default motion style is `none` so storyboard frames stay stable; use `--motion-style center-zoom` or `--motion-style pan-zoom` only when movement is intentional. The animatic is a packaged preview, not a dry still-frame stack. It should include title/end cards, shot overlays, burned captions when `audio/captions.srt` exists, and a voiceover track when one is provided or generated.
+The default profile is `draft`: 12fps and an output size inferred from `brief/spec_lock.md` `aspect_ratio` such as `1280x720` for `16:9` or `720x1280` for `9:16`. Use `--preview-profile smooth` for a higher-polish 15fps preview using the same project ratio, or `--preview-profile off` to skip MP4 generation while still writing a skip manifest. The default motion style is `none` so storyboard frames stay stable; use `--motion-style center-zoom` or `--motion-style pan-zoom` only when movement is intentional. The animatic is a packaged preview, not a dry still-frame stack. It should include title/end cards, shot overlays, burned captions when `audio/captions.srt` exists, a voiceover track when one is provided or generated, and a whole-film BGM bed when a local approved track is available.
 
 `qa/metadata/preview_manifest.json` is required when the animatic is generated or explicitly skipped:
 
@@ -683,19 +684,32 @@ The default profile is `draft`: 12fps and an output size inferred from `brief/sp
   "burned_captions": true,
   "ken_burns_motion": false,
   "motion_style": "none",
-  "voiceover_audio": false
+  "voiceover_audio": false,
+  "background_music": false,
+  "background_music_volume": false,
+  "background_music_source": false
 }
 ```
 
 When `--preview-profile off` is used, `output` is `false`, `skipped` is `true`, `motion_style` is `none`, and `分镜预览.mp4` is not required.
 
-`最终交付/03_口播与字幕/口播音频.mp3` is optional but recommended for voiced previews. Generate it from `audio/tts_lines.json` when TTS is desired:
+`最终交付/03_口播与字幕/口播音频.mp3` or `口播音频.wav` is optional but recommended for voiced previews. Generate it from `audio/tts_lines.json` when TTS is desired:
 
 ```bash
 python3 ${SKILL_DIR}/scripts/generate_voiceover_tts.py <project_path>
+python3 ${SKILL_DIR}/scripts/generate_voiceover_tts.py <project_path> --engine voxcpm2 --tts-base-url http://100.64.0.3:8808/ui/ --persona 小潮院长
 ```
 
 This also writes `最终交付/03_口播与字幕/口播文本.txt` and `qa/metadata/tts_manifest.json`. Use `--dry-run` to prepare the text/manifest without calling a TTS service.
+
+`最终交付/03_口播与字幕/背景音乐.mp3`, `audio/background_music.mp3`, or `audio/bgm.mp3` is optional but recommended for less dry animatic previews when the user has a rights-cleared or otherwise approved local BGM track. You can also pass a specific file or Eagle item ID:
+
+```bash
+python3 ${SKILL_DIR}/scripts/make_animatic.py <project_path> --background-music <path>
+python3 ${SKILL_DIR}/scripts/make_animatic.py <project_path> --eagle-background-music-id <item_id>
+```
+
+Use `--eagle-library-path <path>` when the target Eagle library is not the current or recent Eagle library. Use `--background-music-volume 0.18` to adjust the bed level. This only affects `分镜预览.mp4`; final video-generation prompts must still keep per-clip background music off. When an Eagle item is used, `qa/metadata/preview_manifest.json` records `background_music_source.type: eagle`, the item ID, name, extension, original path, library path, and thumbnail path when available.
 
 ## Optional Title Packaging Sidecar
 

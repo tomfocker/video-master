@@ -26,7 +26,7 @@ For domestic Chinese workflows, always provide a Chinese `.srt` deliverable. If 
 - `最终交付/03_口播与字幕/英文字幕.srt` and/or `最终交付/03_口播与字幕/中文字幕.srt`
 - `最终交付/03_口播与字幕/口播文本.txt`
 - `qa/metadata/tts_manifest.json`
-- `最终交付/03_口播与字幕/口播音频.mp3` when TTS or recorded narration is available
+- `最终交付/03_口播与字幕/口播音频.mp3` or `口播音频.wav` when TTS or recorded narration is available
 
 ## Voiceover Script
 
@@ -84,7 +84,13 @@ When dependencies are installed and the user wants a voiced preview, generate na
 python3 ${SKILL_DIR}/scripts/generate_voiceover_tts.py <project_path>
 ```
 
-Use `--dry-run` when you only need to package the read text and manifest for a human or external TTS service. `make_animatic.py` automatically uses `最终交付/03_口播与字幕/口播音频.mp3` if it exists, or accepts `--voiceover-audio <path>` for user-supplied narration.
+Use local VoxCPM2 when the user has a reachable service such as `http://100.64.0.3:8808/ui/`:
+
+```bash
+python3 ${SKILL_DIR}/scripts/generate_voiceover_tts.py <project_path> --engine voxcpm2 --tts-base-url http://100.64.0.3:8808/ui/ --persona 小潮院长
+```
+
+Use `--dry-run` when you only need to package the read text and manifest for a human or external TTS service. `make_animatic.py` automatically uses `最终交付/03_口播与字幕/口播音频.mp3` or `口播音频.wav` if either exists, or accepts `--voiceover-audio <path>` for user-supplied narration. For preview polish, it can also mix an approved whole-film BGM bed from `最终交付/03_口播与字幕/背景音乐.mp3`, `audio/background_music.mp3`, `audio/bgm.mp3`, `--background-music <path>`, or `--eagle-background-music-id <item_id>`.
 
 ## Music And SFX
 
@@ -101,7 +107,7 @@ Use `--dry-run` when you only need to package the read text and manifest for a h
 
 Write one complete prompt for whole-film music direction and per-shot SFX direction. Include tempo, mood, instrumentation, do-not-use constraints, and voice direction when relevant.
 
-Music and SFX are planning deliverables for now. Do not mix background music or sound effects into `分镜预览.mp4` until that workflow is explicitly enabled. Final video prompts should request no background music per clip, but should include the SFX cue for that shot.
+Background music can be mixed into `分镜预览.mp4` as a whole-film preview bed when the user provides or approves a local track or Eagle item ID. Keep per-shot SFX as cue-sheet guidance for now. Final video prompts should request no background music per clip, but should include the SFX cue for that shot.
 
 ## Copy Assets
 

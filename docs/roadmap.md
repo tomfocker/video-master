@@ -25,6 +25,6 @@
 - Add a project initializer script.
 - Add model-specific prompt exporters for 可灵、即梦、海螺、Vidu、Sora、Runway、Pika.
 - Add brand/product asset ingestion helpers.
-- Add music/SFX mixing for animatic previews after the cue-sheet workflow is stable.
+- Add per-shot SFX mixing for animatic previews after the cue-sheet workflow is stable. Basic whole-film BGM mixing is already available for local animatic previews.
 - Add curated example projects under `examples/`.
 - Add a lightweight UI or CLI if repeated editing and preview workflows need it.

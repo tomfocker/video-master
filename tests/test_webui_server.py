@@ -7,9 +7,11 @@ import unittest
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlencode
+from urllib.error import HTTPError
 from urllib.request import ProxyHandler, Request, build_opener
 
 from tests.test_validate_video_project import make_project, write
+from tests.test_generate_voiceover_tts import WAV_BYTES, voxcpm_server
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +45,23 @@ def post_json(url: str, payload: dict):
         return json.loads(response.read().decode("utf-8"))
 
 
+def post_json_error(url: str, payload: dict):
+    request = Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        LOCAL_OPENER.open(request, timeout=10)
+    except HTTPError as exc:
+        return {
+            "status": exc.code,
+            "payload": json.loads(exc.read().decode("utf-8")),
+        }
+    raise AssertionError("expected HTTPError")
+
+
 class WebUIServerTest(unittest.TestCase):
     def test_webui_page_is_connected_to_state_apis(self):
         html = WEBUI.read_text(encoding="utf-8")
@@ -54,6 +73,7 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("/api/auth/codex/status", html)
         self.assertIn("/api/auth/codex/device/start", html)
         self.assertIn("/api/storyboard-image/generate", html)
+        self.assertIn("/api/voiceover/generate", html)
         self.assertIn("/api/shot-request", html)
         self.assertIn("/api/shot-operation", html)
         self.assertIn("/api/canvas-sync", html)
@@ -82,15 +102,32 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("包装绑定", html)
         self.assertIn("只看框架", html)
         self.assertIn("frameworkOnly", html)
-        self.assertIn("完整制作", html)
+        self.assertIn("全部节点", html)
         self.assertIn("包装交付", html)
         self.assertIn('value="framework"', html)
+        self.assertIn("projectLibraryButton", html)
+        self.assertIn("openProjectLibrary", html)
+        self.assertIn("项目库", html)
+        self.assertIn("project-control-shell", html)
+        self.assertIn('els.projectTitle.textContent = "分镜工作台"', html)
         self.assertIn("projectQuickSelect", html)
         self.assertIn("renderProjectQuickSelect", html)
         self.assertIn("handleProjectQuickSelect", html)
+        self.assertIn("applyCanvasZoom", html)
+        self.assertIn("setCanvasZoom", html)
+        self.assertIn("WHEEL_ZOOM_SENSITIVITY", html)
+        self.assertIn("targetZoom", html)
+        self.assertIn("zoomAnimationActive", html)
+        self.assertIn("Math.exp", html)
+        self.assertIn("smooth: true", html)
+        self.assertIn("scheduleUiPreferenceSave", html)
+        self.assertIn("requestAnimationFrame(flushCanvasZoom)", html)
+        self.assertIn("state.canvasBounds", html)
+        self.assertNotIn("saveUiPreferences();\n      renderBoard();\n    }\n\n    function setZoomAt", html)
         self.assertIn("syncReviewPanel", html)
         self.assertIn("变更清单", html)
         self.assertIn("交给 Codex 处理", html)
+        self.assertIn("collectCanvasChangeReport", html)
         self.assertIn("collectCanvasChangeSummary", html)
         self.assertIn("openCanvasSyncReview", html)
         self.assertIn("confirmCanvasSyncButton", html)
@@ -109,8 +146,10 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("captureCanvasBaseline", html)
         self.assertIn("canvasStateFingerprint", html)
         self.assertIn("canvasHasMeaningfulChanges", html)
-        self.assertIn("当前还没有检测到新的画布修改", html)
-        self.assertIn("同步完成后会把当前画布作为新的对照版本", html)
+        self.assertIn("未检测到新的画布修改", html)
+        self.assertIn("仅本地画布变化", html)
+        self.assertIn("无需交给 Codex 改写项目内容", html)
+        self.assertIn("记为当前状态", html)
         self.assertIn("edge-selection-label", html)
         self.assertIn("拖动黄点调整", html)
         self.assertIn("cardDensitySelect", html)
@@ -118,9 +157,9 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("density-thumbnail", html)
         self.assertIn("density-standard", html)
         self.assertIn("density-full", html)
-        self.assertIn("缩略", html)
+        self.assertIn("摘要", html)
         self.assertIn("标准", html)
-        self.assertIn("完整", html)
+        self.assertIn("详细", html)
         self.assertIn("查看原图", html)
         self.assertIn("替换图片", html)
         self.assertIn("重生成", html)
@@ -209,6 +248,9 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("验证码", html)
         self.assertIn("等待授权", html)
         self.assertIn("直接生成分镜图", html)
+        self.assertIn("生成口播", html)
+        self.assertIn("VoxCPM2", html)
+        self.assertIn("generateVoiceover", html)
         self.assertIn("generateStoryboardImage", html)
         self.assertIn("renderCodexLoginPanel", html)
         self.assertIn("copyCodexLoginCode", html)
@@ -224,7 +266,10 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("locked_rewrite", html)
         self.assertIn("regenerate_image", html)
         self.assertIn("syncCanvasButton", html)
-        self.assertIn("同步修改", html)
+        self.assertIn("检查改动", html)
+        self.assertIn("更新项目状态", html)
+        self.assertNotIn(">写入状态<", html)
+        self.assertNotIn(">同步修改<", html)
         self.assertIn("collectCanvasSyncState", html)
         self.assertIn("syncCanvasToBackend", html)
         self.assertIn("分镜图提示词种子", html)
@@ -233,11 +278,24 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("saveShotFromCanvas", html)
         self.assertIn("adaptive-shot-media", html)
         self.assertIn("shot-media-top", html)
+        self.assertIn("shot-card-brief", html)
+        self.assertIn("shot-card-foot", html)
+        self.assertIn("shot-prompt-preview", html)
+        self.assertIn("renderShotPromptPreview", html)
+        self.assertIn("renderShotSummary", html)
+        self.assertIn("renderShotTechLine", html)
+        self.assertIn("renderShotPrimaryActions", html)
+        self.assertIn("右侧检查器", html)
         self.assertIn("shot-details", html)
-        self.assertIn("SHOT_CARD_HEIGHT = 470", html)
+        self.assertIn("SHOT_CARD_HEIGHT = 390", html)
+        self.assertNotIn("已合并到卡片", html)
         self.assertNotIn("grid-template-columns: minmax(132px, 42%) minmax(0, 1fr)", html)
         self.assertNotIn("aspect-ratio: 9 / 16", html)
         self.assertIn("startCanvasPan", html)
+        self.assertIn("setSpacePanning", html)
+        self.assertIn("canvas-space-panning", html)
+        self.assertIn("event.code === \"Space\"", html)
+        self.assertIn("event.button === 1", html)
         self.assertIn("startNodeDrag", html)
         self.assertIn("requestNodeDragFrame", html)
         self.assertIn("updateConnectedEdgesDuringDrag", html)
@@ -254,9 +312,11 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("showIntro", html)
         self.assertIn("character_lock", html)
         self.assertIn("人物形象锁定", html)
-        self.assertIn('<div class="app side-hidden inspector-hidden">', html)
+        self.assertIn('<div class="app side-hidden">', html)
+        self.assertNotIn('<div class="app side-hidden inspector-hidden">', html)
         self.assertIn("sideHidden: true", html)
-        self.assertIn("inspectorHidden: true", html)
+        self.assertIn("inspectorHidden: false", html)
+        self.assertIn("详情检查器", html)
         self.assertIn("toggleProjectPanelButton", html)
         self.assertIn("project-panel-icon", html)
         self.assertIn("toggleProjectPanel", html)
@@ -271,6 +331,71 @@ class WebUIServerTest(unittest.TestCase):
         self.assertNotIn('id="showShotsButton"', html)
         self.assertNotIn('id="showPackagingButton"', html)
         self.assertNotIn("output_${shot.shot_id}", html)
+
+    def test_server_generates_voiceover_through_webui_api(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp, voxcpm_server() as (tts_server, tts_base_url):
+            root = Path(tmp)
+            project = make_project(root, durations=[3])
+            server = ThreadingHTTPServer(("127.0.0.1", 0), module.VideoMasterHandler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base_url = f"http://127.0.0.1:{server.server_address[1]}"
+            try:
+                generated = post_json(
+                    f"{base_url}/api/voiceover/generate",
+                    {
+                        "project": str(project),
+                        "engine": "voxcpm2",
+                        "tts_base_url": f"{tts_base_url}/ui/",
+                        "persona": "小潮院长",
+                        "control_instruction": "中文男声，自然口播，清晰稳定。",
+                        "cfg_value": 1.5,
+                        "dit_steps": 12,
+                    },
+                )
+                self.assertTrue(generated["ok"])
+                self.assertEqual(generated["engine"], "voxcpm2")
+                self.assertEqual(generated["audio"]["path"], "最终交付/03_口播与字幕/口播音频.wav")
+                self.assertEqual((project / "最终交付" / "03_口播与字幕" / "口播音频.wav").read_bytes(), WAV_BYTES)
+                self.assertEqual(len(tts_server.requests), 1)
+                self.assertEqual(tts_server.requests[0]["path"], "/api/tts")
+                self.assertEqual(tts_server.requests[0]["body"]["persona"], "小潮院长")
+                self.assertEqual(tts_server.requests[0]["body"]["cfg_value"], 1.5)
+                manifest = json.loads((project / "qa" / "metadata" / "tts_manifest.json").read_text(encoding="utf-8"))
+                self.assertEqual(manifest["engine"], "voxcpm2")
+                self.assertEqual(generated["state"]["copywriting"]["voiceover_audio"]["path"], "最终交付/03_口播与字幕/口播音频.wav")
+                self.assertTrue(generated["state"]["copywriting"]["voiceover_audio"]["exists"])
+                self.assertTrue(generated["state"]["copywriting"]["tts_manifest"]["exists"])
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=10)
+
+    def test_voiceover_api_reports_unavailable_tts_service_as_bad_gateway(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            project = make_project(root, durations=[3])
+            server = ThreadingHTTPServer(("127.0.0.1", 0), module.VideoMasterHandler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base_url = f"http://127.0.0.1:{server.server_address[1]}"
+            try:
+                error = post_json_error(
+                    f"{base_url}/api/voiceover/generate",
+                    {
+                        "project": str(project),
+                        "engine": "voxcpm2",
+                        "tts_base_url": "http://127.0.0.1:9",
+                    },
+                )
+                self.assertEqual(error["status"], 502)
+                self.assertIn("VoxCPM2 TTS", error["payload"]["error"])
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=10)
 
     def test_server_lists_project_and_serves_frame_file(self):
         module = load_module()

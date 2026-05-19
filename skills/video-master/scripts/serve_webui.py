@@ -19,6 +19,13 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from project_state import ProjectStateError, build_project_state, write_project_state
+from generate_voiceover_tts import (
+    DEFAULT_VOICE,
+    DEFAULT_VOXCPM2_BASE_URL,
+    DEFAULT_VOXCPM2_CONTROL_INSTRUCTION,
+    DEFAULT_VOXCPM2_PERSONA,
+    generate_voiceover as generate_voiceover_track,
+)
 from codex_image_generation import (
     CodexImageGenerationError,
     generate_storyboard_image_for_project,
@@ -83,6 +90,92 @@ def project_summary(path: Path) -> dict[str, object]:
 
 def file_api_url(project: Path, path: Path) -> str:
     return f"/api/file?project={quote(str(project))}&path={quote(str(path))}"
+
+
+def project_file_payload(project: Path, path: Path) -> dict[str, object]:
+    try:
+        relative = str(path.resolve().relative_to(project.resolve()))
+    except ValueError:
+        relative = str(path)
+    return {
+        "path": relative,
+        "exists": path.exists(),
+        "size": path.stat().st_size if path.exists() and path.is_file() else None,
+    }
+
+
+def coerce_bool(value: object, default: bool = False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"1", "true", "yes", "on", "enabled"}
+
+
+def coerce_float(value: object, default: float) -> float:
+    if value is None or value == "":
+        return default
+    try:
+        return float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("numeric voiceover option is invalid") from exc
+
+
+def coerce_int(value: object, default: int) -> int:
+    if value is None or value == "":
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("integer voiceover option is invalid") from exc
+
+
+def resolve_project_output_path(project: Path, value: object) -> Path | None:
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    output = Path(raw)
+    resolved = output.resolve() if output.is_absolute() else (project / output).resolve()
+    try:
+        resolved.relative_to(project.resolve())
+    except ValueError as exc:
+        raise ValueError("voiceover output must stay inside the project directory") from exc
+    return resolved
+
+
+def generate_voiceover_for_webui(project: Path, payload: dict[str, object]) -> dict[str, object]:
+    engine = str(payload.get("engine") or "voxcpm2").strip() or "voxcpm2"
+    if engine not in {"edge-tts", "voxcpm2"}:
+        raise ValueError("engine must be edge-tts or voxcpm2")
+    result = generate_voiceover_track(
+        project,
+        engine=engine,
+        voice=str(payload.get("voice") or DEFAULT_VOICE).strip() or DEFAULT_VOICE,
+        rate=str(payload.get("rate") or "+0%").strip() or "+0%",
+        volume=str(payload.get("volume") or "+0%").strip() or "+0%",
+        pitch=str(payload.get("pitch") or "+0Hz").strip() or "+0Hz",
+        tts_base_url=str(payload.get("tts_base_url") or DEFAULT_VOXCPM2_BASE_URL).strip() or DEFAULT_VOXCPM2_BASE_URL,
+        persona=str(payload.get("persona") or DEFAULT_VOXCPM2_PERSONA).strip() or DEFAULT_VOXCPM2_PERSONA,
+        control_instruction=str(payload.get("control_instruction") or DEFAULT_VOXCPM2_CONTROL_INSTRUCTION).strip()
+        or DEFAULT_VOXCPM2_CONTROL_INSTRUCTION,
+        cfg_value=coerce_float(payload.get("cfg_value"), 2.0),
+        do_normalize=coerce_bool(payload.get("do_normalize"), False),
+        denoise=coerce_bool(payload.get("denoise"), False),
+        dit_steps=coerce_int(payload.get("dit_steps"), 10),
+        api_key=str(payload.get("api_key") or "").strip() or None,
+        timeout=coerce_float(payload.get("timeout"), 300.0),
+        dry_run=coerce_bool(payload.get("dry_run"), False),
+        output=resolve_project_output_path(project, payload.get("output")),
+    )
+    return {
+        "ok": True,
+        "engine": result["engine"],
+        "dry_run": result["dry_run"],
+        "audio": project_file_payload(project, result["output"]),
+        "text": project_file_payload(project, result["text_path"]),
+        "manifest": project_file_payload(project, result["manifest_path"]),
+        "manifest_data": result["manifest"],
+    }
 
 
 def media_kind(path: Path) -> str | None:
@@ -559,6 +652,24 @@ class VideoMasterHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": str(exc)}, 400)
                 return
             self.send_json({"ok": True, "request": request, "state": state})
+            return
+
+        if route == "/api/voiceover/generate":
+            try:
+                payload = self.read_json_body()
+                project = resolve_local_path(str(payload.get("project") or ""))
+                if not project.is_dir():
+                    self.send_json({"error": "project path not found"}, 404)
+                    return
+                result = generate_voiceover_for_webui(project, payload)
+                result["state"] = build_project_state(project)
+            except RuntimeError as exc:
+                self.send_json({"error": str(exc)}, 502)
+                return
+            except (ProjectStateError, ValueError, FileNotFoundError) as exc:
+                self.send_json({"error": str(exc)}, 400)
+                return
+            self.send_json(result)
             return
 
         if route == "/api/auth/codex/device/start":

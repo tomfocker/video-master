@@ -20,7 +20,7 @@ Recommended dependencies enable:
 - PNG storyboard contact sheets with Pillow.
 - Production workbook export with openpyxl.
 - Packaged MP4 storyboard animatic previews with imageio/ffmpeg and numpy. The default `draft` profile uses 12fps and follows the project's aspect ratio, with optional `smooth` and `off` profiles.
-- Optional TTS voiceover generation with edge-tts.
+- Optional TTS voiceover generation with edge-tts or a local VoxCPM2 HTTP service.
 - Stronger JSON/subtitle validation with pydantic and pysubs2.
 
 ## Global Rules
@@ -31,7 +31,7 @@ Recommended dependencies enable:
 - Treat `brief/spec_lock.md` as the execution contract. Re-read it before writing each shot prompt, generating each storyboard frame, or assembling final deliverables.
 - Use native image generation for storyboard frames when the user asks for images, 分镜图, storyboard frames, keyframes, or visual boards. Do not substitute SVG boxes or text-only placeholders.
 - Video Master is built around Codex native image generation. Default to assuming native image generation is available during project work; do not mark it unavailable just because a CLI key, environment variable, or tool listing is missing. Only record image generation as unavailable after an actual native image-generation attempt fails in the current turn.
-- When using the local WebUI, `scripts/serve_webui.py` can start a Codex device login and call Codex native image generation for a selected storyboard shot. Generated originals are written to `最终交付/01_分镜图/`, and status is recorded in `qa/metadata/image_generation_manifest.json`.
+- When using the local WebUI, `scripts/serve_webui.py` can start a Codex device login and call Codex native image generation for a selected storyboard shot. It can also trigger optional TTS voiceover generation from `audio/tts_lines.json` through edge-tts or a local VoxCPM2 service. Generated originals are written to `最终交付/01_分镜图/`, voiceover audio is written to `最终交付/03_口播与字幕/`, and status is recorded in `qa/metadata/`.
 - Treat fixed characters as a continuity lock before storyboard generation. When a project includes recurring people, hosts, founders, interviewees, actors, or mascots, create/confirm character design anchors first and reference them from storyboard image prompts and video prompts.
 - For formal projects that generate storyboard images, enforce `style_confirmation_gate`: create/confirm the character anchor and the first storyboard frame (S01), set `style_gate_status: pending`, and do not batch-generate remaining storyboard frames until the user approves the current style.
 - Treat title packaging as an optional sidecar branch only. It must never change the normal storyboard, script, audio, or video-prompt generation flow.
@@ -428,7 +428,7 @@ If the user wants a voiced preview and dependencies/network are available, gener
 python3 ${SKILL_DIR}/scripts/generate_voiceover_tts.py <project_path>
 ```
 
-If the user already has narration, place it in `最终交付/03_口播与字幕/` or pass it to the preview tool with `--voiceover-audio`.
+If the user already has narration, place it in `最终交付/03_口播与字幕/` or pass it to the preview tool with `--voiceover-audio`. If the user has approved a local background music track, place it at `最终交付/03_口播与字幕/背景音乐.mp3`, `audio/background_music.mp3`, `audio/bgm.mp3`, or pass it with `--background-music <path>`. To use an Eagle asset directly, pass `--eagle-background-music-id <item_id>` and optionally `--eagle-library-path <path>`. This mixes BGM only into the local animatic preview and does not change video-generation prompts.
 
 Generate the storyboard overview:
 
@@ -448,7 +448,7 @@ Generate the storyboard animatic preview:
 python3 ${SKILL_DIR}/scripts/make_animatic.py <project_path>
 ```
 
-The default preview profile is `draft`: 12fps and an output size inferred from `brief/spec_lock.md` `aspect_ratio` such as `1280x720` for `16:9` or `720x1280` for `9:16`. Use `--preview-profile smooth` when the user prioritizes playback polish, or `--preview-profile off` when the user only wants the core storyboard and prompt package. The default motion style is `none` so storyboard frames stay stable; use `--motion-style center-zoom` or `--motion-style pan-zoom` only when movement is intentionally desired. The animatic preview should include an opening card, ending card, shot overlays, burned-in captions when available, and any provided or generated voiceover. Music and sound-effect mixing is intentionally not part of this step yet; keep those as planning cues for now.
+The default preview profile is `draft`: 12fps and an output size inferred from `brief/spec_lock.md` `aspect_ratio` such as `1280x720` for `16:9` or `720x1280` for `9:16`. Use `--preview-profile smooth` when the user prioritizes playback polish, or `--preview-profile off` when the user only wants the core storyboard and prompt package. The default motion style is `none` so storyboard frames stay stable; use `--motion-style center-zoom` or `--motion-style pan-zoom` only when movement is intentionally desired. The animatic preview should include an opening card, ending card, shot overlays, burned-in captions when available, any provided or generated voiceover, and an approved background music bed when one is available. Keep per-shot SFX as cue-sheet guidance for now. Background music remains whole-film post-production audio; final segmented video prompts must still request no generated background music per clip.
 
 Generate the local WebUI state snapshot:
 

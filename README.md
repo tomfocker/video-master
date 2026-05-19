@@ -48,6 +48,7 @@ video-master/
 - 判断用户输入是纯想法、半成品素材，还是已经锁定的品牌/文案资料。
 - 入口支持 `autopilot` 全委托模式和 `guided` 协作导演模式；前者自动推进并记录假设，后者逐阶段确认和头脑风暴。
 - 提供本地 WebUI，用于浏览项目入口模式、流程节点、分镜图、提示词片段、包装状态和最终交付状态，并支持局部分镜编辑、画布同步和 Codex 登录后的分镜图直接生成。
+- WebUI 侧栏支持从 `audio/tts_lines.json` 直接生成口播，可选择本地 VoxCPM2 服务或 edge-tts，并把音频写入最终交付目录供预览视频自动使用。
 - 在写剧本前确认视频类型，例如广告 TVC、产品宣传短视频、故事短片、动画、教程讲解、品牌片或电商转化短视频。
 - 分开确认提示词语言、口播语言、字幕语言和字幕渲染策略，避免视频模型误生成内嵌字幕。
 - 设计非均匀镜头节奏，不再默认平均分配时长；高速、运动、竞速类主题会加入快切组、冲击镜头和呼吸镜头。
@@ -58,12 +59,12 @@ video-master/
 - 默认把字幕作为后期资产处理；最终视频提示词会明确要求视频模型不要生成或烧录字幕，除非用户明确允许。
 - 把用户真正需要使用的结果集中放到 `最终交付/`。
 - 生成分镜总览 HTML 和 PNG 总览图。
-- 生成 MP4 分镜预览视频，包含片头/片尾卡、镜头信息、字幕和可选配音。默认 `draft` 预览为 12fps，并自动匹配项目画面比例；如果不需要预览，可使用 `--preview-profile off`。
+- 生成 MP4 分镜预览视频，包含片头/片尾卡、镜头信息、字幕、可选配音和可选整片 BGM。默认 `draft` 预览为 12fps，并自动匹配项目画面比例；如果不需要预览，可使用 `--preview-profile off`。
 - 在生成分镜图前锁定视觉风格预设，例如 `imax_70mm_realism`、`photoreal_commercial`、`eastern_fantasy_3d`、`anime_cinematic_light`、`future_tech_clean`，并把画风、调色、光线、质感和镜头语言写入每条分镜图提示词。
 - 如果项目涉及固定人物、主持人、创始人、访谈对象或虚拟角色，会在分镜图生成前先锁定人物设定图和角色描述，后续分镜图与视频提示词只引用已锁定的角色 ID，避免脸型、年龄、发型、服装漂移。
 - 可选生成商业标题包装旁路资产，包括大标题、章节标题、人名条、关键数据/数字包装和 CTA/end card。默认交付透明 PNG；只有明确需要真实动画叠加时才生成 ProRes 4444 透明通道 MOV。MOV 模板支持 `brush_reveal`、`route_light_trail`、`odometer`、`marker_annotation` 等，并可把原生生图清理出的透明设计稿作为 `design_asset` 继续动画化。这个分支不会改写原有视频提示词。
 - 外部画外音不会直接写进最终视频提示词；每个视频片段提示词会要求不要生成背景音乐，并保留逐镜头 SFX 音效说明。
-- 支持基于 `tts_lines.json` 生成或打包 TTS 配音。
+- 支持基于 `tts_lines.json` 生成或打包 TTS 配音；默认可用 edge-tts，也可选接入本地 VoxCPM2 HTTP 服务生成中文口播 WAV。
 - 导出制作总表，方便查看镜头、口播和交付信息。
 - 使用本地校验脚本检查项目结构、镜头时长、音频文件、提示词语言和最终交付文件。
 
@@ -112,7 +113,7 @@ python3 -m pip install -r requirements.txt
 - `Pillow`：生成分镜总览图和处理图片。
 - `openpyxl`：导出制作总表。
 - `imageio[ffmpeg]` 和 `numpy`：生成 MP4 分镜预览视频。
-- `edge-tts`：可选 TTS 配音生成。
+- `edge-tts`：可选 TTS 配音生成；本地 VoxCPM2 HTTP 接入不额外增加 Python 依赖。
 - `pydantic`：更稳的 JSON 结构校验。
 - `pysubs2`：字幕文件校验。
 
@@ -136,6 +137,7 @@ python3 -m unittest tests/test_generate_voiceover_tts.py -v
 python3 skills/video-master/scripts/make_storyboard_overview.py video_projects/<project>
 python3 skills/video-master/scripts/export_production_workbook.py video_projects/<project>
 python3 skills/video-master/scripts/generate_voiceover_tts.py video_projects/<project>
+python3 skills/video-master/scripts/generate_voiceover_tts.py video_projects/<project> --engine voxcpm2 --tts-base-url http://100.64.0.3:8808/ui/ --persona 小潮院长
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project>
 python3 skills/video-master/scripts/render_title_packaging.py video_projects/<project>
 python3 skills/video-master/scripts/project_state.py video_projects/<project> --write
@@ -162,6 +164,15 @@ python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --preview-profile smooth
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --preview-profile off
 ```
+
+给样片预览加入整片背景音乐：
+
+```bash
+python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --background-music path/to/bgm.mp3
+python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --eagle-background-music-id <Eagle素材ID>
+```
+
+如果项目里已经有 `最终交付/03_口播与字幕/背景音乐.mp3`、`audio/background_music.mp3` 或 `audio/bgm.mp3`，脚本会自动混入预览。也可以直接传 Eagle item id，脚本会从 Eagle 当前/历史素材库中只读定位原始音频文件；这只影响 `分镜预览.mp4`，不会改变最终视频提示词里的“不要生成背景音乐”策略。
 
 预览视频运动方式：
 

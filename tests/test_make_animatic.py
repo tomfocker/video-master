@@ -245,6 +245,191 @@ class MakeAnimaticTest(unittest.TestCase):
             manifest = json.loads((project / "qa" / "metadata" / "preview_manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(manifest["voiceover_audio"], str(voiceover.resolve()))
 
+    def test_automatically_uses_project_wav_voiceover_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            frames = project / "最终交付" / "01_分镜图"
+            frames.mkdir(parents=True)
+            (frames / "S01.png").write_bytes(PNG_1X1)
+            write(
+                project / "storyboard" / "shot_list.json",
+                json.dumps(
+                    [{"shot_id": "S01", "start": "00:00", "end": "00:01", "duration_seconds": 1}],
+                    ensure_ascii=False,
+                ),
+            )
+            voiceover = project / "最终交付" / "03_口播与字幕" / "口播音频.wav"
+            voiceover.parent.mkdir(parents=True)
+            with wave.open(str(voiceover), "wb") as handle:
+                handle.setnchannels(1)
+                handle.setsampwidth(2)
+                handle.setframerate(8000)
+                handle.writeframes(b"\x00\x00" * 8000)
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ANIMATIC),
+                    str(project),
+                    "--fps",
+                    "2",
+                    "--size",
+                    "180x320",
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            manifest = json.loads((project / "qa" / "metadata" / "preview_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["voiceover_audio"], str(voiceover.resolve()))
+
+    def test_muxes_background_music_when_provided(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            frames = project / "最终交付" / "01_分镜图"
+            frames.mkdir(parents=True)
+            (frames / "S01.png").write_bytes(PNG_1X1)
+            write(
+                project / "storyboard" / "shot_list.json",
+                json.dumps(
+                    [{"shot_id": "S01", "start": "00:00", "end": "00:01", "duration_seconds": 1}],
+                    ensure_ascii=False,
+                ),
+            )
+            music = project / "audio" / "background_music.wav"
+            music.parent.mkdir(parents=True)
+            with wave.open(str(music), "wb") as handle:
+                handle.setnchannels(1)
+                handle.setsampwidth(2)
+                handle.setframerate(8000)
+                handle.writeframes(b"\x00\x00" * 8000)
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ANIMATIC),
+                    str(project),
+                    "--fps",
+                    "2",
+                    "--size",
+                    "180x320",
+                    "--background-music",
+                    str(music),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            output = project / "最终交付" / "05_预览视频" / "分镜预览.mp4"
+            self.assertTrue(output.is_file())
+            self.assertGreater(output.stat().st_size, 0)
+            manifest = json.loads((project / "qa" / "metadata" / "preview_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["background_music"], str(music.resolve()))
+            self.assertEqual(manifest["background_music_volume"], 0.18)
+
+    def test_automatically_uses_project_background_music_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            frames = project / "最终交付" / "01_分镜图"
+            frames.mkdir(parents=True)
+            (frames / "S01.png").write_bytes(PNG_1X1)
+            write(
+                project / "storyboard" / "shot_list.json",
+                json.dumps(
+                    [{"shot_id": "S01", "start": "00:00", "end": "00:01", "duration_seconds": 1}],
+                    ensure_ascii=False,
+                ),
+            )
+            music = project / "audio" / "bgm.wav"
+            music.parent.mkdir(parents=True)
+            with wave.open(str(music), "wb") as handle:
+                handle.setnchannels(1)
+                handle.setsampwidth(2)
+                handle.setframerate(8000)
+                handle.writeframes(b"\x00\x00" * 8000)
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ANIMATIC),
+                    str(project),
+                    "--fps",
+                    "2",
+                    "--size",
+                    "180x320",
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            manifest = json.loads((project / "qa" / "metadata" / "preview_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["background_music"], str(music.resolve()))
+            self.assertEqual(manifest["background_music_volume"], 0.18)
+
+    def test_muxes_background_music_from_eagle_item_id(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            project = root / "project"
+            frames = project / "最终交付" / "01_分镜图"
+            frames.mkdir(parents=True)
+            (frames / "S01.png").write_bytes(PNG_1X1)
+            write(
+                project / "storyboard" / "shot_list.json",
+                json.dumps(
+                    [{"shot_id": "S01", "start": "00:00", "end": "00:01", "duration_seconds": 1}],
+                    ensure_ascii=False,
+                ),
+            )
+            library = root / "音乐音效库.library"
+            item_dir = library / "images" / "EAGLEBGM1.info"
+            music = item_dir / "商业调性.wav"
+            item_dir.mkdir(parents=True)
+            with wave.open(str(music), "wb") as handle:
+                handle.setnchannels(1)
+                handle.setsampwidth(2)
+                handle.setframerate(8000)
+                handle.writeframes(b"\x00\x00" * 8000)
+            write(
+                item_dir / "metadata.json",
+                json.dumps({"id": "EAGLEBGM1", "name": "商业调性", "ext": "wav"}, ensure_ascii=False),
+            )
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ANIMATIC),
+                    str(project),
+                    "--fps",
+                    "2",
+                    "--size",
+                    "180x320",
+                    "--eagle-background-music-id",
+                    "EAGLEBGM1",
+                    "--eagle-library-path",
+                    str(library),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            manifest = json.loads((project / "qa" / "metadata" / "preview_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["background_music"], str(music.resolve()))
+            self.assertEqual(manifest["background_music_source"]["type"], "eagle")
+            self.assertEqual(manifest["background_music_source"]["item_id"], "EAGLEBGM1")
+            self.assertEqual(manifest["background_music_source"]["name"], "商业调性")
+
 
 if __name__ == "__main__":
     unittest.main()

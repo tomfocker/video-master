@@ -24,6 +24,7 @@ IMAGE_PROMPTS = FINAL_PROMPTS_DIR / "图片生成提示词.md"
 VOICEOVER_SCRIPT = FINAL_AUDIO_DIR / "口播稿.md"
 VOICEOVER_TEXT = FINAL_AUDIO_DIR / "口播文本.txt"
 VOICEOVER_AUDIO = FINAL_AUDIO_DIR / "口播音频.mp3"
+VOICEOVER_AUDIO_WAV = FINAL_AUDIO_DIR / "口播音频.wav"
 CAPTIONS_ZH = FINAL_AUDIO_DIR / "中文字幕.srt"
 CAPTIONS_EN = FINAL_AUDIO_DIR / "英文字幕.srt"
 OVERVIEW_PNG = FINAL_OVERVIEW_DIR / "分镜总览图.png"
@@ -57,7 +58,10 @@ def storyboard_frame_path(project: Path, shot_id: str) -> Path:
 
 
 def read_voiceover_audio_path(project: Path) -> Path:
-    return first_existing(project, [VOICEOVER_AUDIO, LEGACY_ROOT / "final_audio" / "voiceover.mp3"])
+    return first_existing(
+        project,
+        [VOICEOVER_AUDIO, VOICEOVER_AUDIO_WAV, LEGACY_ROOT / "final_audio" / "voiceover.mp3"],
+    )
 
 
 def video_prompt_path(project: Path) -> Path:

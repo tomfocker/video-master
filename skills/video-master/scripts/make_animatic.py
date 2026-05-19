@@ -19,6 +19,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from delivery_paths import PREVIEW_MANIFEST, PREVIEW_MP4, read_voiceover_audio_path, storyboard_frame_path
+from eagle_client import EagleClient, resolve_item_file_from_eagle
 
 
 FONT_CANDIDATES = [
@@ -34,6 +35,15 @@ PREVIEW_PROFILES = {
     "draft": {"fps": 12, "fallback_size": (720, 1280), "long_edge": 1280},
     "smooth": {"fps": 15, "fallback_size": (1080, 1920), "long_edge": 1920},
 }
+
+BACKGROUND_MUSIC_STEMS = [
+    Path("audio") / "background_music",
+    Path("audio") / "bgm",
+    Path("最终交付") / "03_口播与字幕" / "背景音乐",
+    Path("最终交付") / "03_口播与字幕" / "background_music",
+    Path("最终交付") / "03_口播与字幕" / "bgm",
+]
+BACKGROUND_MUSIC_EXTENSIONS = [".mp3", ".wav", ".m4a", ".aac", ".flac", ".aiff", ".aif", ".ogg"]
 
 
 def parse_size(value: str) -> tuple[int, int]:
@@ -130,6 +140,27 @@ def frame_path(project: Path, shot_id: str) -> Path:
     if path.is_file():
         return path
     raise FileNotFoundError(f"missing frame for {shot_id}")
+
+
+def resolve_project_path(project: Path, path: Path) -> Path:
+    path = Path(path).expanduser()
+    if not path.is_absolute():
+        path = project / path
+    return path.resolve()
+
+
+def read_background_music_path(project: Path) -> Path:
+    for stem in BACKGROUND_MUSIC_STEMS:
+        if stem.suffix:
+            candidate = project / stem
+            if candidate.is_file():
+                return candidate
+            continue
+        for extension in BACKGROUND_MUSIC_EXTENSIONS:
+            candidate = project / stem.with_suffix(extension)
+            if candidate.is_file():
+                return candidate
+    return project / BACKGROUND_MUSIC_STEMS[0].with_suffix(".mp3")
 
 
 def load_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -419,34 +450,82 @@ def append_shot_frames(
     return repeat, duration
 
 
-def mux_voiceover(video_path: Path, audio_path: Path, output_path: Path, duration_seconds: float) -> None:
+def background_music_filter(duration_seconds: float, volume: float) -> str:
+    fade_in_seconds = min(0.7, max(0.0, duration_seconds / 4))
+    fade_out_seconds = min(1.0, max(0.0, duration_seconds / 4))
+    parts = [f"volume={volume:.4f}"]
+    if fade_in_seconds >= 0.1:
+        parts.append(f"afade=t=in:st=0:d={fade_in_seconds:.3f}")
+    if duration_seconds > fade_out_seconds and fade_out_seconds >= 0.1:
+        parts.append(f"afade=t=out:st={duration_seconds - fade_out_seconds:.3f}:d={fade_out_seconds:.3f}")
+    return ",".join(parts)
+
+
+def mux_preview_audio(
+    video_path: Path,
+    voiceover_audio: Path | None,
+    background_music: Path | None,
+    output_path: Path,
+    duration_seconds: float,
+    background_music_volume: float,
+) -> None:
     try:
         from imageio_ffmpeg import get_ffmpeg_exe
     except ImportError as exc:
-        raise RuntimeError("imageio-ffmpeg is required to mux voiceover audio") from exc
+        raise RuntimeError("imageio-ffmpeg is required to mux preview audio") from exc
 
-    command = [
+    command: list[str] = [
         get_ffmpeg_exe(),
         "-y",
         "-i",
         str(video_path),
-        "-i",
-        str(audio_path),
-        "-map",
-        "0:v:0",
-        "-map",
-        "1:a:0",
-        "-c:v",
-        "copy",
-        "-c:a",
-        "aac",
-        "-t",
-        f"{duration_seconds:.3f}",
-        str(output_path),
     ]
+    voiceover_index: int | None = None
+    background_index: int | None = None
+    if voiceover_audio is not None:
+        voiceover_index = 1
+        command.extend(["-i", str(voiceover_audio)])
+    if background_music is not None:
+        background_index = 1 if voiceover_index is None else 2
+        command.extend(["-stream_loop", "-1", "-i", str(background_music)])
+
+    filter_complex = ""
+    audio_map = ""
+    if voiceover_index is not None and background_index is not None:
+        filter_complex = (
+            f"[{voiceover_index}:a]volume=1.0[a_voice];"
+            f"[{background_index}:a]{background_music_filter(duration_seconds, background_music_volume)}[a_bgm];"
+            "[a_voice][a_bgm]amix=inputs=2:duration=longest:dropout_transition=0[a_mix]"
+        )
+        audio_map = "[a_mix]"
+    elif background_index is not None:
+        filter_complex = (
+            f"[{background_index}:a]"
+            f"{background_music_filter(duration_seconds, background_music_volume)}[a_mix]"
+        )
+        audio_map = "[a_mix]"
+
+    if filter_complex:
+        command.extend(["-filter_complex", filter_complex])
+
+    command.extend(
+        [
+            "-map",
+            "0:v:0",
+            "-map",
+            audio_map if audio_map else f"{voiceover_index}:a:0",
+            "-c:v",
+            "copy",
+            "-c:a",
+            "aac",
+            "-t",
+            f"{duration_seconds:.3f}",
+            str(output_path),
+        ]
+    )
     completed = subprocess.run(command, text=True, capture_output=True, check=False)
     if completed.returncode != 0:
-        raise RuntimeError(completed.stderr.strip() or "ffmpeg failed while muxing voiceover audio")
+        raise RuntimeError(completed.stderr.strip() or "ffmpeg failed while muxing preview audio")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -464,6 +543,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--title-card-seconds", type=float, default=1.5, help="Opening card duration")
     parser.add_argument("--end-card-seconds", type=float, default=1.5, help="Ending card duration")
     parser.add_argument("--voiceover-audio", type=Path, help="Optional TTS/VO audio file to mux into the preview")
+    parser.add_argument(
+        "--background-music",
+        type=Path,
+        help="Optional background music file to mix under the preview",
+    )
+    parser.add_argument(
+        "--background-music-volume",
+        type=float,
+        default=0.18,
+        help="Background music volume multiplier for preview mixing",
+    )
+    parser.add_argument("--eagle-background-music-id", help="Eagle item ID to use as preview background music")
+    parser.add_argument("--eagle-library-path", type=Path, help="Optional Eagle .library path for item resolution")
+    parser.add_argument("--eagle-base-url", default="http://localhost:41595", help="Eagle local API base URL")
+    parser.add_argument("--no-background-music", action="store_true", help="Disable automatic background music pickup")
     parser.add_argument("--no-title-card", action="store_true", help="Disable the opening card")
     parser.add_argument("--no-end-card", action="store_true", help="Disable the ending card")
     parser.add_argument("--no-shot-overlays", action="store_true", help="Disable shot ID/beat overlays")
@@ -492,6 +586,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.title_card_seconds < 0 or args.end_card_seconds < 0:
         print("ERROR: card durations cannot be negative")
         return 2
+    if args.background_music_volume < 0 or args.background_music_volume > 1:
+        print("ERROR: background music volume must be between 0 and 1")
+        return 2
 
     voiceover_audio = args.voiceover_audio
     if voiceover_audio is None:
@@ -499,10 +596,41 @@ def main(argv: list[str] | None = None) -> int:
         if candidate.is_file():
             voiceover_audio = candidate
     if voiceover_audio is not None:
-        voiceover_audio = voiceover_audio.resolve()
+        voiceover_audio = resolve_project_path(project, voiceover_audio)
         if not voiceover_audio.is_file():
             print(f"ERROR: voiceover audio does not exist: {voiceover_audio}")
             return 2
+
+    background_music = None
+    background_music_source = False
+    if not args.no_background_music:
+        if args.background_music and args.eagle_background_music_id:
+            print("ERROR: use either --background-music or --eagle-background-music-id, not both")
+            return 2
+        background_music = args.background_music
+        if args.eagle_background_music_id:
+            try:
+                resolved_eagle_item = resolve_item_file_from_eagle(
+                    args.eagle_background_music_id,
+                    library_path=args.eagle_library_path,
+                    client=EagleClient(args.eagle_base_url),
+                )
+            except Exception as exc:
+                print(f"ERROR: {exc}")
+                return 2
+            background_music = resolved_eagle_item.path
+            background_music_source = resolved_eagle_item.source_manifest()
+        elif background_music is None:
+            candidate = read_background_music_path(project)
+            if candidate.is_file():
+                background_music = candidate
+        if background_music is not None:
+            background_music = resolve_project_path(project, background_music)
+            if not background_music.is_file():
+                print(f"ERROR: background music does not exist: {background_music}")
+                return 2
+            if background_music_source is False:
+                background_music_source = {"type": "local_file", "path": str(background_music)}
 
     shots = load_shots(project)
     title = args.title or infer_title(project)
@@ -529,6 +657,9 @@ def main(argv: list[str] | None = None) -> int:
             "ken_burns_motion": False,
             "motion_style": "none",
             "voiceover_audio": False,
+            "background_music": False,
+            "background_music_volume": False,
+            "background_music_source": False,
         }
         manifest_path.write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2),
@@ -539,7 +670,7 @@ def main(argv: list[str] | None = None) -> int:
 
     captions = load_captions(project)
     video_only_output = output
-    if voiceover_audio is not None:
+    if voiceover_audio is not None or background_music is not None:
         video_only_output = output.with_name(f"{output.stem}.video-only.tmp{output.suffix}")
 
     title_card_enabled = not args.no_title_card and args.title_card_seconds > 0
@@ -579,13 +710,21 @@ def main(argv: list[str] | None = None) -> int:
                 frame = create_card(size, "包装参考", "PREVIEW PACKAGE", "分镜图 / 字幕 / 配音轨 / 视频提示词")
                 total_frames += append_card(writer, frame, args.end_card_seconds, fps)
                 timeline_seconds += args.end_card_seconds
-        if voiceover_audio is not None:
-            mux_voiceover(video_only_output, voiceover_audio, output, total_frames / fps)
+        if voiceover_audio is not None or background_music is not None:
+            mux_preview_audio(
+                video_only_output,
+                voiceover_audio,
+                background_music,
+                output,
+                total_frames / fps,
+                args.background_music_volume,
+            )
     except Exception as exc:
         print(f"ERROR: {exc}")
         return 1
     finally:
-        if voiceover_audio is not None and video_only_output != output and video_only_output.exists():
+        has_audio = voiceover_audio is not None or background_music is not None
+        if has_audio and video_only_output != output and video_only_output.exists():
             video_only_output.unlink()
 
     manifest = {
@@ -605,6 +744,9 @@ def main(argv: list[str] | None = None) -> int:
         "ken_burns_motion": motion_enabled,
         "motion_style": motion_style,
         "voiceover_audio": str(voiceover_audio) if voiceover_audio is not None else False,
+        "background_music": str(background_music) if background_music is not None else False,
+        "background_music_volume": round(args.background_music_volume, 3) if background_music is not None else False,
+        "background_music_source": background_music_source,
     }
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Animatic: {output}")

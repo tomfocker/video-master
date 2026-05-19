@@ -21,8 +21,10 @@ from delivery_paths import (
     IMAGE_PROMPTS,
     METADATA_DIR,
     PREVIEW_MANIFEST,
+    TTS_MANIFEST,
     TITLE_PACKAGING_MANIFEST,
     VIDEO_PROMPTS,
+    read_voiceover_audio_path,
     WORKBOOK,
     handoff_path,
     image_prompt_path,
@@ -373,6 +375,8 @@ def build_deliverables(project: Path) -> dict[str, Any]:
 def build_copywriting(project: Path) -> dict[str, Any]:
     script = project / "script" / "script.md"
     voiceover = project / "audio" / "voiceover_script.md"
+    voiceover_audio = read_voiceover_audio_path(project)
+    tts_manifest = project / TTS_MANIFEST
     captions = project / "audio" / "captions.srt"
     localized_captions = project / "audio" / "captions_zh.srt"
     music_sfx = project / "audio" / "music_sfx_cue_sheet.md"
@@ -388,6 +392,8 @@ def build_copywriting(project: Path) -> dict[str, Any]:
     return {
         "status": node_status([script, voiceover, captions, music_sfx], optional=True),
         "files": files,
+        "voiceover_audio": path_info(project, voiceover_audio),
+        "tts_manifest": path_info(project, tts_manifest),
         "voiceover_preview": preview_text(voiceover),
         "caption_preview": preview_text(localized_captions) or preview_text(captions),
         "music_sfx_preview": preview_text(music_sfx),
