@@ -78,6 +78,8 @@ Run this checklist before final delivery.
 
 - Every planned frame is marked `Generated`, `Needs-Generation`, or `Skipped`.
 - Generated frame paths are verified before being referenced.
+- For Seedance 2.0 15-second workflows, complex segments have enough reference frames to cover opening state, transition/midpoint, payoff, and next-segment bridge.
+- Still-frame prompts do not try to show the whole 15-second segment at once; each reference image has one clear key-frame purpose and motion direction.
 - Missing images have final prompts and clear reasons.
 - `Needs-Generation` is used only after a real native image-generation attempt fails or the user explicitly pauses generation; do not infer unavailable generation from missing CLI credentials, environment variables, or tool listings.
 - Image prompts describe still frames, not video clips.
@@ -105,7 +107,10 @@ Run this checklist before final delivery.
 - Final prompts include per-shot SFX and a no-background-music policy.
 - Seedance 2.0 is the default target model/profile unless the user explicitly named another video model.
 - For Seedance 2.0, each copy-ready shot heading includes the model/duration/aspect/reference metadata, the body avoids standalone `目标模型` or `参考图` fields, and the body includes a `动态时间切片` section with at least two time-coded motion slices such as `(00-1.5s)` and `(1.5-3.0s)`.
+- For Seedance 2.0 15-second workflows, each time slice integrates visual action, camera movement, character performance/dialogue mouth cue when applicable, and SFX in the same slice instead of splitting them into disconnected sections.
+- For Seedance 2.0 15-second workflows, each segment has a camera/editing chain such as entry texture -> reveal/acceleration -> focus or dialogue hold -> transition bridge. It is not enough to list static visuals.
 - Time-slice descriptions are shot-specific. They do not reuse generic template text such as `gentle dolly 或 tabletop camera movement` or `镜头继续完成本镜头节拍`.
+- Dialogue included in final prompts is used only for mouth shapes and performance; generated clips still forbid subtitles, dialogue text, labels, signs, maps, logos, and watermarks unless explicitly approved.
 - Final prompt bodies stay compact: no `audio/captions.srt`, no `post-production only`, no packaging-file notes, and no external-VO explanation unless the user explicitly asks for that model-facing instruction.
 - Model-specific language for non-default models appears only when the user named or confirmed that target model/profile.
 

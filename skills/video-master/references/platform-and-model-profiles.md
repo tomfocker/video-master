@@ -31,11 +31,13 @@ When a user names another model, keep the selected model in `target_model` and u
 
 Use for the default workflow and for users who name Seedance, Seedance 2.0, 豆包视频, or a Seedance-compatible Chinese video-generation workflow.
 
+- For hands-on production rules, read `references/seedance2-practical-playbook.md` before writing storyboard image prompts or final copy-ready video prompts.
 - Final prompts default to Chinese-first, with optional English camera tags only when they add precision.
 - Write one copy-ready block per shot, not one long film prompt.
+- For 15-second clip workflows, treat each prompt as a mini sequence with internal beats. Generate multiple reference images when a segment includes introductions, transitions, transformations, multi-state process visuals, or ending/title-safe staging.
 - Put model, duration, aspect ratio, and reference-frame path in the shot heading. Do not repeat them as standalone body fields.
 - Inside each shot, add a `动态时间切片` section with time-coded segments such as `(00-1.5s)` and `(1.5-3.0s)`.
-- Every time slice should be inferred from the storyboard beat: vary the framing, camera movement, subject action, prop interaction, and environment motion according to the shot. Do not reuse a generic motion template across shots.
+- Every time slice should be inferred from the storyboard beat: combine framing, camera movement, subject action, prop interaction, environment motion, dialogue mouth cue or character performance, and SFX. Do not reuse a generic motion template across shots.
 - Keep motion continuous and physically plausible: slow, smooth, connected, natural, not abrupt unless the shot deliberately calls for impact.
 - Add stability constraints: clear face when a face appears, stable identity, normal anatomy, consistent wardrobe/product, no flicker, no ghosting, no watermarks or accidental text.
 - Keep final prompt bodies compact. Use only simple model-facing policies such as `背景音乐：不要生成背景音乐`, `字幕：不要生成字幕、caption、对白文字或烧录文字`, and shot-specific `SFX音效`; do not add subtitle-file paths, packaging-file notes, or external-VO explanations.
