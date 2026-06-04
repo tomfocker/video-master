@@ -48,6 +48,7 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
     color_style.md
     editing_style.md
     reference_style_manifest.md
+    scene_anchors/
     reference_keyframes/
   最终交付/
     00_使用说明.md
@@ -205,6 +206,8 @@ Keep this short and data-oriented. Downstream phases re-read it before writing e
 ## production_mode
 - input_mode:
 - video_mode:
+- scene_director_pattern: none | product_showcase | live_commerce_spokesperson | short_drama_reversal | fantasy_action | science_visualization | music_beat_montage | one_take_transition | video_extension | video_edit | motion_poster | animation_action
+- scene_director_overrides: <optional, such as product_showcase_variant: tech_precision_exploded_view | soft_playful_assembly | beauty_lifestyle_application | food_material_appetite | fashion_fit_switch | premium_static_hero>
 - storyboard_coverage:
 - deliverables_profile:
 
@@ -235,7 +238,16 @@ Keep this short and data-oriented. Downstream phases re-read it before writing e
 - camera_language:
 - storyboard_prompt_rules:
 - video_prompt_rules:
+- detailed_visual_style_description:
 - visual_style_overrides:
+
+## scene_design
+- scene_anchor_policy: per_segment_scene_anchor | project_scene_anchor | none
+- scene_anchor_reference_dir: references/scene_anchors/
+- scene_setting_rules:
+- scene_character_rules: <visible descriptors and starting placement for recurring/high-frequency characters when they appear in the segment>
+- scene_consistency_rules:
+- scene_anchor_notes:
 
 ## character_design
 - character_lock_enabled: true | false
@@ -284,9 +296,11 @@ Keep this short and data-oriented. Downstream phases re-read it before writing e
 - subtitle_rendering_policy: post-production-only | model-generated-text-allowed
 - burned_subtitles_allowed: false
 - onscreen_text_policy:
+- sync_sound_policy: model-generated-natural-sync-sound | post-production-only | none
 - voice_style:
 - music_style:
 - sfx_style:
+- sfx_scope_rule: SFX cues are accents layered on top of natural synchronous sound; do not restrict the model to only the named SFX.
 - caption_style:
 
 ## prompt_safety
@@ -431,8 +445,8 @@ High-motion work must include director rhythm, not only beat math. For racing, s
 | ---- | ---- | ------- | ------- |
 
 ## Full Script
-| Time | Visual | Voiceover/Dialog | On-screen Text | Audio/SFX |
-| ---- | ------ | ---------------- | -------------- | --------- |
+| Time | Visual | Voiceover/Dialog | On-screen Text | Sync Sound / SFX |
+| ---- | ------ | ---------------- | -------------- | ---------------- |
 ```
 
 ## Audio Files
@@ -478,9 +492,11 @@ For domestic Chinese workflows, include a Chinese `.srt` even when the voiceover
 
 | Cue | Time | Type | Description | Purpose |
 | --- | ---- | ---- | ----------- | ------- |
+| A01 | 00:00-00:03 | Sync sound / room tone | Natural on-location sound matching the visible space, material contact, movement, breath, and environmental ambience | Keep model audio alive and coherent |
+| S01 | 00:01 | SFX accent | Glass bottle tap | Product tactility |
 ```
 
-`audio_generation_prompt.md`: one complete prompt for whole-film music direction, per-shot SFX direction, voice direction, and any TTS voice constraints. Do not instruct segmented video generation models to create background music per clip.
+`audio_generation_prompt.md`: one complete prompt for whole-film music direction, natural synchronous sound / room tone policy, per-shot SFX accents, voice direction, and any TTS voice constraints. Do not instruct segmented video generation models to create background music per clip.
 
 ## shot_list.md
 
@@ -504,6 +520,8 @@ Use a compact table plus detail blocks.
 - Lighting/color:
 - Character/product continuity:
 - Audio/copy references:
+- Sync sound / room tone:
+- SFX accents:
 - Transition:
 - Storyboard image prompt seed:
 - Video prompt seed:
@@ -534,6 +552,8 @@ Use valid JSON.
     "props": [],
     "transition": "",
     "audio_refs": [],
+    "sync_sound": "",
+    "sfx_cues": [],
     "onscreen_text_refs": [],
     "continuity_notes": "",
     "image_prompt_seed": "",
@@ -635,7 +655,7 @@ Use valid JSON.
 - ...
 ```
 
-`最终交付/02_提示词/视频生成提示词.md` should contain only final prompts meant to be copied into the video generator. The default target model is `seedance-2.0` / Seedance 2.0 unless the user explicitly names another video model. For Seedance 2.0, keep model, duration, aspect ratio, and reference-frame path in the shot heading, not as standalone body lines. Each shot block must include a `动态时间切片` section with time-coded motion segments such as `(00-1.5s)` and `(1.5-3.0s)`, but the slice content must be derived from that specific storyboard's framing, actions, props, and emotional beat instead of reusing a fixed template. Keep final prompt bodies compact: no packaging-file notes, no subtitle-file paths, no external-VO explanations, and no mixed fields such as `声音/字幕`. When `subtitle_rendering_policy` is `post-production-only`, each prompt only needs a simple instruction such as `字幕：不要生成字幕、caption、对白文字或烧录文字`. Each shot block must include `背景音乐：不要生成背景音乐` and `SFX音效：...`. Do not include a `Negative prompt` or `负面提示词` field in final video prompts.
+`最终交付/02_提示词/视频生成提示词.md` should contain only final prompts meant to be copied into the video generator. The default target model is `seedance-2.0` / Seedance 2.0 unless the user explicitly names another video model. For Seedance 2.0, keep model, duration, aspect ratio, and reference-frame path in the shot heading, not as standalone body lines; include the scene anchor reference plus action keyframes when scene continuity matters. Each Seedance 2.0 shot block must include `场景设定`, `画面风格说明`, and a `动态时间切片` section. `场景设定` covers not only environment but also recurring/high-frequency character anchors when present: visible identity, wardrobe, prop, and starting placement. Time-coded motion segments should be rhythm-driven whole-second ranges rather than mechanically equal; examples such as `(00-1s)`, `(1-3s)`, and `(3-6s)` are illustrative, and the slice content must be derived from that specific storyboard's framing, actions, props, and emotional beat instead of reusing a fixed template. Do not use decimal/sub-second time codes in final model-facing prompts; keep that precision for post-production edit notes only. Keep final prompt bodies compact: no packaging-file notes, no subtitle-file paths, no external-VO explanations, and no mixed fields such as `声音/字幕`. Do not add standalone `运镜与焦段` or `光线与风格` lines after `动态时间切片`; those belong in `画面风格说明`. After the time slices, use one `生成要求` section with `稳定性`, `音频`, `字幕与文字`, and `运动与画面` lines. When `subtitle_rendering_policy` is `post-production-only`, the `字幕与文字` line should say not to generate subtitles, captions, dialogue text, burned text, random logos, or watermarks. The `音频` line should include no per-clip background music, natural synchronous sound / room tone, and SFX accents that do not restrict other natural sounds. Do not include a `Negative prompt` or `负面提示词` field in final video prompts.
 
 `最终交付/02_提示词/图片生成提示词.md` should contain copy-ready image prompts.
 

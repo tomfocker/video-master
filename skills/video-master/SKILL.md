@@ -49,7 +49,7 @@ Recommended dependencies enable:
 - For domestic Chinese workflows, include a Chinese SRT deliverable even when the voiceover is English. If the VO is English, package both `英文字幕.srt` and `中文字幕.srt` in `最终交付/03_口播与字幕/`.
 - If narration is external voiceover rather than on-camera speech, do not include the exact VO lines in copy-ready video prompts. Keep spoken copy in `audio/voiceover_script.md`, `audio/tts_lines.json`, and SRT files; video prompts should only say the VO is added in post.
 - Copy-ready video prompts must explicitly say the video model should not generate background music for each clip. Music direction belongs to post-production or whole-film audio planning, because per-clip generated music creates hard seams during assembly.
-- Every copy-ready video prompt must include per-shot SFX/sound-design cues. SFX cues are part of the clip brief; background music is not.
+- Every copy-ready video prompt must first request natural synchronous production sound / room tone / environment sound when model audio is relevant, then add per-shot SFX/sound-design cues as accents. SFX cues guide the clip; they must not over-constrain the model into only the manually named sounds. Background music is not generated per clip.
 - Do not use a `Negative prompt` / `负面提示词` field in final video prompts. Prefer positive generation requirements and clear policy fields such as `画面文字策略`.
 - Avoid unlicensed celebrity likenesses, copyrighted characters, trademark-heavy style imitation, or deceptive real-person depictions unless the user provides rights and the request is allowed. Convert risky requests into original characters, original brands, or generic style language.
 - If the user provides reference images or videos for style, treat them as `reference_style` assets: extract transferable color, lighting, camera, pacing, framing, and packaging rules, but do not copy subjects, plot, branding, protected characters, creator identity, or a living artist/director's protected style. Use the distilled rules and safe reference frames to guide native image generation and final video prompts.
@@ -98,6 +98,8 @@ Before video-mode confirmation, classify the style route:
 
 If using a template, capture `template_id`, whether draft templates are allowed, and `template_user_overrides` from any user-supplied ideas or constraints.
 
+If using a scene director pattern, capture `scene_director_pattern` and any user overrides that change the pattern's default staging or rhythm.
+
 Before storyboard work, classify the visual style preset route:
 
 - `preset`: use one visual style card from `references/visual_style_presets.json`.
@@ -133,6 +135,8 @@ Common modes:
 - `tutorial-explainer`
 - `brand-film`
 - `ecommerce-conversion-short`
+
+When the brief clearly matches a repeatable scene grammar such as product showcase, live-commerce spokesperson, short drama, science visualization, fantasy action, music beat montage, one-take transition, video extension, video edit, motion poster, or animation action, also read `references/scene-director-patterns.md` after selecting the main video mode. Treat the scene pattern as a director-method layer that can combine with a full style template and a visual style preset.
 
 Present the recommended mode and the impact on structure, rhythm, audio, storyboard coverage, and deliverables. Wait for confirmation unless the user already specified the mode or explicitly said to proceed.
 
@@ -189,14 +193,16 @@ Present the Production Lock as a bundled recommendation and wait for confirmatio
 8. Copy/VO language, caption language, and subtitle rendering policy (`post-production-only` by default)
 9. Narrative style, visual style, and pacing style
 10. Visual style preset: choose one preset from `references/visual_style_presets.json`, custom, or reference-derived. Present 2-4 relevant cards with a recommended default instead of an unstructured open-ended style question.
-11. Character/product/brand continuity rules, including whether fixed people need a character-design lock before storyboard generation
-12. Claims/compliance boundaries
-13. Storyboard image coverage: every shot, key shots, or selected scenes
-14. Reference style usage: mimic color grading, camera language, edit rhythm, typography/packaging, or only general mood
-15. Style route: `original`, `use_style_template`, or `create_style_template_from_reference`
-16. Style template fields when applicable: `template_id`, `allow_draft_template`, and `template_user_overrides`
-17. Template application summary: what is inherited from the template, what is overridden by the user's ideas, and what must not be copied
-18. Optional title packaging: ask whether to generate `main_title`, `chapter_card`, `lower_third`/`name_tag`, `data_callout`/`counter`, `cta_card`/`end_card`, or none. Capture exact copy, style references, PNG-only vs real animated overlay need, and `title_packaging_enabled`. This is a sidecar branch and does not modify video prompts.
+11. Scene setting and scene-anchor plan: project-level anchor, per-segment anchor, or none; record stable set/location/tabletop/stage rules and detailed visual style description.
+12. Character/product/brand continuity rules, including whether fixed people need a character-design lock before storyboard generation
+13. Claims/compliance boundaries
+14. Storyboard image coverage: every shot, key shots, or selected scenes
+15. Reference style usage: mimic color grading, camera language, edit rhythm, typography/packaging, or only general mood
+16. Style route: `original`, `use_style_template`, or `create_style_template_from_reference`
+17. Style template fields when applicable: `template_id`, `allow_draft_template`, and `template_user_overrides`
+18. Template application summary: what is inherited from the template, what is overridden by the user's ideas, and what must not be copied
+19. Scene director pattern when applicable: `product_showcase`, `live_commerce_spokesperson`, `short_drama_reversal`, `science_visualization`, `fantasy_action`, `music_beat_montage`, `one_take_transition`, `video_extension`, `video_edit`, `motion_poster`, `animation_action`, or `none`.
+20. Optional title packaging: ask whether to generate `main_title`, `chapter_card`, `lower_third`/`name_tag`, `data_callout`/`counter`, `cta_card`/`end_card`, or none. Capture exact copy, style references, PNG-only vs real animated overlay need, and `title_packaging_enabled`. This is a sidecar branch and does not modify video prompts.
 
 Write:
 
@@ -294,7 +300,7 @@ Write:
 
 The rhythm map must allocate non-uniform shot durations unless the confirmed mode genuinely calls for uniform timing. For advertising modes, design hook, product memory, proof, and CTA beats deliberately. Do not default to equal shot lengths.
 
-Act like a creative director, not a spreadsheet. For high-motion subjects such as racing, sport, chase sequences, launch films, and fast-paced TVC, design at least one rapid-cut cluster of very short shots before or after longer emotional shots. Use shot durations such as `0.6s`, `0.8s`, `1.2s`, and `2s` when the moment calls for velocity, then contrast them with longer breath shots. Mark camera energy explicitly: stable, handheld, vehicle-mounted vibration, impact shake, whip pan, hard push-in, POV, pass-by, or locked-off.
+Act like a creative director, not a spreadsheet. For high-motion subjects such as racing, sport, chase sequences, launch films, and fast-paced TVC, design at least one rapid-cut cluster of short shots before or after longer emotional shots. For model-facing timing, use whole-second durations such as `1s`, `2s`, and `3s`; keep sub-second precision for post-production edit notes only when needed. Mark camera energy explicitly: stable, handheld, vehicle-mounted vibration, impact shake, whip pan, hard push-in, POV, pass-by, or locked-off.
 
 Use `references/video-modes.md`, `references/platform-and-model-profiles.md`, and any `references/style_analysis.md`.
 
@@ -319,7 +325,7 @@ Write:
 Use `references/audio-and-copy.md`. Keep audio copy centralized so TTS, captions, and final video prompts stay consistent.
 If `template_id` is present, read `style_templates/<template_id>/template.md`, `director_notes.md`, and `prompt_rules.md` before writing script, copy, and audio files so rhythm, sound policy, and copy posture remain aligned with the selected style template while preserving user-provided copy direction.
 Confirm whether the spoken copy is Chinese, English, bilingual, or user-supplied before writing `audio/voiceover_script.md`. Treat `audio/captions.srt` as a post-production subtitle asset unless `burned_subtitles_allowed` is explicitly true. For Chinese-facing delivery, create Chinese localized captions even if the spoken VO is English, and keep the VO-language transcript as a separate SRT.
-In `audio/music_sfx_cue_sheet.md`, map an SFX cue to every shot. Keep background music as a whole-film post-production direction unless the user explicitly asks to generate or mix music later.
+In `audio/music_sfx_cue_sheet.md`, map natural synchronous sound / room tone and at least one SFX cue to every shot. Keep background music as a whole-film post-production direction unless the user explicitly asks to generate or mix music later.
 
 ### Step 6: Shot List And Storyboard Plan
 
@@ -333,6 +339,7 @@ Write:
 Use a compact overview table plus per-shot detail blocks. Avoid a single very wide Markdown table for all fields. Every shot must include timing, beat, visual action, framing, camera, movement, lighting, audio/copy references, continuity notes, image prompt seed, and video prompt seed.
 
 If `template_id` is present, read `style_templates/<template_id>/template.md`, `director_notes.md`, `rhythm_rules.json`, `shot_motifs.json`, `editing_craft.md`, `example_shot_list.md`, and `prompt_rules.md` before writing the shot list and storyboard plan. Apply the template as a complete director method while redesigning the subject, plot, characters, product, and brand details around the user's own ideas.
+If `scene_director_pattern` is not `none`, read `references/scene-director-patterns.md` and use the selected pattern's required locks and rhythm grammar to shape shot staging. The selected visual style preset still controls look, and any full style template still controls the broader director archive.
 
 ### Step 7: Storyboard Image Prompts And Native Images
 
@@ -344,6 +351,7 @@ If `template_id` is present, also read `style_templates/<template_id>/prompt_rul
 Write `prompts/storyboard_image_prompts.md` before generating images. Generate storyboard frames with native image generation:
 
 - Every storyboard image prompt must carry the locked visual style preset fields from `brief/spec_lock.md`: `visual_style_preset_id`, medium, realism level, art direction, color palette, lighting, texture, camera language, and storyboard prompt rules.
+- For 15-second Seedance workflows, recurring locations, or product environments where space matters, create a wide scene-anchor image before action keyframes. Store scene anchors in `references/scene_anchors/`, name them distinctly such as `SEG01_SCENE.png`, and use them to lock environment layout, light direction, set dressing, action-safe space, and visible placement of recurring characters/products when they belong to the scene.
 - If `character_lock_enabled` is true, every storyboard image prompt involving a fixed character must reference the stable character ID and the locked character bible. Do not vary face, age, hairstyle, body type, or signature wardrobe unless `character_bible.md` allows it.
 - For formal projects, enforce `style_confirmation_gate`: generate or confirm the character anchor, generate only the first storyboard frame (S01), set `style_gate_status: pending`, show both to the user, and do not batch-generate remaining storyboard frames until the user approves the style. If the work is explicitly a simulation/test run, record `style_gate_status: skipped` and the reason before continuing.
 - If shot count is manageable and the user requested detailed storyboard images, generate one frame per shot.
@@ -369,11 +377,12 @@ Write:
 
 If no other target video model is specified, write the final prompts for Seedance 2.0. If the target workflow is Chinese, Seedance 2.0, or another domestic Chinese video model, final copy-ready prompts must be Chinese-first. Keep `prompts/video_prompts.md` detailed for review, and make `最终交付/02_提示词/视频生成提示词.md` easy to copy into a video model.
 
-Use `references/storyboard-and-video-prompts.md`, `references/platform-and-model-profiles.md`, `references/seedance2-practical-playbook.md` when Seedance 2.0 or 15-second web generation is targeted, and any `references/style_analysis.md`. If `reference_style` assets exist, final video prompts must carry the same safe style rules used for native image generation so generated video matches the reference look and editing language without copying protected content.
+Use `references/storyboard-and-video-prompts.md`, `references/platform-and-model-profiles.md`, `references/scene-director-patterns.md` when a scene director pattern fits the project, `references/seedance2-practical-playbook.md` when Seedance 2.0 or 15-second web generation is targeted, and any `references/style_analysis.md`. If `reference_style` assets exist, final video prompts must carry the same safe style rules used for native image generation so generated video matches the reference look and editing language without copying protected content.
 When a style template is selected, storyboard image prompts and video prompts must carry the template's safe prompt rules as a whole, adapted around `template_user_overrides` and the current subject.
-For Seedance 2.0, each copy-ready shot prompt must put model, duration, aspect ratio, and reference-frame path in the shot heading, for example `## S01 - 镜头名（3s / 16:9 / Seedance 2.0 / 参考图：最终交付/01_分镜图/S01.png）`. Do not add standalone `目标模型`, `时长`, `画幅`, or `参考图` lines in the prompt body.
-Every Seedance 2.0 copy-ready shot prompt must include a `动态时间切片` section. Split the shot duration into time-coded segments that are inferred from the shot's actual framing, action, environment, props, and emotional beat. Do not reuse generic slice text across shots. Each segment should describe concrete camera movement, subject action, environment/material motion, and the transition of the shot beat.
-Keep copy-ready video prompts compact and model-facing. Do not paste actual VO sentences, subtitle file paths, packaging file paths, or explanatory post-production notes into the prompt body. Use simple lines such as `背景音乐：不要生成背景音乐。`, `SFX音效：...`, and `字幕：不要生成字幕、caption、对白文字或烧录文字。`. Do not include a `负面提示词` section in final prompts.
+For Seedance 2.0, each copy-ready shot prompt must put model, duration, aspect ratio, and reference-frame path in the shot heading, for example `## S01 - 镜头名（3s / 16:9 / Seedance 2.0 / 参考图：references/scene_anchors/S01_SCENE.png + 最终交付/01_分镜图/S01.png）`. Do not add standalone `目标模型`, `时长`, `画幅`, or `参考图` lines in the prompt body.
+Every Seedance 2.0 copy-ready shot prompt must include `场景设定` and `画面风格说明` before `动态时间切片`. `场景设定` locks the stable environment, layout, light direction, key props, and non-drift rules; when recurring or high-frequency characters appear, it must also summarize the visible character identity anchors such as role, age range, face/hair/body cue, wardrobe, prop, and starting position, while still referencing the character bible when present. For style-heavy or realistic scenes, split `画面风格说明` into `风格核心`, `视觉基调`, `色彩与影调`, `摄影机与镜头`, `材质与特效`, `动作质感`, and `风格边界`. For realistic live-action scenes where the user wants to avoid AI feel, include `超写实`, `极致逼真`, and `Photorealism-真人实景拍摄`; do not use those realism anchors for intentionally stylized animation, anime, 2D, toy-like 3D, or graphic motion.
+Every Seedance 2.0 copy-ready shot prompt must include a `动态时间切片` section. Split the shot duration into rhythm-driven, non-mechanical whole-second ranges inferred from the shot's actual framing, action, environment, props, and emotional beat. Do not use decimal/sub-second time codes in final model-facing prompts, because they imply a precision current video models may not reliably follow. Do not default to equal slices such as five 3-second blocks for a 15-second segment unless the confirmed rhythm deliberately calls for a fixed beat grid. Use 1-second slices for impact, handoffs, reveal hits, and fast transitions, then longer whole-second slices for performance holds, product proof, atmosphere, or emotional payoff. Do not reuse generic slice text across shots. Each segment should describe concrete camera movement, subject action, environment/material motion, synchronous sound/SFX, and the transition of the shot beat.
+Keep copy-ready video prompts compact and model-facing. Do not paste actual VO sentences, subtitle file paths, packaging file paths, or explanatory post-production notes into the prompt body. Do not add standalone `运镜与焦段` or `光线与风格` lines after `动态时间切片`; camera, lens, lighting, and color belong in `画面风格说明`. Put stability, audio, subtitle/text, and execution constraints under one `生成要求` section, with compact lines such as `音频：背景音乐不要生成；同期声...；SFX...` and `字幕与文字：不要生成字幕、caption、对白文字或烧录文字。`. Do not include a `负面提示词` section in final prompts.
 
 ### Step 8.5: Optional Title Packaging Sidecar
 
@@ -482,6 +491,7 @@ Fix issues before finishing. Final response should list the output folder, the u
 
 - `references/output-contract.md`: v2 project structure and file schemas.
 - `references/video-modes.md`: mode routing and rhythm rules.
+- `references/scene-director-patterns.md`: scene-level director grammars that combine with style templates, visual presets, and model profiles.
 - `references/platform-and-model-profiles.md`: platform/model prompt language and constraints.
 - `references/audio-and-copy.md`: VO, TTS, captions, SFX, and copy extraction.
 - `references/visual-style-presets.md` and `references/visual_style_presets.json`: lightweight visual look cards for storyboard image prompts and video prompts.

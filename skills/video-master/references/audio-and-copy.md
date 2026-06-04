@@ -92,22 +92,23 @@ python3 ${SKILL_DIR}/scripts/generate_voiceover_tts.py <project_path> --engine v
 
 Use `--dry-run` when you only need to package the read text and manifest for a human or external TTS service. `make_animatic.py` automatically uses `最终交付/03_口播与字幕/口播音频.mp3` or `口播音频.wav` if either exists, or accepts `--voiceover-audio <path>` for user-supplied narration. For preview polish, it can also mix an approved whole-film BGM bed from `最终交付/03_口播与字幕/背景音乐.mp3`, `audio/background_music.mp3`, `audio/bgm.mp3`, `--background-music <path>`, or `--eagle-background-music-id <item_id>`.
 
-## Music And SFX
+## Music, Sync Sound, And SFX
 
-`music_sfx_cue_sheet.md` should map each cue to a time range and purpose. Every shot should have at least one SFX cue; whole-film music is optional and should be treated as post-production direction, not per-clip video generation.
+`music_sfx_cue_sheet.md` should map each cue to a time range and purpose. Every shot should have a natural synchronous sound / room tone cue plus at least one optional SFX accent when sound is relevant. Whole-film music is optional and should be treated as post-production direction, not per-clip video generation.
 
 ```markdown
 | Cue | Time | Type | Description | Purpose |
 | --- | ---- | ---- | ----------- | ------- |
 | M01 | 00:00-00:30 | Music | Whole-film post-production music bed, not generated in video clips | Premium mood |
+| A01 | 00:00-00:03 | Sync sound / room tone | Natural sound from the visible space, character movement, material contact, and environment | Keep model audio coherent and not over-specified |
 | S01 | 00:05 | SFX | Glass bottle tap | Product tactility |
 ```
 
 ## Audio Generation Prompt
 
-Write one complete prompt for whole-film music direction and per-shot SFX direction. Include tempo, mood, instrumentation, do-not-use constraints, and voice direction when relevant.
+Write one complete prompt for whole-film music direction, natural synchronous sound / room tone policy, per-shot SFX accents, and voice direction when relevant. Include tempo, mood, instrumentation, and do-not-use constraints when relevant.
 
-Background music can be mixed into `分镜预览.mp4` as a whole-film preview bed when the user provides or approves a local track or Eagle item ID. Keep per-shot SFX as cue-sheet guidance for now. Final video prompts should request no background music per clip, but should include the SFX cue for that shot.
+Background music can be mixed into `分镜预览.mp4` as a whole-film preview bed when the user provides or approves a local track or Eagle item ID. Keep per-shot SFX as cue-sheet guidance for now. Final video prompts should request no background music per clip, but should first ask the model to generate natural synchronous sound / room tone and then include the SFX cue for that shot as an accent. SFX cues should not imply that all other natural sounds are forbidden.
 
 ## Copy Assets
 

@@ -44,17 +44,20 @@ Run this checklist before final delivery.
 - Hook appears in the first 1-3 seconds for short-form videos.
 - CTA has enough time to read or hear.
 - No shot is too overloaded for its duration.
+- If `scene_director_pattern` is not `none`, the selected pattern's required locks and rhythm grammar are reflected in the shot list and do not conflict with the selected style template or visual style preset.
+- If `scene_director_pattern` is `product_showcase`, `scene_director_overrides` records the selected showcase variant or explains why a simple product hero sequence is better than a specialized variant.
 
 ## Audio And Copy
 
-- `spec_lock.md` records `copy_language`, `voiceover_language`, `caption_language`, `localized_caption_languages`, `subtitle_rendering_policy`, and `burned_subtitles_allowed`.
+- `spec_lock.md` records `copy_language`, `voiceover_language`, `caption_language`, `localized_caption_languages`, `subtitle_rendering_policy`, `burned_subtitles_allowed`, and `sync_sound_policy`.
 - VO, captions, and video prompt dialogue all come from the same source copy.
 - `tts_lines.json` is valid JSON and has non-empty text per line.
 - Captions are readable and platform-safe.
 - Captions are treated as `post-production only` unless the user explicitly approved generated on-screen subtitles.
 - For domestic Chinese workflows, a Chinese SRT is included even when the VO is English; English VO projects should package both `captions_en.srt` and `captions_zh.srt`.
-- Music/SFX cues map to the rhythm map.
-- Every shot has an SFX cue. Per-clip video prompts explicitly say not to generate background music; whole-film music remains a post-production direction.
+- Music, synchronous sound, and SFX cues map to the rhythm map.
+- Every shot has natural synchronous sound / room tone guidance when model audio is relevant, plus SFX accents where useful. Per-clip video prompts explicitly say not to generate background music; whole-film music remains a post-production direction.
+- SFX cues are written as accents layered on top of natural synchronous sound, not as an exhaustive list that forbids other model-generated on-location sounds.
 - If a voiced preview is requested, `最终交付/03_口播与字幕/口播音频.mp3`, `口播音频.wav`, or a user-supplied narration file is used by `make_animatic.py`.
 - If a BGM preview bed is requested, an approved local BGM file exists at `最终交付/03_口播与字幕/背景音乐.mp3`, `audio/background_music.mp3`, or `audio/bgm.mp3`, or an Eagle item ID is passed with `--eagle-background-music-id`, `make_animatic.py` records `background_music` and `background_music_source` in `qa/metadata/preview_manifest.json`.
 - Per-shot SFX are documented as cues only; they are not mixed into the animatic in the current workflow.
@@ -67,6 +70,7 @@ Run this checklist before final delivery.
 - For formal projects, the character anchor and first storyboard frame have been shown to the user, `style_gate_status: pending` is held during review, and the workflow follows this rule: do not batch-generate remaining storyboard frames until style approval.
 - Product and brand details stay consistent.
 - Locations and time of day do not drift accidentally.
+- `场景设定` and scene anchors include recurring/high-frequency character placement and visible identity cues when such characters appear, instead of describing only the environment.
 - Visual style matches `spec_lock.md` across all prompts.
 - `spec_lock.md` records `visual_style_lock`, `visual_style_preset_id`, `visual_style_preset_name`, and preset prompt rules before storyboard image prompts are generated.
 - If `reference_style` assets exist, `references/style_analysis.md`, `references/color_style.md`, `references/editing_style.md`, and `references/reference_style_manifest.md` exist before prompts are finalized.
@@ -79,6 +83,7 @@ Run this checklist before final delivery.
 - Every planned frame is marked `Generated`, `Needs-Generation`, or `Skipped`.
 - Generated frame paths are verified before being referenced.
 - For Seedance 2.0 15-second workflows, complex segments have enough reference frames to cover opening state, transition/midpoint, payoff, and next-segment bridge.
+- For Seedance 2.0 15-second workflows, each segment with a meaningful set, location, room, landscape, tabletop, stage, or product environment has a wide scene-anchor reference frame or an explicit reason why a separate scene anchor is unnecessary.
 - Still-frame prompts do not try to show the whole 15-second segment at once; each reference image has one clear key-frame purpose and motion direction.
 - Missing images have final prompts and clear reasons.
 - `Needs-Generation` is used only after a real native image-generation attempt fails or the user explicitly pauses generation; do not infer unavailable generation from missing CLI credentials, environment variables, or tool listings.
@@ -94,9 +99,12 @@ Run this checklist before final delivery.
 
 ## Video Prompts
 
-- Every shot has visual, motion, camera, continuity, external audio policy, background music policy, SFX, on-screen text policy, and parameter/assumption fields.
+- Every shot has visual, motion, camera, continuity, external audio policy, background music policy, synchronous sound / room tone, SFX accents, on-screen text policy, and parameter/assumption fields.
 - If `reference_style` assets exist, every final video prompt includes the approved transferable style rules and avoids reproducing the source content.
 - Final video prompts preserve the selected visual style preset through camera language, lighting, texture, and `video_prompt_rules`.
+- Final Seedance 2.0 prompts include `场景设定` and `画面风格说明` before `动态时间切片`; for style-heavy or realistic scenes, `画面风格说明` is split into `风格核心`, `视觉基调`, `色彩与影调`, `摄影机与镜头`, `材质与特效`, `动作质感`, and `风格边界`.
+- Final Seedance 2.0 `场景设定` covers stable environment plus recurring/high-frequency character identity anchors when present: role/ID, visible face or hair cue, body or age-range cue, wardrobe, signature prop, and starting position.
+- If a prompt targets realistic live-action and aims to reduce AI feel, it includes `超写实`, `极致逼真`, and `Photorealism-真人实景拍摄`; those realism anchors are not used for intentionally stylized animation, anime, 2D, toy-like 3D, or graphic motion.
 - Final copy-ready prompts are easy to paste into a model.
 - If `prompt_language` is `zh-CN`, final prompts are Chinese-first.
 - Final prompts keep external voiceover/audio and subtitle deliverables out of the copy-ready prompt body unless the user explicitly asks for a model-facing audio note.
@@ -104,12 +112,14 @@ Run this checklist before final delivery.
 - Final prompts do not use mixed labels such as `声音/字幕`.
 - External VO prompts do not paste the actual narration sentence, subtitle file path, or explanatory post-production note into the video model prompt.
 - Final prompts include no `Negative prompt` or `负面提示词` field; use positive generation requirements instead.
-- Final prompts include per-shot SFX and a no-background-music policy.
+- Final prompts group stability, no-background-music policy, natural synchronous sound / room tone instruction, per-shot SFX accents, subtitle/text policy, and execution constraints under one `生成要求` section.
+- Final prompts do not repeat standalone `运镜与焦段` or `光线与风格` after `动态时间切片`; camera, lens, lighting, and color rules belong in `画面风格说明`.
 - Seedance 2.0 is the default target model/profile unless the user explicitly named another video model.
-- For Seedance 2.0, each copy-ready shot heading includes the model/duration/aspect/reference metadata, the body avoids standalone `目标模型` or `参考图` fields, and the body includes a `动态时间切片` section with at least two time-coded motion slices such as `(00-1.5s)` and `(1.5-3.0s)`.
-- For Seedance 2.0 15-second workflows, each time slice integrates visual action, camera movement, character performance/dialogue mouth cue when applicable, and SFX in the same slice instead of splitting them into disconnected sections.
+- For Seedance 2.0, each copy-ready shot heading includes the model/duration/aspect/reference metadata, the body avoids standalone `目标模型` or `参考图` fields, and the body includes a `动态时间切片` section with at least two rhythm-driven whole-second motion slices such as `(00-1s)` and `(1-3s)`.
+- For Seedance 2.0, scene-anchor references are included in the heading when available, and `场景设定` repeats the stable environment, light direction, layout, and non-drift rules.
+- For Seedance 2.0 15-second workflows, each time slice integrates visual action, camera movement, character performance/dialogue mouth cue when applicable, natural synchronous sound, and SFX accents in the same slice instead of splitting them into disconnected sections.
 - For Seedance 2.0 15-second workflows, each segment has a camera/editing chain such as entry texture -> reveal/acceleration -> focus or dialogue hold -> transition bridge. It is not enough to list static visuals.
-- Time-slice descriptions are shot-specific. They do not reuse generic template text such as `gentle dolly 或 tabletop camera movement` or `镜头继续完成本镜头节拍`.
+- Time-slice descriptions are shot-specific and rhythm-driven whole-second ranges. They do not use decimal/sub-second time codes in final model-facing prompts, do not reuse generic template text such as `gentle dolly 或 tabletop camera movement` or `镜头继续完成本镜头节拍`, and do not default to equal-duration blocks unless a fixed beat grid is intentionally chosen.
 - Dialogue included in final prompts is used only for mouth shapes and performance; generated clips still forbid subtitles, dialogue text, labels, signs, maps, logos, and watermarks unless explicitly approved.
 - Final prompt bodies stay compact: no `audio/captions.srt`, no `post-production only`, no packaging-file notes, and no external-VO explanation unless the user explicitly asks for that model-facing instruction.
 - Model-specific language for non-default models appears only when the user named or confirmed that target model/profile.

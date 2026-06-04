@@ -25,7 +25,7 @@ Confirm the video mode before writing scripts or shot lists. The mode controls r
   - CTA: usually 2-4 seconds.
 - For story modes, let emotion and action determine shot length.
 - For tutorial modes, use step clarity instead of speed.
-- For high-motion subjects such as racing, sport, chase, action, or a fast launch film, include at least one rapid-cut cluster. A typical cluster can be `0.6s / 0.8s / 1.2s / 2s`, followed by a longer shot that lets the audience feel the consequence.
+- For high-motion subjects such as racing, sport, chase, action, or a fast launch film, include at least one rapid-cut cluster. For model-facing prompts, keep the cluster in whole-second units such as `1s / 1s / 2s / 3s`, followed by a longer shot that lets the audience feel the consequence. Put sub-second precision only in post-production edit notes when needed.
 - High-motion shot lists should name camera energy per shot: handheld, vehicle-mounted vibration, impact shake, whip pan, hard push-in, POV, pass-by, or locked-off.
 - Do not spread a one-minute high-motion film into only 8-10 long shots unless the concept is deliberately meditative and the user confirmed that choice.
 
