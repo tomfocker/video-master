@@ -430,6 +430,18 @@
       z-index: 4;
     }
 
+    .rail-group {
+      display: grid;
+      gap: 8px;
+      padding: 0 0 10px;
+      border-bottom: 1px solid rgba(77, 95, 121, 0.28);
+    }
+
+    .rail-group:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
     .rail-button {
       width: 42px;
       height: 42px;
@@ -443,6 +455,105 @@
       color: var(--ink);
       border-color: var(--blue);
       box-shadow: var(--glow-blue);
+    }
+
+    .tool-mode-button {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-mode-button::after {
+      content: "";
+      position: absolute;
+      inset: auto 9px 7px 9px;
+      height: 2px;
+      border-radius: 999px;
+      background: transparent;
+      transition: background 160ms ease;
+    }
+
+    .tool-mode-button.active::after {
+      background: var(--cyan);
+    }
+
+    .select-tool-icon {
+      width: 18px;
+      height: 18px;
+      position: relative;
+      display: block;
+    }
+
+    .select-tool-icon::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 2px;
+      width: 0;
+      height: 0;
+      border-left: 13px solid currentColor;
+      border-top: 7px solid transparent;
+      border-bottom: 7px solid transparent;
+      transform: rotate(39deg);
+      transform-origin: 20% 50%;
+    }
+
+    .select-tool-icon::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      top: 12px;
+      width: 7px;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+      transform: rotate(50deg);
+    }
+
+    .hand-tool-icon {
+      width: 18px;
+      height: 18px;
+      position: relative;
+      display: block;
+      border: 2px solid currentColor;
+      border-top: 0;
+      border-radius: 4px 4px 7px 7px;
+      transform: translateY(2px);
+    }
+
+    .hand-tool-icon::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      right: 2px;
+      top: -8px;
+      height: 10px;
+      border-left: 2px solid currentColor;
+      border-right: 2px solid currentColor;
+      box-shadow: inset 5px 0 0 -3px currentColor, inset -5px 0 0 -3px currentColor;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .hand-tool-icon::after {
+      content: "";
+      position: absolute;
+      left: -5px;
+      top: 4px;
+      width: 8px;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+      transform: rotate(42deg);
+    }
+
+    .zoom-readout {
+      width: 42px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      color: var(--faint);
+      font-size: 10px;
+      font-weight: 820;
+      font-variant-numeric: tabular-nums;
     }
 
     .project-panel-icon {
@@ -499,9 +610,8 @@
       position: relative;
       overflow: hidden;
       background:
-        radial-gradient(circle, rgba(92, 108, 132, 0.34) 1px, transparent 1px),
-        linear-gradient(135deg, rgba(13, 19, 29, 0.42), rgba(7, 10, 15, 0.18));
-      background-size: 24px 24px, auto;
+        linear-gradient(135deg, rgba(13, 19, 29, 0.72), rgba(7, 10, 15, 0.3)),
+        var(--page);
     }
 
     .canvas-head {
@@ -555,11 +665,13 @@
     }
 
     .canvas-tools button {
-      min-width: 42px;
+      min-width: max-content;
       height: 36px;
       padding: 0 10px;
       color: var(--muted);
       background: rgba(12, 18, 27, 0.78);
+      white-space: nowrap;
+      flex: 0 0 auto;
     }
 
     .canvas-tools button.active {
@@ -757,17 +869,57 @@
     .viewport {
       position: absolute;
       inset: 0;
-      overflow: auto;
-      padding: 94px 34px 34px 34px;
-      cursor: grab;
+      --canvas-dot-step: 18px;
+      --canvas-dot-x: 0px;
+      --canvas-dot-y: 0px;
+      --canvas-flow-opacity: 0.58;
+      overflow: hidden;
+      padding: 0;
+      cursor: default;
       overscroll-behavior: contain;
       touch-action: none;
+    }
+
+    .viewport::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle, rgba(125, 165, 255, 0.2) 0 0.9px, transparent 1.55px),
+        radial-gradient(ellipse at 35% 22%, rgba(91, 140, 255, 0.08), transparent 34%),
+        radial-gradient(ellipse at 76% 66%, rgba(61, 214, 208, 0.055), transparent 38%),
+        linear-gradient(180deg, rgba(7, 10, 15, 0.04), rgba(7, 10, 15, 0.38));
+      background-size:
+        var(--canvas-dot-step) var(--canvas-dot-step),
+        auto,
+        auto,
+        auto;
+      background-position:
+        var(--canvas-dot-x) var(--canvas-dot-y),
+        center,
+        center,
+        center;
+      opacity: 0.46;
+    }
+
+    .flow-dot-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: var(--canvas-flow-opacity);
+      mix-blend-mode: screen;
     }
 
     .viewport.panning {
       cursor: grabbing;
     }
 
+    body.canvas-tool-hand .viewport,
     body.canvas-space-panning .viewport {
       cursor: grab;
     }
@@ -777,11 +929,14 @@
     }
 
     .world {
-      position: relative;
-      min-width: 100%;
-      min-height: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+      min-width: 1px;
+      min-height: 1px;
       transform-origin: 0 0;
       will-change: transform;
+      z-index: 2;
     }
 
     .connection-layer {
@@ -1878,12 +2033,25 @@
     </header>
 
     <nav class="rail" aria-label="画布工具">
-      <button id="toggleProjectPanelButton" class="rail-button" type="button" title="显示项目栏" aria-label="显示项目栏" aria-pressed="false">
-        <span class="project-panel-icon" aria-hidden="true"></span>
-      </button>
-      <button id="zoomInButton" class="rail-button" type="button" title="放大">+</button>
-      <button id="zoomOutButton" class="rail-button" type="button" title="缩小">-</button>
-      <button id="resetZoomButton" class="rail-button active" type="button" title="重置">1</button>
+      <div class="rail-group">
+        <button id="toggleProjectPanelButton" class="rail-button" type="button" title="显示项目栏" aria-label="显示项目栏" aria-pressed="false">
+          <span class="project-panel-icon" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="rail-group">
+        <button id="selectToolButton" class="rail-button tool-mode-button active" type="button" title="选择模式 (V)" aria-label="选择模式" aria-pressed="true">
+          <span class="select-tool-icon" aria-hidden="true"></span>
+        </button>
+        <button id="handToolButton" class="rail-button tool-mode-button" type="button" title="抓手模式 (H，按住空格临时切换)" aria-label="抓手模式" aria-pressed="false">
+          <span class="hand-tool-icon" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="rail-group rail-zoom-group">
+        <button id="zoomInButton" class="rail-button" type="button" title="放大">+</button>
+        <button id="zoomOutButton" class="rail-button" type="button" title="缩小">-</button>
+        <button id="resetZoomButton" class="rail-button active" type="button" title="重置">1</button>
+        <span id="zoomReadout" class="zoom-readout">100%</span>
+      </div>
     </nav>
 
     <aside class="side">
@@ -1968,6 +2136,7 @@
         </div>
       </div>
       <div id="viewport" class="viewport">
+        <canvas id="flowDotCanvas" class="flow-dot-canvas" aria-hidden="true"></canvas>
         <div id="world" class="world">
           <svg id="connectionLayer" class="connection-layer"></svg>
           <div id="nodeLayer" class="node-layer"></div>
@@ -2021,10 +2190,12 @@
     const UI_PREFS_KEY = "video-master-ui-prefs-v1";
     const CANVAS_FILTERS = new Set(["all", "shots", "framework", "packaging"]);
     const CARD_DENSITIES = new Set(["thumbnail", "standard", "full"]);
-    const MIN_CANVAS_ZOOM = 0.35;
-    const MAX_CANVAS_ZOOM = 2.2;
-    const WHEEL_ZOOM_SENSITIVITY = 0.00072;
-    const ZOOM_EASING = 0.24;
+    const CANVAS_TOOLS = new Set(["select", "hand"]);
+    const MIN_CANVAS_ZOOM = 0.12;
+    const MAX_CANVAS_ZOOM = 2.8;
+    const WHEEL_ZOOM_SENSITIVITY = 0.00082;
+    const ZOOM_EASING = 0.34;
+    const FLOW_DOT_FPS = 30;
 
     const state = {
       root: "",
@@ -2039,13 +2210,16 @@
       selectedNodeId: "",
       zoom: 1,
       targetZoom: 1,
-      canvasBounds: { maxX: 1500, maxY: 820 },
+      panX: 0,
+      panY: 0,
+      canvasBounds: { minX: 0, minY: 0, maxX: 1500, maxY: 820, width: 1500, height: 820 },
       zoomFrame: 0,
       zoomAnchor: null,
       zoomAnimationActive: false,
       preferenceSaveTimer: 0,
       filter: "all",
       cardDensity: "standard",
+      canvasTool: "select",
       frameworkOnly: false,
       contextMenu: null,
       draftIdea: null,
@@ -2068,6 +2242,21 @@
       editingShot: null,
       voiceoverBusy: false,
       suppressClickUntil: 0,
+      flowDots: {
+        frameId: 0,
+        lastDrawTime: 0,
+        previousDrawTime: 0,
+        pointerX: 0,
+        pointerY: 0,
+        targetX: 0,
+        targetY: 0,
+        pointerActive: false,
+        trails: [],
+        lastTrailX: null,
+        lastTrailY: null,
+        lastTrailTime: 0,
+        running: false,
+      },
     };
 
     const INTRO_BACKGROUND_VIDEO = "/assets/intro-background-20260427-v2.mp4";
@@ -2089,9 +2278,12 @@
       codexLoginButton: document.querySelector("#codexLoginButton"),
       writeStateButton: document.querySelector("#writeStateButton"),
       toggleProjectPanelButton: document.querySelector("#toggleProjectPanelButton"),
+      selectToolButton: document.querySelector("#selectToolButton"),
+      handToolButton: document.querySelector("#handToolButton"),
       zoomInButton: document.querySelector("#zoomInButton"),
       zoomOutButton: document.querySelector("#zoomOutButton"),
       resetZoomButton: document.querySelector("#resetZoomButton"),
+      zoomReadout: document.querySelector("#zoomReadout"),
       syncCanvasButton: document.querySelector("#syncCanvasButton"),
       canvasModeSelect: document.querySelector("#canvasModeSelect"),
       cardDensitySelect: document.querySelector("#cardDensitySelect"),
@@ -2123,6 +2315,7 @@
       generateVoiceoverButton: document.querySelector("#generateVoiceoverButton"),
       dryRunVoiceoverButton: document.querySelector("#dryRunVoiceoverButton"),
       viewport: document.querySelector("#viewport"),
+      flowDotCanvas: document.querySelector("#flowDotCanvas"),
       world: document.querySelector("#world"),
       canvasContextMenu: document.querySelector("#canvasContextMenu"),
       connectionLayer: document.querySelector("#connectionLayer"),
@@ -2191,6 +2384,7 @@
         inspectorHidden: Boolean(state.inspectorHidden),
         filter: CANVAS_FILTERS.has(state.filter) ? state.filter : "all",
         cardDensity: CARD_DENSITIES.has(state.cardDensity) ? state.cardDensity : "standard",
+        canvasTool: CANVAS_TOOLS.has(state.canvasTool) ? state.canvasTool : "select",
         zoom: Number((Number.isFinite(state.targetZoom) ? state.targetZoom : state.zoom).toFixed(2)),
       };
       localStorage.setItem(UI_PREFS_KEY, JSON.stringify(prefs));
@@ -2211,6 +2405,9 @@
       }
       if (CARD_DENSITIES.has(prefs.cardDensity)) {
         state.cardDensity = prefs.cardDensity;
+      }
+      if (CANVAS_TOOLS.has(prefs.canvasTool)) {
+        state.canvasTool = prefs.canvasTool;
       }
       const savedZoom = Number(prefs.zoom);
       state.hasZoomPreference = Number.isFinite(savedZoom);
@@ -2411,11 +2608,7 @@
       renderProject();
       captureCanvasBaseline();
       setTimeout(() => {
-        if (state.hasZoomPreference) {
-          renderBoard();
-          return;
-        }
-        fitCanvas({ persist: false });
+        fitCanvas({ persist: false, preserveZoom: state.hasZoomPreference });
       }, 20);
     }
 
@@ -3178,20 +3371,300 @@
     }
 
     function measureCanvasBounds(nodes = filteredNodes()) {
-      const maxX = Math.max(1500, ...nodes.map((node) => node.x + node.width + 100));
-      const maxY = Math.max(820, ...nodes.map((node) => node.y + nodeDisplayHeight(node) + 100));
-      return { maxX, maxY };
+      const rects = nodes.map((node) => ({
+        x: Number(node.x) || 0,
+        y: Number(node.y) || 0,
+        width: Number(node.width) || 0,
+        height: nodeDisplayHeight(node) || Number(node.height) || 0,
+      }));
+      const minX = Math.min(0, ...rects.map((rect) => rect.x - 160));
+      const minY = Math.min(0, ...rects.map((rect) => rect.y - 160));
+      const maxX = Math.max(1500, ...rects.map((rect) => rect.x + rect.width + 220));
+      const maxY = Math.max(820, ...rects.map((rect) => rect.y + rect.height + 220));
+      return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+    }
+
+    function smoothstep(value) {
+      const x = clamp(value, 0, 1);
+      return x * x * (3 - 2 * x);
+    }
+
+    function stableNoise(x, y) {
+      const value = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+      return value - Math.floor(value);
+    }
+
+    function advanceFlowValue(current, target, ease, deltaMs) {
+      const frameMs = 1000 / 60;
+      const frameCount = Math.max(1, deltaMs / frameMs);
+      const normalizedEase = 1 - (1 - clamp(ease, 0, 1)) ** frameCount;
+      return current + (target - current) * normalizedEase;
+    }
+
+    function ellipticalFlowPatch(x, y, cx, cy, sx, sy, weight) {
+      const dx = (x - cx) / Math.max(1, sx);
+      const dy = (y - cy) / Math.max(1, sy);
+      return Math.exp(-(dx * dx + dy * dy) / 2) * weight;
+    }
+
+    function computeFlowPatchMask(x, y, width, height, spacing, time) {
+      const cellX = Math.floor(x / Math.max(1, spacing));
+      const cellY = Math.floor(y / Math.max(1, spacing));
+      const driftX = Math.sin(time * 0.16) * width * 0.018;
+      const driftY = Math.cos(time * 0.13) * height * 0.014;
+      const field =
+        ellipticalFlowPatch(x, y, width * 0.72 + driftX, height * 0.2 + driftY, width * 0.22, height * 0.08, 0.82) +
+        ellipticalFlowPatch(x, y, width * 0.18 - driftX * 0.6, height * 0.3, width * 0.12, height * 0.05, 0.48) +
+        ellipticalFlowPatch(x, y, width * 0.48, height * 0.36 + driftY * 0.7, width * 0.18, height * 0.06, 0.44) +
+        ellipticalFlowPatch(x, y, width * 0.9, height * 0.42 - driftY, width * 0.12, height * 0.05, 0.32) +
+        ellipticalFlowPatch(x, y, width * 0.24 + driftX * 0.5, height * 0.66, width * 0.18, height * 0.065, 0.4) +
+        ellipticalFlowPatch(x, y, width * 0.74 - driftX, height * 0.74, width * 0.22, height * 0.075, 0.58) +
+        ellipticalFlowPatch(x, y, width * 0.38, height * 0.86 - driftY * 0.5, width * 0.16, height * 0.055, 0.28);
+      const grain = 0.78 + stableNoise(cellX, cellY) * 0.24;
+      const rowBreak = 0.86 + Math.sin(cellY * 1.7 + cellX * 0.12 + time * 0.08) * 0.14;
+      return clamp(field * grain * rowBreak, 0, 1);
+    }
+
+    function computeFlowWave(x, y, width, height, time) {
+      const nx = x / Math.max(1, width);
+      const ny = y / Math.max(1, height);
+      return (
+        0.28 * Math.sin((nx * 6.8 + time * 0.42) * 1.55) +
+        0.24 * Math.cos((ny * 6.1 - time * 0.36) * 1.7) +
+        0.18 * Math.sin((nx + ny) * 13.4 - time * 0.75)
+      );
+    }
+
+    function computeFlowTrailInfluence(x, y, time, trails) {
+      const sigma = 19;
+      const maxAge = 0.62;
+      let influence = 0;
+      for (const trail of trails) {
+        const age = time - trail.born;
+        if (age < 0 || age > maxAge) continue;
+        const dx = x - trail.x;
+        const dy = y - trail.y;
+        const directionStrength = clamp((trail.speed || 0) / 980, 0, 1);
+        const vx = trail.vx || 1;
+        const vy = trail.vy || 0;
+        const along = dx * vx + dy * vy;
+        const across = -dx * vy + dy * vx;
+        const sigmaAlong = sigma * (1.15 + directionStrength * 1.45);
+        const sigmaAcross = sigma * (0.94 - directionStrength * 0.24);
+        const maxDistance = sigmaAlong * 3.2;
+        if (dx * dx + dy * dy > maxDistance * maxDistance) continue;
+        const distanceFalloff = Math.exp(
+          -(
+            (along * along) / (2 * sigmaAlong * sigmaAlong) +
+            (across * across) / (2 * sigmaAcross * sigmaAcross)
+          )
+        );
+        const ageFalloff = Math.exp(-age * 3.6);
+        influence += distanceFalloff * ageFalloff * (trail.weight || 1);
+      }
+      return clamp(influence * 0.42, 0, 0.62);
+    }
+
+    function pruneFlowTrails(time) {
+      const trails = state.flowDots.trails;
+      while (trails.length && time - trails[0].born > 1) {
+        trails.shift();
+      }
+      if (trails.length > 72) {
+        trails.splice(0, trails.length - 72);
+      }
+    }
+
+    function resizeFlowDotCanvas() {
+      const canvas = els.flowDotCanvas;
+      if (!canvas) return null;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+      const width = Math.max(1, Math.round(rect.width));
+      const height = Math.max(1, Math.round(rect.height));
+      const pixelWidth = Math.floor(width * dpr);
+      const pixelHeight = Math.floor(height * dpr);
+      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+        canvas.width = pixelWidth;
+        canvas.height = pixelHeight;
+      }
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { canvas, ctx, width, height };
+    }
+
+    function drawFlowDots(timestamp = performance.now()) {
+      const setup = resizeFlowDotCanvas();
+      if (!setup) return;
+      const { ctx, width, height } = setup;
+      const time = timestamp * 0.001;
+      const flow = state.flowDots;
+      const interval = 1000 / FLOW_DOT_FPS;
+      const deltaMs = flow.previousDrawTime ? Math.min(80, timestamp - flow.previousDrawTime) : interval;
+      flow.previousDrawTime = timestamp;
+      const ease = flow.pointerActive ? 0.26 : 0.18;
+      if (!flow.pointerActive) {
+        flow.targetX = width * 0.5 + Math.cos(time * 0.44) * width * 0.08;
+        flow.targetY = height * 0.35 + Math.sin(time * 0.37) * height * 0.06;
+      }
+      flow.pointerX = advanceFlowValue(flow.pointerX, flow.targetX, ease, deltaMs);
+      flow.pointerY = advanceFlowValue(flow.pointerY, flow.targetY, ease, deltaMs);
+      pruneFlowTrails(time);
+
+      ctx.clearRect(0, 0, width, height);
+      const spacing = clamp(16 * Math.max(0.72, Math.sqrt(state.zoom)), 11, 26);
+      const rowStep = spacing * 0.88;
+      const buckets = Array.from({ length: 9 }, () => []);
+      const xOffset = ((state.panX % spacing) + spacing) % spacing;
+      const yOffset = ((state.panY % rowStep) + rowStep) % rowStep;
+
+      for (let row = -1, y = yOffset - rowStep; y < height + rowStep; row += 1, y += rowStep) {
+        const rowOffset = row % 2 ? spacing * 0.5 : 0;
+        for (let x = xOffset - spacing + rowOffset; x < width + spacing; x += spacing) {
+          const worldX = (x - state.panX) / Math.max(state.zoom, 0.01);
+          const worldY = (y - state.panY) / Math.max(state.zoom, 0.01);
+          const cellX = Math.floor(worldX / 32);
+          const cellY = Math.floor(worldY / 32);
+          const grain = 0.76 + stableNoise(cellX, cellY) * 0.24;
+          const patchMask = computeFlowPatchMask(x, y, width, height, spacing, time);
+          const ripple = 0.9 + Math.sin(x * 0.025 - time * 1.5 + Math.sin(y * 0.018)) * 0.1;
+          const wave = computeFlowWave(x, y, width, height, time) * 0.08;
+          const bandDx = (x - flow.pointerX) / 260;
+          const bandDy = (y - flow.pointerY) / 58;
+          const pointerFlow = Math.exp(-(bandDx * bandDx + bandDy * bandDy) / 2) * (flow.pointerActive ? 0.3 : 0.052);
+          const glowDx = x - flow.pointerX;
+          const glowDy = y - flow.pointerY;
+          const pointerGlow = flow.pointerActive
+            ? Math.exp(-(glowDx * glowDx + glowDy * glowDy) / (2 * 135 * 135)) * 0.16
+            : 0;
+          const trailGlow = computeFlowTrailInfluence(x, y, time, flow.trails);
+          const ambient = 0.025 + patchMask * 0.42 * ripple + wave * patchMask;
+          const interactionMask = 0.32 + patchMask * 0.68;
+          const interaction = pointerFlow * interactionMask + pointerGlow * 0.82 + trailGlow * 0.95;
+          const density = smoothstep(ambient + interaction) * grain;
+          if (density < 0.105) continue;
+          const radius = clamp(0.5 + density * 1.65 + trailGlow * 0.95, 0.5, 2.8);
+          const alpha = clamp(0.03 + density * 0.22 + trailGlow * 0.2, 0.03, 0.38);
+          const bucketIndex = Math.min(buckets.length - 1, Math.floor((alpha / 0.38) * buckets.length));
+          buckets[bucketIndex].push(x, y, radius);
+        }
+      }
+
+      for (let index = 0; index < buckets.length; index += 1) {
+        const bucket = buckets[index];
+        if (!bucket.length) continue;
+        const alpha = 0.03 + (index / Math.max(1, buckets.length - 1)) * 0.3;
+        ctx.fillStyle = `rgba(154, 207, 255, ${alpha.toFixed(3)})`;
+        ctx.beginPath();
+        for (let i = 0; i < bucket.length; i += 3) {
+          const x = bucket[i];
+          const y = bucket[i + 1];
+          const radius = bucket[i + 2];
+          ctx.moveTo(x + radius, y);
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+        }
+        ctx.fill();
+      }
+    }
+
+    function tickFlowDots(timestamp) {
+      if (!state.flowDots.running) return;
+      if (document.hidden) {
+        state.flowDots.frameId = requestAnimationFrame(tickFlowDots);
+        return;
+      }
+      const interval = 1000 / FLOW_DOT_FPS;
+      if (!state.flowDots.lastDrawTime || timestamp - state.flowDots.lastDrawTime >= interval) {
+        state.flowDots.lastDrawTime = timestamp;
+        drawFlowDots(timestamp);
+      }
+      state.flowDots.frameId = requestAnimationFrame(tickFlowDots);
+    }
+
+    function startFlowDots() {
+      if (!els.flowDotCanvas || state.flowDots.running) return;
+      const rect = els.viewport.getBoundingClientRect();
+      state.flowDots.pointerX = rect.width * 0.5;
+      state.flowDots.pointerY = rect.height * 0.42;
+      state.flowDots.targetX = state.flowDots.pointerX;
+      state.flowDots.targetY = state.flowDots.pointerY;
+      state.flowDots.trails = [];
+      state.flowDots.lastTrailX = null;
+      state.flowDots.lastTrailY = null;
+      state.flowDots.lastTrailTime = 0;
+      state.flowDots.previousDrawTime = 0;
+      state.flowDots.running = true;
+      state.flowDots.frameId = requestAnimationFrame(tickFlowDots);
+    }
+
+    function handleFlowPointerMove(event) {
+      const local = viewportLocalPoint(event.clientX, event.clientY);
+      const flow = state.flowDots;
+      const now = performance.now() * 0.001;
+      const lastX = flow.lastTrailX;
+      const lastY = flow.lastTrailY;
+      const dx = lastX === null ? 0 : local.x - lastX;
+      const dy = lastY === null ? 0 : local.y - lastY;
+      const distance = Math.hypot(dx, dy);
+      const elapsed = flow.lastTrailTime ? now - flow.lastTrailTime : 1;
+      if (lastX === null || distance > 11 || elapsed > 0.042) {
+        const invDistance = distance > 0.001 ? 1 / distance : 0;
+        const speed = distance / Math.max(0.016, elapsed);
+        flow.trails.push({
+          x: local.x,
+          y: local.y,
+          born: now,
+          weight: clamp(0.58 + distance / 46, 0.58, 1.34),
+          vx: invDistance ? dx * invDistance : 1,
+          vy: invDistance ? dy * invDistance : 0,
+          speed,
+        });
+        if (flow.trails.length > 72) {
+          flow.trails.splice(0, flow.trails.length - 72);
+        }
+        flow.lastTrailX = local.x;
+        flow.lastTrailY = local.y;
+        flow.lastTrailTime = now;
+      }
+      flow.targetX = local.x;
+      flow.targetY = local.y;
+      flow.pointerActive = true;
+    }
+
+    function handleFlowPointerLeave() {
+      state.flowDots.pointerActive = false;
+      state.flowDots.lastTrailX = null;
+      state.flowDots.lastTrailY = null;
+      state.flowDots.lastTrailTime = 0;
     }
 
     function applyCanvasZoom() {
       const bounds = state.canvasBounds || measureCanvasBounds();
-      const scaledWidth = Math.max(bounds.maxX * state.zoom, els.viewport.clientWidth + 120);
-      const scaledHeight = Math.max(bounds.maxY * state.zoom, els.viewport.clientHeight + 120);
-      els.world.style.width = `${scaledWidth}px`;
-      els.world.style.height = `${scaledHeight}px`;
-      els.connectionLayer.setAttribute("width", bounds.maxX);
-      els.connectionLayer.setAttribute("height", bounds.maxY);
-      els.world.style.transform = `translate3d(0, 0, 0) scale(${state.zoom})`;
+      const worldWidth = Math.max(bounds.maxX + 600, els.viewport.clientWidth / Math.max(state.zoom, 0.1));
+      const worldHeight = Math.max(bounds.maxY + 600, els.viewport.clientHeight / Math.max(state.zoom, 0.1));
+      els.world.style.width = `${worldWidth}px`;
+      els.world.style.height = `${worldHeight}px`;
+      els.connectionLayer.setAttribute("width", Math.ceil(worldWidth));
+      els.connectionLayer.setAttribute("height", Math.ceil(worldHeight));
+      els.world.style.transform = `translate3d(${state.panX.toFixed(2)}px, ${state.panY.toFixed(2)}px, 0) scale(${state.zoom})`;
+
+      const dotStep = clamp(18 * Math.max(0.72, Math.sqrt(state.zoom)), 10, 30);
+      const dotX = ((state.panX % dotStep) + dotStep) % dotStep;
+      const dotY = ((state.panY % dotStep) + dotStep) % dotStep;
+      els.viewport.style.setProperty("--canvas-dot-step", `${dotStep.toFixed(2)}px`);
+      els.viewport.style.setProperty("--canvas-dot-x", `${dotX.toFixed(2)}px`);
+      els.viewport.style.setProperty("--canvas-dot-y", `${dotY.toFixed(2)}px`);
+
+      const flowOpacity = clamp(0.76 - Math.max(0, state.zoom - 0.35) * 0.14, 0.42, 0.76);
+      els.viewport.style.setProperty("--canvas-flow-opacity", flowOpacity.toFixed(2));
+
+      if (els.zoomReadout) {
+        els.zoomReadout.textContent = `${Math.round(state.zoom * 100)}%`;
+      }
+      if (els.resetZoomButton) {
+        els.resetZoomButton.classList.toggle("active", Math.abs(state.zoom - 1) < 0.02);
+      }
     }
 
     function renderBoard() {
@@ -4758,6 +5231,7 @@
       state.selectedEdgeKey = "";
       els.serverState.textContent = pins.size ? "已整理画布，已避开固定节点" : "已整理画布";
       renderProject();
+      setTimeout(() => fitCanvas({ persist: false }), 0);
     }
 
     function packagingStatus(project) {
@@ -4844,16 +5318,40 @@
       renderProject();
     }
 
+    function setCanvasTool(tool, options = {}) {
+      const { persist = true } = options;
+      state.canvasTool = CANVAS_TOOLS.has(tool) ? tool : "select";
+      document.body.classList.toggle("canvas-tool-hand", state.canvasTool === "hand");
+      document.body.classList.toggle("canvas-tool-select", state.canvasTool === "select");
+      els.selectToolButton?.classList.toggle("active", state.canvasTool === "select");
+      els.handToolButton?.classList.toggle("active", state.canvasTool === "hand");
+      els.selectToolButton?.setAttribute("aria-pressed", String(state.canvasTool === "select"));
+      els.handToolButton?.setAttribute("aria-pressed", String(state.canvasTool === "hand"));
+      if (persist) saveUiPreferences();
+    }
+
+    function isPanModeActive() {
+      return state.canvasTool === "hand" || state.spacePanning;
+    }
+
     function requestCanvasZoomFrame() {
       if (state.zoomFrame) return;
       state.zoomAnimationActive = true;
       state.zoomFrame = requestAnimationFrame(flushCanvasZoom);
     }
 
-    function syncZoomAnchorScroll() {
+    function viewportLocalPoint(clientX, clientY) {
+      const rect = els.viewport.getBoundingClientRect();
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top,
+      };
+    }
+
+    function syncZoomAnchorPan() {
       if (!state.zoomAnchor) return;
-      els.viewport.scrollLeft = state.zoomAnchor.worldX * state.zoom - state.zoomAnchor.localX;
-      els.viewport.scrollTop = state.zoomAnchor.worldY * state.zoom - state.zoomAnchor.localY;
+      state.panX = state.zoomAnchor.localX - state.zoomAnchor.worldX * state.zoom;
+      state.panY = state.zoomAnchor.localY - state.zoomAnchor.worldY * state.zoom;
     }
 
     function flushCanvasZoom() {
@@ -4861,15 +5359,15 @@
       const diff = state.targetZoom - state.zoom;
       if (Math.abs(diff) < 0.001) {
         state.zoom = state.targetZoom;
+        syncZoomAnchorPan();
         applyCanvasZoom();
-        syncZoomAnchorScroll();
         state.zoomAnchor = null;
         state.zoomAnimationActive = false;
         return;
       }
       state.zoom += diff * ZOOM_EASING;
+      syncZoomAnchorPan();
       applyCanvasZoom();
-      syncZoomAnchorScroll();
       state.zoomFrame = requestAnimationFrame(flushCanvasZoom);
     }
 
@@ -4878,26 +5376,23 @@
       const baseZoom = Number.isFinite(state.targetZoom) ? state.targetZoom : oldZoom;
       const nextZoom = clamp(value, MIN_CANVAS_ZOOM, MAX_CANVAS_ZOOM);
       if (Math.abs(nextZoom - baseZoom) < 0.001) return;
-      if (Number.isFinite(options.clientX) && Number.isFinite(options.clientY)) {
-        const rect = els.viewport.getBoundingClientRect();
-        const localX = options.clientX - rect.left;
-        const localY = options.clientY - rect.top;
-        state.zoomAnchor = {
-          localX,
-          localY,
-          worldX: (els.viewport.scrollLeft + localX) / oldZoom,
-          worldY: (els.viewport.scrollTop + localY) / oldZoom,
-        };
-      } else {
-        state.zoomAnchor = null;
-      }
+      const rect = els.viewport.getBoundingClientRect();
+      const local = Number.isFinite(options.clientX) && Number.isFinite(options.clientY)
+        ? viewportLocalPoint(options.clientX, options.clientY)
+        : { x: rect.width / 2, y: rect.height / 2 };
+      state.zoomAnchor = {
+        localX: local.x,
+        localY: local.y,
+        worldX: (local.x - state.panX) / oldZoom,
+        worldY: (local.y - state.panY) / oldZoom,
+      };
       state.targetZoom = nextZoom;
       state.hasZoomPreference = true;
       scheduleUiPreferenceSave();
       if (options.smooth === false) {
         state.zoom = state.targetZoom;
+        syncZoomAnchorPan();
         applyCanvasZoom();
-        syncZoomAnchorScroll();
         state.zoomAnchor = null;
         state.zoomAnimationActive = false;
         return;
@@ -4914,13 +5409,23 @@
     }
 
     function fitCanvas(options = {}) {
-      const { persist = true } = options;
-      state.zoom = 0.82;
-      state.targetZoom = state.zoom;
+      const { persist = true, preserveZoom = false } = options;
+      const bounds = state.canvasBounds || measureCanvasBounds();
+      const rect = els.viewport.getBoundingClientRect();
+      const pad = { left: 72, right: 72, top: 126, bottom: 72 };
+      const availableWidth = Math.max(240, rect.width - pad.left - pad.right);
+      const availableHeight = Math.max(240, rect.height - pad.top - pad.bottom);
+      const contentWidth = Math.max(1, bounds.maxX - bounds.minX);
+      const contentHeight = Math.max(1, bounds.maxY - bounds.minY);
+      const fittedZoom = clamp(Math.min(availableWidth / contentWidth, availableHeight / contentHeight), MIN_CANVAS_ZOOM, 1.05);
+      const nextZoom = preserveZoom ? clamp(state.targetZoom || state.zoom || fittedZoom, MIN_CANVAS_ZOOM, MAX_CANVAS_ZOOM) : fittedZoom;
+      state.zoom = nextZoom;
+      state.targetZoom = nextZoom;
+      state.panX = pad.left + Math.max(0, (availableWidth - contentWidth * nextZoom) / 2) - bounds.minX * nextZoom;
+      state.panY = pad.top + Math.max(0, (availableHeight - contentHeight * nextZoom) / 2) - bounds.minY * nextZoom;
       state.hasZoomPreference = true;
       if (persist) saveUiPreferences();
       applyCanvasZoom();
-      els.viewport.scrollTo({ left: 0, top: 0, behavior: "smooth" });
     }
 
     function isInteractiveTarget(target) {
@@ -4932,10 +5437,10 @@
     }
 
     function canvasPointFromEvent(event) {
-      const worldRect = els.world.getBoundingClientRect();
+      const local = viewportLocalPoint(event.clientX, event.clientY);
       return {
-        x: Math.max(0, Math.round((event.clientX - worldRect.left) / state.zoom)),
-        y: Math.max(0, Math.round((event.clientY - worldRect.top) / state.zoom)),
+        x: Math.round((local.x - state.panX) / state.zoom),
+        y: Math.round((local.y - state.panY) / state.zoom),
         clientX: event.clientX,
         clientY: event.clientY,
       };
@@ -5005,7 +5510,7 @@
     }
 
     function startCanvasPan(event) {
-      const wantsPan = event.button === 1 || (event.button === 0 && (state.spacePanning || !event.target.closest(".graph-node")));
+      const wantsPan = event.button === 1 || (event.button === 0 && isPanModeActive());
       if (!wantsPan || isInteractiveTarget(event.target)) return;
       closeCanvasContextMenu();
       state.selectedEdgeKey = "";
@@ -5015,8 +5520,9 @@
         pointerId: event.pointerId,
         startX: event.clientX,
         startY: event.clientY,
-        scrollLeft: els.viewport.scrollLeft,
-        scrollTop: els.viewport.scrollTop,
+        startPanX: state.panX,
+        startPanY: state.panY,
+        moved: false,
       };
       els.viewport.classList.add("panning");
       els.viewport.setPointerCapture(event.pointerId);
@@ -5025,17 +5531,23 @@
     function moveCanvasPan(event) {
       if (!state.pan || event.pointerId !== state.pan.pointerId) return;
       event.preventDefault();
-      els.viewport.scrollLeft = state.pan.scrollLeft - (event.clientX - state.pan.startX);
-      els.viewport.scrollTop = state.pan.scrollTop - (event.clientY - state.pan.startY);
+      if (Math.hypot(event.clientX - state.pan.startX, event.clientY - state.pan.startY) > 3) {
+        state.pan.moved = true;
+      }
+      state.panX = state.pan.startPanX + (event.clientX - state.pan.startX);
+      state.panY = state.pan.startPanY + (event.clientY - state.pan.startY);
+      applyCanvasZoom();
     }
 
     function endCanvasPan(event) {
       if (!state.pan || event.pointerId !== state.pan.pointerId) return;
+      const moved = state.pan.moved;
       state.pan = null;
       els.viewport.classList.remove("panning");
       if (els.viewport.hasPointerCapture(event.pointerId)) {
         els.viewport.releasePointerCapture(event.pointerId);
       }
+      if (moved) state.suppressClickUntil = Date.now() + 180;
     }
 
     function setSpacePanning(enabled) {
@@ -5043,7 +5555,32 @@
       document.body.classList.toggle("canvas-space-panning", enabled);
     }
 
+    function handleCanvasClick(event) {
+      if (Date.now() < state.suppressClickUntil) return;
+      if (event.target.closest(".graph-node") || isInteractiveTarget(event.target)) return;
+      state.selectedEdgeKey = "";
+      state.selectedNodeId = "";
+      renderBoard();
+      renderInspector();
+    }
+
+    function handleCanvasWheel(event) {
+      if (isInteractiveTarget(event.target)) return;
+      event.preventDefault();
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        const wheelDelta = clamp(event.deltaY, -120, 120);
+        const zoomBase = Number.isFinite(state.targetZoom) ? state.targetZoom : state.zoom;
+        const nextZoom = zoomBase * Math.exp(-wheelDelta * WHEEL_ZOOM_SENSITIVITY);
+        setCanvasZoom(nextZoom, { clientX: event.clientX, clientY: event.clientY, smooth: true });
+        return;
+      }
+      state.panX -= event.deltaX;
+      state.panY -= event.deltaY;
+      applyCanvasZoom();
+    }
+
     function startNodeDrag(event, nodeId) {
+      if (isPanModeActive()) return;
       if (event.button !== 0 || isInteractiveTarget(event.target)) return;
       const node = findCanvasNode(nodeId);
       if (!node) return;
@@ -5084,8 +5621,8 @@
       const dx = (event.clientX - state.nodeDrag.startX) / state.zoom;
       const dy = (event.clientY - state.nodeDrag.startY) / state.zoom;
       if (Math.abs(dx) > 2 || Math.abs(dy) > 2) state.nodeDrag.moved = true;
-      const nextX = Math.max(0, state.nodeDrag.originalX + dx);
-      const nextY = Math.max(0, state.nodeDrag.originalY + dy);
+      const nextX = state.nodeDrag.originalX + dx;
+      const nextY = state.nodeDrag.originalY + dy;
       const elapsed = Math.max(8, now - state.nodeDrag.lastTime);
       state.nodeDrag.vx = clamp((nextX - state.nodeDrag.lastX) / elapsed, -DRAG_MAX_VELOCITY, DRAG_MAX_VELOCITY);
       state.nodeDrag.vy = clamp((nextY - state.nodeDrag.lastY) / elapsed, -DRAG_MAX_VELOCITY, DRAG_MAX_VELOCITY);
@@ -5178,10 +5715,8 @@
       }
       const elapsed = Math.min(32, Math.max(8, now - inertia.lastTime));
       inertia.lastTime = now;
-      node.x = Math.max(0, node.x + inertia.vx * elapsed);
-      node.y = Math.max(0, node.y + inertia.vy * elapsed);
-      if (node.x === 0 && inertia.vx < 0) inertia.vx = 0;
-      if (node.y === 0 && inertia.vy < 0) inertia.vy = 0;
+      node.x += inertia.vx * elapsed;
+      node.y += inertia.vy * elapsed;
       const friction = Math.pow(DRAG_INERTIA_FRICTION, elapsed / 16.67);
       inertia.vx *= friction;
       inertia.vy *= friction;
@@ -5279,8 +5814,10 @@
     els.openCodexVerifyButton.addEventListener("click", openCodexVerificationPage);
     els.copyCodexCodeButton.addEventListener("click", () => copyCodexLoginCode().catch(showError));
     els.toggleProjectPanelButton.addEventListener("click", toggleProjectPanel);
-    els.zoomInButton.addEventListener("click", () => setZoom(state.zoom + 0.1));
-    els.zoomOutButton.addEventListener("click", () => setZoom(state.zoom - 0.1));
+    els.selectToolButton.addEventListener("click", () => setCanvasTool("select"));
+    els.handToolButton.addEventListener("click", () => setCanvasTool("hand"));
+    els.zoomInButton.addEventListener("click", () => setZoom((Number.isFinite(state.targetZoom) ? state.targetZoom : state.zoom) * 1.18));
+    els.zoomOutButton.addEventListener("click", () => setZoom((Number.isFinite(state.targetZoom) ? state.targetZoom : state.zoom) / 1.18));
     els.resetZoomButton.addEventListener("click", () => setZoom(1));
     els.projectQuickSelect.addEventListener("change", handleProjectQuickSelect);
     els.syncCanvasButton.addEventListener("click", openCanvasSyncReview);
@@ -5314,14 +5851,10 @@
     els.viewport.addEventListener("pointermove", moveCanvasPan);
     els.viewport.addEventListener("pointerup", endCanvasPan);
     els.viewport.addEventListener("pointercancel", endCanvasPan);
-    els.viewport.addEventListener("wheel", (event) => {
-      if (isInteractiveTarget(event.target)) return;
-      event.preventDefault();
-      const wheelDelta = clamp(event.deltaY, -180, 180);
-      const zoomBase = Number.isFinite(state.targetZoom) ? state.targetZoom : state.zoom;
-      const nextZoom = zoomBase * Math.exp(-wheelDelta * WHEEL_ZOOM_SENSITIVITY);
-      setCanvasZoom(nextZoom, { clientX: event.clientX, clientY: event.clientY, smooth: true });
-    }, { passive: false });
+    els.viewport.addEventListener("click", handleCanvasClick);
+    els.viewport.addEventListener("pointermove", handleFlowPointerMove);
+    els.viewport.addEventListener("pointerleave", handleFlowPointerLeave);
+    els.viewport.addEventListener("wheel", handleCanvasWheel, { passive: false });
     window.addEventListener("pointermove", moveNodeDrag);
     window.addEventListener("pointerup", endNodeDrag);
     window.addEventListener("pointercancel", endNodeDrag);
@@ -5351,6 +5884,14 @@
       if (event.code === "Space" && !isTypingTarget(event.target)) {
         event.preventDefault();
         setSpacePanning(true);
+        return;
+      }
+      if ((event.code === "KeyV" || event.key?.toLowerCase() === "v") && !isTypingTarget(event.target)) {
+        setCanvasTool("select");
+        return;
+      }
+      if ((event.code === "KeyH" || event.key?.toLowerCase() === "h") && !isTypingTarget(event.target)) {
+        setCanvasTool("hand");
       }
     }
 
@@ -5359,11 +5900,17 @@
       if (event.code === "Space") setSpacePanning(false);
     });
     window.addEventListener("blur", () => setSpacePanning(false));
+    window.addEventListener("resize", () => {
+      drawFlowDots();
+      fitCanvas({ persist: false, preserveZoom: true });
+    });
     if (sessionStorage.getItem("video-master-intro-seen") === "1") {
       els.intro.classList.add("hidden");
     }
     applyUiPreferences();
+    setCanvasTool(state.canvasTool, { persist: false });
     updatePanelVisibility({ persist: false });
+    startFlowDots();
 
     loadCodexAuthStatus().catch(() => updateCodexLoginButton());
     loadProjects(true).catch(showError);
