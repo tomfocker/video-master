@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance 分镜导演"
+  short_description: "生成导演级分镜与 Seedance 2.0 十五秒视频提示词"
+  default_prompt: "Use $seedance-storyboard-director to turn this video brief into a storyboard and Seedance 2.0 prompts."
