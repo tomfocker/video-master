@@ -2,7 +2,7 @@
 
 `video-master` 是一个 Codex skill，用来把视频想法、广告需求、已有素材或参考片，整理成一套 AI 视频前期制作包：需求判断、视频类型确认、创意策略、剧本/文案/音频拆分、详细分镜、原生生图分镜图，以及可直接复制到视频大模型里的生成提示词。
 
-这个项目参考了 `ppt-master` 的组织方式：核心能力放在 `skills/video-master/`，仓库层面的文档、示例和测试用于说明如何安装、使用、验证和继续演进。
+这个项目参考了 `ppt-master` 的组织方式：`skills/video-master/` 是自包含的主生产 Skill；Seedance 和 Midjourney 能力提炼为可独立安装的兄弟 Skill，也可以被主流程作为专项执行层调用。仓库层面的文档、示例和测试用于说明如何安装、使用、验证和继续演进。
 
 ## 项目结构
 
@@ -12,7 +12,14 @@ video-master/
     video-master/
       SKILL.md
       agents/openai.yaml
+      ai_animation/
+        registry.json
       scripts/
+        ai_animation/
+          build_assets.py
+          init_project.py
+          validate_library.py
+        demos/
         make_storyboard_overview.py
         make_animatic.py
         render_title_packaging.py
@@ -26,13 +33,23 @@ video-master/
         index.html
       style_templates/
         cinematic-flow-racing/
+        paper-cut-collage-packaging/
       references/
+        ai-animation.md
         audio-and-copy.md
         output-contract.md
         platform-and-model-profiles.md
         quality-check.md
         storyboard-and-video-prompts.md
         video-modes.md
+    seedance-storyboard-director/
+      SKILL.md
+      agents/openai.yaml
+      references/
+    midjourney-storyboard-prompts/
+      SKILL.md
+      agents/openai.yaml
+      references/
   docs/
     roadmap.md
     superpowers/plans/
@@ -88,7 +105,7 @@ docs/superpowers/specs/2026-04-26-video-style-library-design.md
 
 ## 安装到 Codex
 
-本地 Codex skill 的安装位置通常是：
+本地 Codex Skill 的安装位置通常是：
 
 ```text
 ~/.codex/skills/video-master
@@ -98,6 +115,13 @@ docs/superpowers/specs/2026-04-26-video-style-library-design.md
 
 ```bash
 rsync -a --delete skills/video-master/ ~/.codex/skills/video-master/
+```
+
+需要让主流程自动使用两个专项 Skill 时，同时安装它们：
+
+```bash
+rsync -a --delete skills/seedance-storyboard-director/ ~/.codex/skills/seedance-storyboard-director/
+rsync -a --delete skills/midjourney-storyboard-prompts/ ~/.codex/skills/midjourney-storyboard-prompts/
 ```
 
 ## 推荐依赖
@@ -123,6 +147,8 @@ python3 -m pip install -r requirements.txt
 
 ```bash
 python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/video-master
+python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/seedance-storyboard-director
+python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/midjourney-storyboard-prompts
 python3 -m unittest discover -s tests
 python3 -m unittest tests/test_validate_video_project.py -v
 python3 -m unittest tests/test_storyboard_overview.py -v

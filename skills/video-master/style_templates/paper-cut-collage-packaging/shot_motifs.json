@@ -1,0 +1,74 @@
+[
+  {
+    "id": "P01",
+    "name": "背景底板",
+    "function": "建立可复用的材质、色彩和活动区域。",
+    "visual_prompt_seed": "clean reusable background plate, tactile material texture, asymmetrical composition, quiet title-safe area, no characters, no text",
+    "video_prompt_seed": "mostly stable background with only subtle material movement or parallax",
+    "sfx": "soft room tone or material ambience"
+  },
+  {
+    "id": "P02",
+    "name": "独立角色入场",
+    "function": "让角色/讲解者像舞台演员一样进入。",
+    "visual_prompt_seed": "single isolated cutout character, consistent outline and soft shadow, clear pose, neutral extraction background",
+    "video_prompt_seed": "character slides or steps a short distance onto the background plate, then settles",
+    "sfx": "paper glide, cloth rustle or light footstep"
+  },
+  {
+    "id": "P03",
+    "name": "关键道具弹入",
+    "function": "让一个概念、部件或剧情触发物成为焦点。",
+    "visual_prompt_seed": "single isolated hero prop as a paper-cut element, tactile edge, simple contour, no text",
+    "video_prompt_seed": "prop enters with a small elastic settle, without excessive bounce",
+    "sfx": "card drop, object tap or world-specific foley"
+  },
+  {
+    "id": "P04",
+    "name": "场景窗口",
+    "function": "在底板与真实/故事现场之间建立通道。",
+    "visual_prompt_seed": "realistic or illustrated scene framed as a separate torn-edge window card, title-safe margin around it",
+    "video_prompt_seed": "scene window expands smoothly into the full frame or shrinks back into the collage board",
+    "sfx": "photo card land, scene ambience fades in"
+  },
+  {
+    "id": "P05",
+    "name": "关系组装",
+    "function": "让多个独立元素表达因果、对比、组合或剧情互动。",
+    "visual_prompt_seed": "three separated collage elements arranged with clear hierarchy and generous breathing room, no readable labels",
+    "video_prompt_seed": "elements arrive in causal order and lock into one readable composition",
+    "sfx": "successive paper taps, small connector click"
+  },
+  {
+    "id": "P06",
+    "name": "纸边转场",
+    "function": "用实体材料切换章节或状态。",
+    "visual_prompt_seed": "torn paper edge, folded flap, card edge or sticker occluder prepared as a transition layer",
+    "video_prompt_seed": "one paper layer wipes across the frame and reveals the next background or scene window",
+    "sfx": "paper tear, tape peel or page turn"
+  },
+  {
+    "id": "P07",
+    "name": "概念分解/组装",
+    "function": "解释过程、机制或变化。",
+    "visual_prompt_seed": "one main object separated into a few clear modular paper-cut parts, no labels, ordered spacing",
+    "video_prompt_seed": "parts separate, reveal a relationship, then reassemble with believable spacing",
+    "sfx": "soft clicks, paper layers sliding"
+  },
+  {
+    "id": "P08",
+    "name": "情绪特效层",
+    "function": "用可控的小元素强化卡通情绪或科普重点。",
+    "visual_prompt_seed": "small isolated paper-cut effect elements such as puff, sparkle, line burst or cloud, restrained palette",
+    "video_prompt_seed": "one effect appears briefly around the hero element and disappears after the beat",
+    "sfx": "bubble pop, pencil flick or airy puff"
+  },
+  {
+    "id": "P09",
+    "name": "全板记忆点",
+    "function": "用完整且静止的组合留下最后印象。",
+    "visual_prompt_seed": "wide hero collage composition, independent elements organized on one background plate, clear focal point, closing-text safe area",
+    "video_prompt_seed": "slow pullback or stable hold after all elements settle",
+    "sfx": "soft final landing, material ambience"
+  }
+]

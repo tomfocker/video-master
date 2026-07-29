@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "module_id": "ai-animation",
+  "display_name": "AI 动画",
+  "status": "draft",
+  "default_engine": "hyperframes",
+  "description": "Deterministic, reusable code-animation modules selected and assembled by an AI director.",
+  "modules": [
+    {
+      "id": "typography",
+      "status": "ready",
+      "catalog": "typography/catalog.json",
+      "runtime": [
+        "typography/runtime/text-effects-catalog.js",
+        "typography/runtime/text-effects-runtime.js",
+        "typography/runtime/text-effects.css"
+      ],
+      "example": "typography/examples/hyperframes-showcase.html",
+      "validator": "../scripts/ai_animation/validate_library.py"
+    }
+  ],
+  "planned_modules": [
+    "spatial-camera",
+    "transitions",
+    "data-visualization",
+    "diagram-motion",
+    "ui-demonstration",
+    "particles-and-shaders"
+  ]
+}

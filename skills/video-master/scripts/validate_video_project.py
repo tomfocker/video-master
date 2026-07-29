@@ -43,6 +43,12 @@ from delivery_paths import (
 from style_templates import TemplateError, load_template
 
 
+AI_ANIMATION_CATALOG = SCRIPT_DIR.parent / "ai_animation" / "typography" / "catalog.json"
+AI_ANIMATION_PLAN = Path("animation") / "ai_animation_plan.json"
+AI_ANIMATION_MANIFEST = Path("qa") / "metadata" / "ai_animation_manifest.json"
+FINAL_AI_ANIMATION_DIR = Path("最终交付") / "08_ai_animation"
+
+
 BASE_REQUIRED = [
     ("brief/creative_brief.md", [Path("brief/creative_brief.md")]),
     ("brief/spec_lock.md", [Path("brief/spec_lock.md")]),
@@ -705,6 +711,104 @@ def validate_title_packaging(project: Path, spec: dict[str, str], errors: list[s
                 errors.append(f"missing title packaging alpha MOV: {mov}")
 
 
+def validate_ai_animation(project: Path, spec: dict[str, str], errors: list[str]) -> None:
+    plan_path = project / AI_ANIMATION_PLAN
+    manifest_path = project / AI_ANIMATION_MANIFEST
+    enabled = parse_boolish_true(spec.get("ai_animation_enabled", ""))
+    if not enabled and not plan_path.exists() and not manifest_path.exists():
+        return
+
+    if not plan_path.is_file():
+        errors.append(f"missing AI animation plan: {AI_ANIMATION_PLAN.as_posix()}")
+        return
+    try:
+        plan = json.loads(read_text(plan_path))
+    except json.JSONDecodeError as exc:
+        errors.append(f"invalid JSON in {AI_ANIMATION_PLAN.as_posix()}: {exc}")
+        return
+    if not isinstance(plan, dict):
+        errors.append(f"{AI_ANIMATION_PLAN.as_posix()} must be an object")
+        return
+    if plan.get("enabled") is not True:
+        errors.append("AI animation plan must set enabled=true")
+    if plan.get("engine") != "hyperframes":
+        errors.append("AI animation plan engine must be hyperframes")
+    if plan.get("execution_mode") not in {"hyperframes", "hybrid"}:
+        errors.append("AI animation execution_mode must be hyperframes or hybrid")
+
+    modules = plan.get("modules")
+    if not isinstance(modules, list) or not modules:
+        errors.append("AI animation plan requires a non-empty modules list")
+        modules = []
+    if "typography" in modules:
+        typography = plan.get("typography")
+        effects = typography.get("effects") if isinstance(typography, dict) else None
+        if not isinstance(effects, list) or not effects:
+            errors.append("AI animation typography module requires a non-empty effects list")
+        else:
+            try:
+                catalog = json.loads(read_text(AI_ANIMATION_CATALOG))
+                known_ids = {
+                    str(item.get("id"))
+                    for item in catalog.get("effects", [])
+                    if isinstance(item, dict) and item.get("id")
+                }
+            except (OSError, json.JSONDecodeError) as exc:
+                errors.append(f"cannot load AI animation typography catalog: {exc}")
+                known_ids = set()
+            for index, item in enumerate(effects, start=1):
+                if not isinstance(item, dict):
+                    errors.append(f"AI animation typography effect {index} must be an object")
+                    continue
+                effect_id = str(item.get("effect_id", ""))
+                if effect_id not in known_ids:
+                    errors.append(f"unknown AI animation typography effect: {effect_id or '<missing>'}")
+
+    compositions = plan.get("compositions")
+    if not isinstance(compositions, list) or not compositions:
+        errors.append("AI animation plan requires a non-empty compositions list")
+    else:
+        for index, item in enumerate(compositions, start=1):
+            if not isinstance(item, dict):
+                errors.append(f"AI animation composition {index} must be an object")
+                continue
+            source = item.get("source")
+            duration = item.get("duration_seconds")
+            if not source or not (project / str(source)).is_file():
+                errors.append(f"missing AI animation composition source: {source or '<missing>'}")
+            if not isinstance(duration, (int, float)) or duration <= 0:
+                errors.append(f"AI animation composition {index} requires positive duration_seconds")
+
+    if not manifest_path.is_file():
+        errors.append(f"missing AI animation manifest: {AI_ANIMATION_MANIFEST.as_posix()}")
+        return
+    try:
+        manifest = json.loads(read_text(manifest_path))
+    except json.JSONDecodeError as exc:
+        errors.append(f"invalid JSON in {AI_ANIMATION_MANIFEST.as_posix()}: {exc}")
+        return
+    if not isinstance(manifest, dict) or manifest.get("ai_animation") is not True:
+        errors.append("AI animation manifest must set ai_animation=true")
+        return
+    if manifest.get("engine") != "hyperframes":
+        errors.append("AI animation manifest engine must be hyperframes")
+    delivered = manifest.get("compositions")
+    if not isinstance(delivered, list) or not delivered:
+        errors.append("AI animation manifest requires a non-empty compositions list")
+        return
+    if not (project / FINAL_AI_ANIMATION_DIR).is_dir():
+        errors.append(f"missing AI animation final directory: {FINAL_AI_ANIMATION_DIR.as_posix()}")
+    for index, item in enumerate(delivered, start=1):
+        if not isinstance(item, dict):
+            errors.append(f"AI animation manifest composition {index} must be an object")
+            continue
+        for field in ["source", "output"]:
+            relative = item.get(field)
+            path = project / str(relative) if relative else None
+            if path is None or not path.is_file() or path.stat().st_size == 0:
+                errors.append(f"missing AI animation {field}: {relative or '<missing>'}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate a video-master project package.")
     parser.add_argument("project", type=Path, help="Path to a video-master project directory")
@@ -730,6 +834,7 @@ def main(argv: list[str] | None = None) -> int:
     validate_storyboard_overview(project, errors)
     validate_preview_manifest(project, errors)
     validate_title_packaging(project, spec, errors)
+    validate_ai_animation(project, spec, errors)
 
     if errors:
         for error in errors:

@@ -1,0 +1,66 @@
+{
+  "template_id": "paper-cut-collage-packaging",
+  "application_policy": "Apply the background-plus-independent-elements collage method as defaults. User theme, story, assets, brand constraints, copy and compliance requirements override all default motifs.",
+  "default_arc": [
+    {
+      "phase": "钩子与底板",
+      "position": "0-18%",
+      "shot_duration_guidance": "1.5-4s",
+      "camera_energy": ["stable background", "single hero-element entrance", "gentle push"]
+    },
+    {
+      "phase": "主元素建立",
+      "position": "18-42%",
+      "shot_duration_guidance": "1-4s",
+      "camera_energy": ["cutout slide", "card placement", "2.5D parallax"]
+    },
+    {
+      "phase": "关系与变化",
+      "position": "42-75%",
+      "shot_duration_guidance": "0.6-2s transfer cluster, then 1.5-3s readable hold",
+      "camera_energy": ["assembly", "swap", "window expansion", "occlusion wipe"]
+    },
+    {
+      "phase": "记忆点收束",
+      "position": "75-100%",
+      "shot_duration_guidance": "2-5s",
+      "camera_energy": ["hero composition", "stable hold", "slow pullback"]
+    }
+  ],
+  "timeline_model_30s": [
+    {
+      "phase": "钩子",
+      "time_window": "00:00-00:05",
+      "editing_logic": "A clean background base receives one unexpected or important hero element.",
+      "purpose": "Set topic, mood and visual grammar without forcing generated title text.",
+      "duration_guidance": "1.5-3s shots with one title-safe area"
+    },
+    {
+      "phase": "元素关系",
+      "time_window": "00:05-00:15",
+      "editing_logic": "Introduce character, prop and scene-window in a deliberate order.",
+      "purpose": "Make the main concept or story relationship visible.",
+      "duration_guidance": "1-3s placements; allow a short hold after each important relationship"
+    },
+    {
+      "phase": "变化",
+      "time_window": "00:15-00:24",
+      "editing_logic": "Use an assembly, swap, opening flap, zoomed window or small rapid collage cluster.",
+      "purpose": "Show mechanism, causality, joke, conflict or transformation.",
+      "duration_guidance": "two to four 0.6-1.2s transfers, then a 2s reading pause"
+    },
+    {
+      "phase": "收束",
+      "time_window": "00:24-00:30",
+      "editing_logic": "Return to a composed hero board or let the scene window become full frame.",
+      "purpose": "Leave one visual memory and a safe zone for post-produced closing text.",
+      "duration_guidance": "3-6s stable hold"
+    }
+  ],
+  "audio_design_model": {
+    "principle": "Synchronize sound with visible material and object behavior. The sound palette changes with the project world, while the timing remains tactile and readable.",
+    "core_sfx": ["paper slide", "card drop", "tape peel", "page turn", "pencil stroke", "bubble pop", "wood tap", "object-specific foley"],
+    "music_policy": "Do not ask video models to generate per-clip background music; score and beat music are added in post-production.",
+    "text_policy": "No generated readable text or subtitles. Exact typography, labels, arrows, captions and citations are post-production packaging."
+  }
+}

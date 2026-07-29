@@ -35,6 +35,14 @@ description: Create compact director-led storyboards and copy-ready Chinese Seed
 - 多段视频的配乐留给后期。提示词要求自然现场声、环境声与可见材质声；只列重点 SFX，不要限制其他自然声音。
 - 有口播时，用表情/口型/短表演提示，不粘贴长台词，更不要要求画内字幕。
 
+## 与 Video Master 协作
+
+既可以独立完成 Seedance 分镜任务，也可以作为 `$video-master` 的专项执行层。由 Video Master 调用时：
+
+- 把其 `brief/spec_lock.md`、节奏图、角色/产品连续性锚点、参考图角色和音频政策视为上游契约。
+- 返回分镜方案与 Seedance 提示词，不另建一套项目状态或改写上游锁定项。
+- 让 Video Master 负责规范化落盘、跨阶段一致性、最终交付与项目级 QA。
+
 ## 资源路由
 
 - 需要选择叙事与镜头节奏时：读取 `references/director-patterns.md`。

@@ -27,6 +27,9 @@ Run this checklist before final delivery.
 - `最终交付/02_提示词/视频生成提示词.md` exists.
 - `最终交付/01_分镜图/` contains final storyboard frames.
 - If title packaging is requested, `packaging/title_packaging_plan.json`, `qa/metadata/title_packaging_manifest.json`, and `最终交付/07_title_packaging/` exist.
+- If AI animation is enabled, `animation/ai_animation_plan.json`, `qa/metadata/ai_animation_manifest.json`, and `最终交付/08_ai_animation/` exist.
+- Every code-rendered typography element uses an ID from `ai_animation/typography/catalog.json`; selected effects match the intended energy and usage notes.
+- HyperFrames/WAAPI animations use finite iterations, deterministic initialization, and declared composition duration. Run `scripts/ai_animation/validate_library.py` before delivery.
 - If fixed characters are requested, `characters/character_bible.md`, `characters/character_manifest.json`, and any reference images exist before storyboard prompts are finalized.
 
 ## Workflow State And WebUI

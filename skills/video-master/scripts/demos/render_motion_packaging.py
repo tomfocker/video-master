@@ -12,7 +12,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[4]
 PROJECT = ROOT / "video_projects" / "packaging_effect_demos"
 FINAL = PROJECT / "最终交付" / "07_title_packaging"
 PREVIEW = PROJECT / "qa" / "metadata" / "effect_previews"

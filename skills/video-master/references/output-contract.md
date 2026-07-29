@@ -42,6 +42,11 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
     title_packaging_prompts.md
     title_cards/
     alpha_mov/
+  animation/
+    ai_animation_plan.json
+    compositions/
+    runtime/
+    renders/
   references/
     visual_style_presets.json
     style_analysis.md
@@ -73,6 +78,8 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
     07_title_packaging/
       main_title.png
       main_title.mov
+    08_ai_animation/
+      main.mp4
   qa/
     metadata/
       project_state.json
@@ -81,6 +88,7 @@ video_projects/<project_slug>_<YYYYMMDD_HHMM>/
       preview_manifest.json
       tts_manifest.json
       title_packaging_manifest.json
+      ai_animation_manifest.json
 ```
 
 ## input_readiness.md
@@ -208,6 +216,10 @@ Keep this short and data-oriented. Downstream phases re-read it before writing e
 - video_mode:
 - scene_director_pattern: none | product_showcase | live_commerce_spokesperson | short_drama_reversal | fantasy_action | science_visualization | music_beat_montage | one_take_transition | video_extension | video_edit | motion_poster | animation_action
 - scene_director_overrides: <optional, such as product_showcase_variant: tech_precision_exploded_view | soft_playful_assembly | beauty_lifestyle_application | food_material_appetite | fashion_fit_switch | premium_static_hero>
+- ai_animation_enabled: false
+- animation_execution_mode: generative-video | hyperframes | hybrid
+- animation_engine: none | hyperframes
+- ai_animation_modules: typography | spatial-camera | transitions | data-visualization | diagram-motion | ui-demonstration | particles-and-shaders
 - storyboard_coverage:
 - deliverables_profile:
 

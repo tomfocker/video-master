@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Video Master Typography Showcase</title>
+    <link rel="stylesheet" href="../runtime/text-effects.css" />
+    <style>
+      :root { color-scheme: dark; font-family: "Microsoft YaHei", "PingFang SC", sans-serif; }
+      * { box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #05070c; }
+      [data-composition-id] {
+        position: relative; width: 1920px; height: 1080px; overflow: hidden;
+        background:
+          radial-gradient(circle at 74% 24%, rgba(67, 226, 201, .16), transparent 34%),
+          radial-gradient(circle at 18% 82%, rgba(81, 102, 255, .17), transparent 36%),
+          linear-gradient(145deg, #080b13 0%, #05070c 48%, #090d18 100%);
+      }
+      [data-composition-id]::before {
+        content: ""; position: absolute; inset: 0; opacity: .14;
+        background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+        background-size: 80px 80px;
+      }
+      .brand { position: absolute; top: 64px; left: 72px; color: #7e8ba8; font-size: 22px; letter-spacing: .22em; }
+      .beat { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; }
+      .copy { width: 1500px; min-height: 220px; color: #f6f8ff; font-size: 112px; font-weight: 760; line-height: 1.15; letter-spacing: -.045em; text-align: center; }
+      .copy.small { font-size: 82px; letter-spacing: .01em; }
+      .label { position: absolute; left: 72px; bottom: 62px; color: #6de6d0; font: 22px/1.4 Consolas, monospace; letter-spacing: .08em; }
+      .rail { position: absolute; left: 72px; right: 72px; bottom: 42px; height: 1px; background: rgba(255,255,255,.12); }
+    </style>
+  </head>
+  <body>
+    <main data-composition-id="video-master-typography-showcase" data-duration="12">
+      <div class="brand">VIDEO MASTER · AI ANIMATION / TYPOGRAPHY</div>
+      <section class="beat" data-start="0" data-duration="2"><div id="text-1" class="copy"></div><div class="label">clean-fade-rise</div></section>
+      <section class="beat" data-start="2" data-duration="2"><div id="text-2" class="copy"></div><div class="label">focus-blur-rise</div></section>
+      <section class="beat" data-start="4" data-duration="2"><div id="text-3" class="copy"></div><div class="label">wipe-reveal</div></section>
+      <section class="beat" data-start="6" data-duration="2"><div id="text-4" class="copy small"></div><div class="label">typewriter-reveal</div></section>
+      <section class="beat" data-start="8" data-duration="2"><div id="text-5" class="copy"></div><div class="label">glow-impact</div></section>
+      <section class="beat" data-start="10" data-duration="2"><div id="text-6" class="copy"></div><div class="label">glitch-reveal</div></section>
+      <div class="rail"></div>
+    </main>
+    <script src="../runtime/text-effects-catalog.js"></script>
+    <script src="../runtime/text-effects-runtime.js"></script>
+    <script>
+      const beats = [
+        ["#text-1", "clean-fade-rise", "复杂的世界，需要清晰的解释", 0],
+        ["#text-2", "focus-blur-rise", "从现象，进入原理", 2000],
+        ["#text-3", "wipe-reveal", "第一步：找到关键变量", 4000],
+        ["#text-4", "typewriter-reveal", "AI 正在重新定义知识的表达方式", 6000],
+        ["#text-5", "glow-impact", "10× 信息密度", 8000],
+        ["#text-6", "glitch-reveal", "但不能牺牲理解", 10000],
+      ];
+
+      document.querySelectorAll(".beat").forEach((beat, index) => {
+        const visibility = beat.animate(
+          [{ opacity: 0 }, { opacity: 1, offset: .04 }, { opacity: 1, offset: .9 }, { opacity: 0 }],
+          { duration: 2000, delay: index * 2000, easing: "linear", fill: "both", iterations: 1 },
+        );
+        if (new URLSearchParams(location.search).has("paused")) visibility.pause();
+      });
+
+      beats.forEach(([target, effectId, text, startMs]) => {
+        VideoMasterTextEffects.play({
+          target,
+          effectId,
+          text,
+          startMs: startMs + 140,
+          autoplay: !new URLSearchParams(location.search).has("paused"),
+          glowColor: "109, 230, 208",
+        });
+      });
+    </script>
+  </body>
+</html>

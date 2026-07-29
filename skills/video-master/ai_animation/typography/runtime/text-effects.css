@@ -1,0 +1,29 @@
+.vmte-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.vmte-text {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  white-space: pre-wrap;
+  transform-style: preserve-3d;
+}
+
+.vmte-unit {
+  display: inline-block;
+  transform-origin: 50% 55%;
+  will-change: transform, opacity, filter, clip-path;
+}
+
+.vmte-split-lines {
+  align-items: center;
+  flex-direction: column;
+}
+
+.vmte-line {
+  display: block;
+}

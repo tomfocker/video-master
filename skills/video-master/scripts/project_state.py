@@ -43,6 +43,9 @@ from delivery_paths import (
 PROJECT_STATE = METADATA_DIR / "project_state.json"
 WORKFLOW_EVENTS = METADATA_DIR / "workflow_events.jsonl"
 CODEX_SHOT_REQUESTS = METADATA_DIR / "codex_shot_requests.json"
+AI_ANIMATION_PLAN = Path("animation") / "ai_animation_plan.json"
+AI_ANIMATION_MANIFEST = METADATA_DIR / "ai_animation_manifest.json"
+FINAL_AI_ANIMATION_DIR = Path("最终交付") / "08_ai_animation"
 
 
 class ProjectStateError(ValueError):
@@ -281,6 +284,8 @@ def build_flow_nodes(project: Path, sections: dict[str, dict[str, str]]) -> list
     paths = prompt_paths(project)
     title_plan = project / "packaging" / "title_packaging_plan.json"
     title_manifest = title_packaging_manifest_path(project)
+    ai_animation_plan = project / AI_ANIMATION_PLAN
+    ai_animation_manifest = project / AI_ANIMATION_MANIFEST
     frame_dir = storyboard_frame_dir(project)
     frame_files = list(frame_dir.glob("*.png")) if frame_dir.is_dir() else []
     visual_style_locked = bool(sections.get("visual_style", {}).get("visual_style_preset_id"))
@@ -308,6 +313,7 @@ def build_flow_nodes(project: Path, sections: dict[str, dict[str, str]]) -> list
             "frame_count": len(frame_files),
         },
         make_node(project, "video_prompts", "Video Prompts", [paths["working_video_prompts"], paths["final_video_prompts"]]),
+        make_node(project, "ai_animation", "AI Animation", [ai_animation_plan, ai_animation_manifest, project / FINAL_AI_ANIMATION_DIR], optional=True),
         make_node(project, "title_packaging", "Title Packaging", [title_plan, title_manifest, title_packaging_dir(project)], optional=True),
         make_node(project, "deliverables", "Deliverables", [handoff_path(project), overview_png_path(project), preview_mp4_path(project), workbook_path(project), paths["final_image_prompts"]]),
     ]
@@ -369,6 +375,19 @@ def build_deliverables(project: Path) -> dict[str, Any]:
         "final_image_prompts": path_info(project, paths["final_image_prompts"]),
         "preview_manifest": read_json(preview_manifest, {}),
         "title_packaging_manifest": read_json(title_manifest, {}),
+        "ai_animation_manifest": read_json(project / AI_ANIMATION_MANIFEST, {}),
+    }
+
+
+def build_ai_animation(project: Path, production: dict[str, str]) -> dict[str, Any]:
+    return {
+        "enabled": production.get("ai_animation_enabled", "false"),
+        "execution_mode": production.get("animation_execution_mode", "generative-video"),
+        "engine": production.get("animation_engine", "none"),
+        "modules": production.get("ai_animation_modules", ""),
+        "plan": read_json(project / AI_ANIMATION_PLAN, {}),
+        "manifest": read_json(project / AI_ANIMATION_MANIFEST, {}),
+        "final_dir": path_info(project, project / FINAL_AI_ANIMATION_DIR),
     }
 
 
@@ -465,6 +484,7 @@ def build_project_state(project: Path) -> dict[str, Any]:
         "visual_style": visual_style,
         "character_design": character_design,
         "title_packaging": title_packaging,
+        "ai_animation": build_ai_animation(project, production),
         "copywriting": build_copywriting(project),
         "shot_requests": build_shot_requests(project),
         "flow_nodes": build_flow_nodes(project, sections),

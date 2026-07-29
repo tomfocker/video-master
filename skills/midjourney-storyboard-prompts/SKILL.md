@@ -26,6 +26,14 @@ description: Create reusable Midjourney 8.1 prompts for character design anchors
 - 历史题材先锁服饰工艺、武器和实用性；如发生玄幻化，先净化角色锚点，再降低风格化，而不是继续堆加风格词。
 - 使用 `--style raw` 降低默认装饰。人物/分镜通常从 `--stylize 15-30` 起试，宏大建立镜头可试 `30-45`。
 
+## 与 Video Master 协作
+
+既可以独立生成 Midjourney 提示词，也可以作为 `$video-master` 的分镜静帧专项执行层。由 Video Master 调用时：
+
+- 接收已锁定的画幅、视觉预设、角色/产品连续性、场景布局、参考资产角色和文字政策。
+- 返回角色锚点、场景锚点或单帧提示词，并标明它们在视频流程中的 `SCENE`、`A-D`、首帧或尾帧角色。
+- 不另建项目契约；由 Video Master 将获选提示词和图片写入 manifest、完成连续性检查并交付。
+
 ## 资源路由
 
 - 角色、人设、`--cref`、历史写实与反奇幻：读取 `references/midjourney-storyboards.md` 的“角色锚点”“历史写实”部分。
