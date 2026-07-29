@@ -26,6 +26,8 @@ class SkillArchitectureTest(unittest.TestCase):
 
     def test_specialized_scripts_are_grouped(self):
         self.assertTrue((VIDEO_MASTER / "scripts" / "ai_animation" / "validate_library.py").is_file())
+        self.assertTrue((VIDEO_MASTER / "scripts" / "ai_animation" / "init_motion_template.py").is_file())
+        self.assertTrue((VIDEO_MASTER / "scripts" / "ai_animation" / "render_motion_template.py").is_file())
         self.assertTrue((VIDEO_MASTER / "scripts" / "demos" / "render_paper_cut_collage.py").is_file())
         self.assertFalse((VIDEO_MASTER / "scripts" / "validate_ai_animation_library.py").exists())
 

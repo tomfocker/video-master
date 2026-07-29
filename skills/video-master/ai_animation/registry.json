@@ -17,13 +17,27 @@
       ],
       "example": "typography/examples/hyperframes-showcase.html",
       "validator": "../scripts/ai_animation/validate_library.py"
+    },
+    {
+      "id": "motion-templates",
+      "status": "ready",
+      "catalog": "motion_templates/catalog.json",
+      "templates": "motion_templates/templates",
+      "source": "motion_templates/source.json",
+      "notice": "motion_templates/UPSTREAM_NOTICE.md",
+      "capabilities": [
+        "data-visualization",
+        "knowledge-explainer",
+        "transparent-overlay"
+      ],
+      "initializer": "../scripts/ai_animation/init_motion_template.py",
+      "renderer": "../scripts/ai_animation/render_motion_template.py",
+      "validator": "../scripts/ai_animation/validate_library.py"
     }
   ],
   "planned_modules": [
     "spatial-camera",
     "transitions",
-    "data-visualization",
-    "diagram-motion",
     "ui-demonstration",
     "particles-and-shaders"
   ]

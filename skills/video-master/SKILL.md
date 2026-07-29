@@ -193,7 +193,7 @@ Do not paste external VO lines, subtitle paths, packaging paths, or post-product
 
 Gate: `ai_animation_enabled` and mode is `hyperframes` or `hybrid`.
 
-Read `references/ai-animation.md`, `ai_animation/registry.json`, and the relevant catalog. Write `animation/ai_animation_plan.json`, initialize with `scripts/ai_animation/init_project.py`, author finite deterministic compositions under `animation/compositions/`, and render work files under `animation/renders/`.
+Read `references/ai-animation.md`, `ai_animation/registry.json`, and the relevant catalog. Use `scripts/ai_animation/init_project.py` for typography compositions and `scripts/ai_animation/init_motion_template.py` for registered charts, comparisons, explainers, evidence cards, process diagrams, and transparent overlays. Write `animation/ai_animation_plan.json`, author finite deterministic compositions under `animation/compositions/`, and render work files under `animation/renders/`.
 
 Copy approved outputs to `最终交付/08_ai_animation/` and write `qa/metadata/ai_animation_manifest.json`. Validate the library with `scripts/ai_animation/validate_library.py`; lint/check every composition before final render. Never claim an unregistered or only-planned module is available.
 

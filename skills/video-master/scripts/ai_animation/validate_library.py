@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Validate the reusable AI-animation registry and typography runtime."""
+"""Validate the reusable AI-animation registry, runtimes, and motion templates."""
 
 from __future__ import annotations
 
 import json
+import html as html_lib
 import re
 import sys
 from pathlib import Path
@@ -19,6 +20,10 @@ STYLES = MODULE_DIR / "typography" / "runtime" / "text-effects.css"
 SHOWCASE = MODULE_DIR / "typography" / "examples" / "hyperframes-showcase.html"
 NOTICE = MODULE_DIR / "typography" / "THIRD_PARTY_NOTICES.md"
 LICENSE = MODULE_DIR / "typography" / "licenses" / "sakura-animate-text-MIT.txt"
+MOTION_DIR = MODULE_DIR / "motion_templates"
+MOTION_CATALOG = MOTION_DIR / "catalog.json"
+MOTION_SOURCE = MOTION_DIR / "source.json"
+MOTION_NOTICE = MOTION_DIR / "UPSTREAM_NOTICE.md"
 
 
 def read_json(path: Path, errors: list[str]) -> dict:
@@ -94,6 +99,98 @@ def validate_effect(effect: object, index: int, seen_ids: set[str], seen_sources
         errors.append(f"{effect_id}: frame offsets must be ordered within 0..1")
 
 
+def validate_motion_templates(errors: list[str]) -> int:
+    catalog = read_json(MOTION_CATALOG, errors)
+    source = read_json(MOTION_SOURCE, errors)
+    if not MOTION_NOTICE.is_file() or MOTION_NOTICE.stat().st_size == 0:
+        errors.append(f"missing or empty file: {MOTION_NOTICE.relative_to(SKILL_DIR)}")
+    if source.get("repository") != "https://github.com/nutllwhy/hyperframes-motion-library":
+        errors.append("motion template source must name the upstream repository")
+    if not re.fullmatch(r"[0-9a-f]{40}", str(source.get("commit", ""))):
+        errors.append("motion template source must pin a full commit hash")
+    if source.get("license_file_present_at_import") is not False or not source.get("permission_basis"):
+        errors.append("motion template source must record its non-standard permission basis")
+
+    templates = catalog.get("templates")
+    if not isinstance(templates, list) or not templates:
+        errors.append("motion template catalog requires a non-empty templates list")
+        return 0
+    if source.get("template_count") != len(templates):
+        errors.append("motion template source template_count does not match the catalog")
+
+    seen_ids: set[str] = set()
+    motion_root = MOTION_DIR.resolve()
+    required_files = ["index.html", "design.md", "meta.json", "package.json", "presets/default.json"]
+    for index, item in enumerate(templates, start=1):
+        label = f"motion template[{index}]"
+        if not isinstance(item, dict):
+            errors.append(f"{label} must be an object")
+            continue
+        template_id = str(item.get("id", ""))
+        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", template_id):
+            errors.append(f"{label} has invalid id: {template_id or '<missing>'}")
+            continue
+        if template_id in seen_ids:
+            errors.append(f"duplicate motion template id: {template_id}")
+        seen_ids.add(template_id)
+        if item.get("status") != "ready":
+            errors.append(f"{template_id}: catalog status must be ready")
+        if not isinstance(item.get("duration"), (int, float)) or item["duration"] <= 0:
+            errors.append(f"{template_id}: duration must be positive")
+        if not isinstance(item.get("formats"), list) or not {"mp4", "mov", "webm"}.issubset(item["formats"]):
+            errors.append(f"{template_id}: formats must include mp4, mov, and webm")
+
+        relative_path = str(item.get("path", ""))
+        template_dir = (MOTION_DIR / relative_path).resolve()
+        if not template_dir.is_relative_to(motion_root) or relative_path != f"templates/{template_id}":
+            errors.append(f"{template_id}: unsafe or mismatched template path: {relative_path}")
+            continue
+        for name in required_files:
+            path = template_dir / name
+            if not path.is_file() or path.stat().st_size == 0:
+                errors.append(f"{template_id}: missing or empty {name}")
+
+        index_path = template_dir / "index.html"
+        if not index_path.is_file():
+            continue
+        html_text = index_path.read_text(encoding="utf-8")
+        variable_match = re.search(r"data-composition-variables='([^']+)'", html_text)
+        if not variable_match:
+            errors.append(f"{template_id}: missing data-composition-variables")
+            schema = []
+        else:
+            try:
+                schema = json.loads(html_lib.unescape(variable_match.group(1)))
+            except json.JSONDecodeError as exc:
+                errors.append(f"{template_id}: invalid variable schema: {exc}")
+                schema = []
+        if not isinstance(schema, list) or not schema:
+            errors.append(f"{template_id}: variable schema must be a non-empty list")
+            schema = []
+        variable_ids = {str(value.get("id")) for value in schema if isinstance(value, dict) and value.get("id")}
+        if "exportMode" not in variable_ids:
+            errors.append(f"{template_id}: variable schema must include exportMode")
+
+        preset_path = template_dir / "presets" / "default.json"
+        preset = read_json(preset_path, errors) if preset_path.is_file() else {}
+        unknown_variables = sorted(set(preset) - variable_ids)
+        if unknown_variables:
+            errors.append(f"{template_id}: preset contains unknown variables: {', '.join(unknown_variables)}")
+
+        meta_path = template_dir / "meta.json"
+        meta = read_json(meta_path, errors) if meta_path.is_file() else {}
+        if meta.get("id") != template_id:
+            errors.append(f"{template_id}: meta.json id does not match")
+        for marker in ["window.__timelines", "data-composition-id=\"main\""]:
+            if marker not in html_text:
+                errors.append(f"{template_id}: missing deterministic HyperFrames marker: {marker}")
+        if not re.search(r"paused\s*:\s*true", html_text):
+            errors.append(f"{template_id}: GSAP master timeline must initialize paused")
+        if "Math.random" in html_text or "Infinity" in html_text or re.search(r"repeat\s*:\s*-1", html_text):
+            errors.append(f"{template_id}: template must not use random or infinite render-time animation")
+    return len(templates)
+
+
 def main() -> int:
     errors: list[str] = []
     registry = read_json(REGISTRY, errors)
@@ -105,8 +202,10 @@ def main() -> int:
     if registry.get("module_id") != "ai-animation":
         errors.append("registry module_id must be ai-animation")
     modules = registry.get("modules")
-    if not isinstance(modules, list) or not any(isinstance(item, dict) and item.get("id") == "typography" for item in modules):
-        errors.append("registry must declare the typography module")
+    module_ids = {str(item.get("id")) for item in modules if isinstance(item, dict)} if isinstance(modules, list) else set()
+    for required_module in ["typography", "motion-templates"]:
+        if required_module not in module_ids:
+            errors.append(f"registry must declare the {required_module} module")
 
     source = catalog.get("source")
     if not isinstance(source, dict) or source.get("license") != "MIT" or not source.get("commit"):
@@ -148,11 +247,13 @@ def main() -> int:
             if marker not in runtime_text:
                 errors.append(f"runtime missing deterministic WAAPI marker: {marker}")
 
+    motion_template_count = validate_motion_templates(errors)
+
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print(f"OK: {len(effects)} curated typography effects")
+    print(f"OK: {len(effects)} curated typography effects; {motion_template_count} motion templates")
     return 0
 
 

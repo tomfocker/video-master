@@ -14,6 +14,7 @@ video-master/
       agents/openai.yaml
       ai_animation/
         registry.json
+        motion_templates/          # 20 个参数化 HyperFrames 动效模板
       scripts/
         ai_animation/
           build_assets.py
@@ -82,6 +83,7 @@ video-master/
 - 可选生成商业标题包装旁路资产，包括大标题、章节标题、人名条、关键数据/数字包装和 CTA/end card。默认交付透明 PNG；只有明确需要真实动画叠加时才生成 ProRes 4444 透明通道 MOV。MOV 模板支持 `brush_reveal`、`route_light_trail`、`odometer`、`marker_annotation` 等，并可把原生生图清理出的透明设计稿作为 `design_asset` 继续动画化。这个分支不会改写原有视频提示词。
 - 外部画外音不会直接写进最终视频提示词；每个视频片段提示词会要求不要生成背景音乐，并保留逐镜头 SFX 音效说明。
 - 支持基于 `tts_lines.json` 生成或打包 TTS 配音；默认可用 edge-tts，也可选接入本地 VoxCPM2 HTTP 服务生成中文口播 WAV。
+- 内置 20 个参数化 HyperFrames 动效模板，覆盖图表、数字、对比、引用卡、流程、时间线、误区纠正和透明叠加；模板来源、固定 commit 与作者许可说明随库保留。
 - 导出制作总表，方便查看镜头、口播和交付信息。
 - 使用本地校验脚本检查项目结构、镜头时长、音频文件、提示词语言和最终交付文件。
 

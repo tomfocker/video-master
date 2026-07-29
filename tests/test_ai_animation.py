@@ -12,10 +12,15 @@ SKILL = ROOT / "skills" / "video-master"
 CATALOG = SKILL / "ai_animation" / "typography" / "catalog.json"
 RUNTIME = SKILL / "ai_animation" / "typography" / "runtime" / "text-effects-runtime.js"
 CATALOG_JS = SKILL / "ai_animation" / "typography" / "runtime" / "text-effects-catalog.js"
+MOTION_CATALOG = SKILL / "ai_animation" / "motion_templates" / "catalog.json"
+MOTION_SOURCE = SKILL / "ai_animation" / "motion_templates" / "source.json"
+MOTION_NOTICE = SKILL / "ai_animation" / "motion_templates" / "UPSTREAM_NOTICE.md"
 BUILD = SKILL / "scripts" / "ai_animation" / "build_assets.py"
 LIBRARY_VALIDATOR = SKILL / "scripts" / "ai_animation" / "validate_library.py"
 PROJECT_VALIDATOR = SKILL / "scripts" / "validate_video_project.py"
 INITIALIZER = SKILL / "scripts" / "ai_animation" / "init_project.py"
+MOTION_INITIALIZER = SKILL / "scripts" / "ai_animation" / "init_motion_template.py"
+MOTION_RENDERER = SKILL / "scripts" / "ai_animation" / "render_motion_template.py"
 
 
 def load_project_validator():
@@ -67,6 +72,77 @@ class AiAnimationLibraryTest(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_motion_template_catalog_is_pinned_and_complete(self):
+        catalog = json.loads(MOTION_CATALOG.read_text(encoding="utf-8"))
+        source = json.loads(MOTION_SOURCE.read_text(encoding="utf-8"))
+        templates = catalog["templates"]
+        self.assertEqual(len(templates), 20)
+        self.assertEqual(len({item["id"] for item in templates}), 20)
+        self.assertEqual(source["template_count"], 20)
+        self.assertEqual(source["commit"], "01c393f9f26b5b0d8432fa02682ceb36f6cc3e0f")
+        self.assertFalse(source["license_file_present_at_import"])
+        self.assertIn("栗噔噔", MOTION_NOTICE.read_text(encoding="utf-8"))
+        for item in templates:
+            template = SKILL / "ai_animation" / "motion_templates" / item["path"]
+            self.assertTrue((template / "index.html").is_file())
+            self.assertTrue((template / "presets" / "default.json").is_file())
+
+    def test_motion_initializer_registers_selected_template(self):
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory) / "demo"
+            variables = Path(directory) / "variables.json"
+            variables.write_text(json.dumps({"term": "视觉注意力", "accent": "#FF7A3D"}), encoding="utf-8")
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(MOTION_INITIALIZER),
+                    str(project),
+                    "--template-id",
+                    "concept-spotlight",
+                    "--variables",
+                    str(variables),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            plan = json.loads((project / "animation" / "ai_animation_plan.json").read_text(encoding="utf-8"))
+            selected = plan["motion_templates"]["templates"][0]
+            self.assertIn("motion-templates", plan["modules"])
+            self.assertEqual(selected["template_id"], "concept-spotlight")
+            preset = json.loads(
+                (project / "animation" / "compositions" / "concept-spotlight" / "presets" / "project.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(preset["term"], "视觉注意力")
+            self.assertEqual(preset["exportMode"], "transparent")
+            self.assertTrue(
+                (project / "animation" / "compositions" / "concept-spotlight" / "UPSTREAM_NOTICE.md").is_file()
+            )
+            render = subprocess.run(
+                [
+                    sys.executable,
+                    str(MOTION_RENDERER),
+                    str(project),
+                    "--composition-id",
+                    "concept-spotlight",
+                    "--format",
+                    "webm",
+                    "--dry-run",
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(render.returncode, 0, render.stdout + render.stderr)
+            render_plan = json.loads(render.stdout)
+            self.assertIn("hyperframes@0.6.115", render_plan["command"])
+            self.assertIn('"exportMode":"transparent"', " ".join(render_plan["command"]))
 
     def test_initializer_creates_reusable_project_runtime(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -167,6 +243,76 @@ class AiAnimationProjectContractTest(unittest.TestCase):
             errors = []
             self.validator.validate_ai_animation(project, {"ai_animation_enabled": "true"}, errors)
             self.assertIn("unknown AI animation typography effect: not-in-catalog", errors)
+
+    def make_motion_project(self, root: Path, template_id: str = "concept-spotlight") -> Path:
+        project = root / "motion-project"
+        source = project / "animation" / "compositions" / "concept" / "index.html"
+        variables = project / "animation" / "compositions" / "concept" / "presets" / "project.json"
+        output = project / "最终交付" / "08_ai_animation" / "concept.webm"
+        source.parent.mkdir(parents=True, exist_ok=True)
+        variables.parent.mkdir(parents=True, exist_ok=True)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        (project / "qa" / "metadata").mkdir(parents=True, exist_ok=True)
+        source.write_text("<!doctype html><title>Motion template</title>", encoding="utf-8")
+        variables.write_text(json.dumps({"exportMode": "transparent"}), encoding="utf-8")
+        output.write_bytes(b"video")
+        plan = {
+            "schema_version": 1,
+            "enabled": True,
+            "engine": "hyperframes",
+            "execution_mode": "hybrid",
+            "modules": ["motion-templates"],
+            "motion_templates": {
+                "templates": [
+                    {
+                        "composition_id": "concept",
+                        "template_id": template_id,
+                        "variables_file": "animation/compositions/concept/presets/project.json",
+                    }
+                ]
+            },
+            "compositions": [
+                {
+                    "id": "concept",
+                    "source": "animation/compositions/concept/index.html",
+                    "duration_seconds": 5,
+                    "aspect_ratio": "16:9",
+                }
+            ],
+        }
+        (project / "animation" / "ai_animation_plan.json").write_text(
+            json.dumps(plan, ensure_ascii=False), encoding="utf-8"
+        )
+        manifest = {
+            "ai_animation": True,
+            "engine": "hyperframes",
+            "plan": "animation/ai_animation_plan.json",
+            "compositions": [
+                {
+                    "id": "concept",
+                    "source": "animation/compositions/concept/index.html",
+                    "output": "最终交付/08_ai_animation/concept.webm",
+                }
+            ],
+        }
+        (project / "qa" / "metadata" / "ai_animation_manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False), encoding="utf-8"
+        )
+        return project
+
+    def test_valid_motion_template_contract(self):
+        with tempfile.TemporaryDirectory() as directory:
+            project = self.make_motion_project(Path(directory))
+            errors = []
+            self.validator.validate_ai_animation(project, {"ai_animation_enabled": "true"}, errors)
+            self.assertEqual(errors, [])
+
+    def test_unknown_motion_template_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            project = self.make_motion_project(Path(directory), template_id="not-in-catalog")
+            errors = []
+            self.validator.validate_ai_animation(project, {"ai_animation_enabled": "true"}, errors)
+            self.assertIn("unknown AI animation motion template: not-in-catalog", errors)
 
 
 if __name__ == "__main__":

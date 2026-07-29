@@ -1,0 +1,12 @@
+{
+  "source_id": "nutllwhy-hyperframes-motion-library",
+  "name": "hyperframes-motion-library",
+  "author": "栗噔噔",
+  "repository": "https://github.com/nutllwhy/hyperframes-motion-library",
+  "commit": "01c393f9f26b5b0d8432fa02682ceb36f6cc3e0f",
+  "imported_on": "2026-07-29",
+  "template_count": 20,
+  "license_file_present_at_import": false,
+  "permission_basis": "The upstream README and application describe the project as open source and explicitly invite users to clone it, modify copy and data, generate motion assets, and extend it into their own library.",
+  "attribution_required_by_video_master_policy": true
+}

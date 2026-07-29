@@ -44,6 +44,7 @@ from style_templates import TemplateError, load_template
 
 
 AI_ANIMATION_CATALOG = SCRIPT_DIR.parent / "ai_animation" / "typography" / "catalog.json"
+AI_MOTION_TEMPLATE_CATALOG = SCRIPT_DIR.parent / "ai_animation" / "motion_templates" / "catalog.json"
 AI_ANIMATION_PLAN = Path("animation") / "ai_animation_plan.json"
 AI_ANIMATION_MANIFEST = Path("qa") / "metadata" / "ai_animation_manifest.json"
 FINAL_AI_ANIMATION_DIR = Path("最终交付") / "08_ai_animation"
@@ -764,20 +765,70 @@ def validate_ai_animation(project: Path, spec: dict[str, str], errors: list[str]
                 if effect_id not in known_ids:
                     errors.append(f"unknown AI animation typography effect: {effect_id or '<missing>'}")
 
+    motion_composition_ids: set[str] = set()
+    if "motion-templates" in modules:
+        motion = plan.get("motion_templates")
+        selected_templates = motion.get("templates") if isinstance(motion, dict) else None
+        if not isinstance(selected_templates, list) or not selected_templates:
+            errors.append("AI animation motion-templates module requires a non-empty templates list")
+        else:
+            try:
+                motion_catalog = json.loads(read_text(AI_MOTION_TEMPLATE_CATALOG))
+                known_template_ids = {
+                    str(item.get("id"))
+                    for item in motion_catalog.get("templates", [])
+                    if isinstance(item, dict) and item.get("id")
+                }
+            except (OSError, json.JSONDecodeError) as exc:
+                errors.append(f"cannot load AI animation motion template catalog: {exc}")
+                known_template_ids = set()
+            for index, item in enumerate(selected_templates, start=1):
+                if not isinstance(item, dict):
+                    errors.append(f"AI animation motion template {index} must be an object")
+                    continue
+                template_id = str(item.get("template_id", ""))
+                composition_id = str(item.get("composition_id", ""))
+                if template_id not in known_template_ids:
+                    errors.append(f"unknown AI animation motion template: {template_id or '<missing>'}")
+                if not composition_id:
+                    errors.append(f"AI animation motion template {index} requires composition_id")
+                else:
+                    motion_composition_ids.add(composition_id)
+                variables_file = item.get("variables_file")
+                variables_path = project / str(variables_file) if variables_file else None
+                if variables_path is None or not variables_path.is_file():
+                    errors.append(f"missing AI animation motion template variables: {variables_file or '<missing>'}")
+                else:
+                    try:
+                        values = json.loads(read_text(variables_path))
+                        if not isinstance(values, dict):
+                            errors.append(f"AI animation motion template variables must be an object: {variables_file}")
+                    except json.JSONDecodeError as exc:
+                        errors.append(f"invalid AI animation motion template variables {variables_file}: {exc}")
+
     compositions = plan.get("compositions")
     if not isinstance(compositions, list) or not compositions:
         errors.append("AI animation plan requires a non-empty compositions list")
     else:
+        composition_ids: set[str] = set()
         for index, item in enumerate(compositions, start=1):
             if not isinstance(item, dict):
                 errors.append(f"AI animation composition {index} must be an object")
                 continue
+            composition_id = str(item.get("id", ""))
+            if composition_id:
+                composition_ids.add(composition_id)
             source = item.get("source")
             duration = item.get("duration_seconds")
             if not source or not (project / str(source)).is_file():
                 errors.append(f"missing AI animation composition source: {source or '<missing>'}")
             if not isinstance(duration, (int, float)) or duration <= 0:
                 errors.append(f"AI animation composition {index} requires positive duration_seconds")
+        missing_motion_compositions = sorted(motion_composition_ids - composition_ids)
+        if missing_motion_compositions:
+            errors.append(
+                "AI animation motion templates missing compositions: " + ", ".join(missing_motion_compositions)
+            )
 
     if not manifest_path.is_file():
         errors.append(f"missing AI animation manifest: {AI_ANIMATION_MANIFEST.as_posix()}")
