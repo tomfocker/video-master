@@ -6,4 +6,7 @@ tmp/
 .tmp-tests/
 video_projects/
 商业标题参考模板/
+.webui-*.log
+output/
+seedance-storyboard-director*.zip
 

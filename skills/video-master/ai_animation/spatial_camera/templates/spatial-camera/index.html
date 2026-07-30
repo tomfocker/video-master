@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"eyebrow","type":"string","label":"眉题","default":"一次生成的内部旅程"},{"id":"title","type":"string","label":"标题","default":"模型如何从输入走向回答"},{"id":"node1Title","type":"string","label":"节点一标题","default":"上下文"},{"id":"node1Body","type":"string","label":"节点一解释","default":"把输入切成可计算的 token"},{"id":"node2Title","type":"string","label":"节点二标题","default":"概率"},{"id":"node2Body","type":"string","label":"节点二解释","default":"预测下一个 token 的分布"},{"id":"node3Title","type":"string","label":"节点三标题","default":"输出"},{"id":"node3Body","type":"string","label":"节点三解释","default":"逐步采样，拼成完整回答"},{"id":"outro","type":"string","label":"结论","default":"它在预测，不是在查阅事实"},{"id":"accent","type":"color","label":"强调色","default":"#FF6B45"},{"id":"secondary","type":"color","label":"辅助色","default":"#5EEAD4"},{"id":"foreground","type":"color","label":"文字色","default":"#F7F4ED"},{"id":"exportMode","type":"enum","label":"导出模式","default":"mp4","hidden":true,"options":[{"value":"transparent","label":"透明背景"},{"value":"mp4","label":"深色背景"}]}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      *{box-sizing:border-box}html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:transparent}
+      body{font-family:Arial,sans-serif;color:var(--fg)}
+      #root{position:relative;width:1920px;height:1080px;overflow:hidden;background:transparent}
+      html[data-export-mode="mp4"] #root{background:#080A0F}
+      .grain{position:absolute;inset:0;opacity:.16;background-image:radial-gradient(rgba(255,255,255,.24) .7px,transparent .7px);background-size:8px 8px;mix-blend-mode:soft-light;pointer-events:none;z-index:5}
+      .world{position:absolute;left:0;top:0;width:3840px;height:2160px;transform-origin:0 0;transform-style:preserve-3d;will-change:transform;background:radial-gradient(circle at 48% 45%,rgba(255,107,69,.12),transparent 27%),radial-gradient(circle at 82% 63%,rgba(94,234,212,.10),transparent 25%),linear-gradient(135deg,#090B11,#10121A 52%,#080A0E)}
+      .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(circle at 50% 50%,black 30%,transparent 80%)}
+      .kicker{position:absolute;left:180px;top:150px;color:var(--accent);font:800 24px/1 monospace;letter-spacing:.18em;text-transform:uppercase}
+      .headline{position:absolute;left:180px;top:210px;width:1120px;font-size:104px;line-height:1.03;letter-spacing:-.055em;margin:0;font-weight:900}
+      .path{position:absolute;left:520px;top:1050px;width:2780px;height:3px;background:linear-gradient(90deg,var(--accent),rgba(255,255,255,.18),var(--secondary));transform:rotate(-8deg);transform-origin:left center;box-shadow:0 0 28px rgba(255,107,69,.3)}
+      .node{position:absolute;width:720px;min-height:340px;padding:50px 54px;border:1px solid rgba(255,255,255,.16);border-radius:38px;background:rgba(15,17,24,.88);box-shadow:0 38px 110px rgba(0,0,0,.36);backdrop-filter:blur(20px);will-change:transform,filter,opacity}
+      .node::before{content:"";position:absolute;left:52px;top:-14px;width:28px;height:28px;border-radius:50%;background:var(--node-color);box-shadow:0 0 0 12px color-mix(in srgb,var(--node-color) 16%,transparent),0 0 38px var(--node-color)}
+      .index{font:800 22px/1 monospace;color:var(--node-color);letter-spacing:.15em}.node h2{font-size:82px;line-height:1;margin:24px 0 24px;letter-spacing:-.05em}.node p{margin:0;color:#C4C6CC;font-size:32px;line-height:1.45;font-weight:650}
+      #n1{left:500px;top:980px;--node-color:var(--accent)}#n2{left:1600px;top:720px;--node-color:#FFD166}#n3{left:2700px;top:460px;--node-color:var(--secondary)}
+      .token-cloud{position:absolute;left:2350px;top:1220px;width:860px;display:flex;flex-wrap:wrap;gap:18px;transform:rotate(-6deg)}
+      .token{padding:15px 24px;border:1px solid rgba(255,255,255,.13);border-radius:14px;color:#9297A2;background:rgba(255,255,255,.035);font:700 22px/1 monospace}
+      .outro{position:absolute;left:2480px;top:1580px;width:1030px;font-size:64px;line-height:1.16;font-weight:900;letter-spacing:-.04em;color:var(--fg)}.outro b{color:var(--secondary)}
+      .hud{position:absolute;z-index:4;left:72px;right:72px;bottom:54px;display:flex;justify-content:space-between;align-items:center;color:#7D828D;font:700 18px/1 monospace;letter-spacing:.08em}.meter{width:360px;height:4px;background:rgba(255,255,255,.1);overflow:hidden}.meter i{display:block;width:100%;height:100%;background:linear-gradient(90deg,var(--accent),var(--secondary));transform-origin:left}
+    </style>
+  </head>
+  <body>
+    <main id="root" data-composition-id="main" data-start="0" data-duration="7" data-width="1920" data-height="1080" data-motion-events="0,0.4,0.95,1.15,2.48,3.82,5.08,6.15,6.62,7" data-transition-grammar="spatial-linked" data-depth-of-field="near-sharp-far-soft">
+      <div class="world" data-layout-allow-overflow>
+        <div class="grid"></div><div class="kicker" id="eyebrow"></div><h1 class="headline" id="title"></h1><div class="path"></div>
+        <article class="node" id="n1"><span class="index">01 / INPUT</span><h2 id="node1Title"></h2><p id="node1Body"></p></article>
+        <article class="node" id="n2"><span class="index">02 / PREDICT</span><h2 id="node2Title"></h2><p id="node2Body"></p></article>
+        <article class="node" id="n3"><span class="index">03 / SAMPLE</span><h2 id="node3Title"></h2><p id="node3Body"></p></article>
+        <div class="token-cloud"><span class="token">0.42</span><span class="token">0.27</span><span class="token">0.11</span><span class="token">token</span><span class="token">context</span><span class="token">next?</span></div>
+        <div class="outro" id="outro"></div>
+      </div>
+      <div class="grain"></div><div class="hud"><span>MODEL / CONCEPT MAP</span><div class="meter"><i></i></div><span>3840 × 2160</span></div>
+    </main>
+    <script>
+      const fallback={eyebrow:"一次生成的内部旅程",title:"模型如何从输入走向回答",node1Title:"上下文",node1Body:"把输入切成可计算的 token",node2Title:"概率",node2Body:"预测下一个 token 的分布",node3Title:"输出",node3Body:"逐步采样，拼成完整回答",outro:"它在预测，不是在查阅事实",accent:"#FF6B45",secondary:"#5EEAD4",foreground:"#F7F4ED",exportMode:"mp4"};
+      const v=window.__hyperframes?.getVariables?window.__hyperframes.getVariables():fallback;
+      document.documentElement.dataset.exportMode=v.exportMode||"mp4";for(const [k,val] of Object.entries({"--accent":v.accent,"--secondary":v.secondary,"--fg":v.foreground}))document.documentElement.style.setProperty(k,val);
+      for(const id of ["eyebrow","title","node1Title","node1Body","node2Title","node2Body","node3Title","node3Body","outro"])document.getElementById(id).textContent=v[id];
+      window.__timelines=window.__timelines||{};const tl=gsap.timeline({paused:true,defaults:{ease:"power3.inOut"}});
+      tl.set(".world",{x:190,y:80,scale:.47,rotation:.35});
+      tl.set("#n1",{filter:"blur(2px)",opacity:.82});tl.set("#n2",{filter:"blur(6px)",opacity:.62});tl.set("#n3",{filter:"blur(10px)",opacity:.44});
+      tl.fromTo([".kicker",".headline"],{opacity:0,y:45},{opacity:1,y:0,stagger:.12,duration:.65,ease:"power4.out"},.12);
+      tl.fromTo([".path",".node",".token-cloud",".outro"],{opacity:0},{opacity:1,stagger:.08,duration:.55},.45);
+      tl.to(".grid",{x:120,y:55,duration:6.6,ease:"none"},0);
+      tl.to(".grain",{opacity:.22,duration:1.3,yoyo:true,repeat:4,ease:"sine.inOut"},.2);
+      tl.to(".node",{y:-10,duration:1.35,stagger:.16,yoyo:true,repeat:4,ease:"sine.inOut"},.55);
+      tl.to(".token-cloud",{x:-34,y:-18,duration:2.2,yoyo:true,repeat:2,ease:"sine.inOut"},.7);
+      tl.to([".kicker",".headline"],{opacity:0,duration:.35,ease:"sine.inOut"},.95);
+      function focusNode(selector,at){tl.to(".node",{filter:"blur(9px)",opacity:.46,duration:.58,ease:"sine.inOut"},at);tl.to(selector,{filter:"blur(0px)",opacity:1,duration:.58,ease:"sine.inOut"},at);}
+      focusNode("#n1",1.15);tl.to(".world",{x:-170,y:-470,scale:.82,rotation:0,duration:1.08},1.15);tl.fromTo("#n1",{scale:.96},{scale:1,duration:.5},1.55);
+      focusNode("#n2",2.48);tl.to(".world",{x:-1180,y:-330,scale:.84,rotation:1.1,duration:1.05},2.48);tl.fromTo("#n2",{scale:.96},{scale:1,duration:.5},2.85);
+      focusNode("#n3",3.82);tl.to(".world",{x:-2180,y:-120,scale:.82,rotation:-.7,duration:1.05},3.82);tl.fromTo("#n3",{scale:.96},{scale:1,duration:.5},4.2);
+      tl.to(".node",{filter:"blur(2px)",opacity:.88,duration:.72,ease:"sine.inOut"},5.08);tl.to(".world",{x:-90,y:-20,scale:.49,rotation:0,duration:1.18,ease:"expo.inOut"},5.08);
+      tl.to([".kicker",".headline"],{opacity:1,duration:.36,ease:"sine.out"},6.15);
+      tl.to(".meter i",{scaleX:0,duration:6.45,ease:"none"},0);tl.to("#root",{opacity:0,duration:.34,ease:"power2.in"},6.62);
+      window.__timelines.main=tl;
+    </script>
+  </body>
+</html>

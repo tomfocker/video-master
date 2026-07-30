@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "spatial-camera",
+      "name": "超大画布概念漫游",
+      "description": "在 3840×2160 虚拟画布上用平滑平移、缩放和轻微旋转串联三个概念节点。",
+      "path": "templates/spatial-camera",
+      "category": "空间叙事",
+      "tags": ["超大画布", "摄像机", "概念图", "平滑转场"],
+      "duration": 7,
+      "size": "1920×1080",
+      "formats": ["mp4", "mov", "webm"],
+      "defaultFormat": "mp4",
+      "status": "ready"
+    }
+  ]
+}

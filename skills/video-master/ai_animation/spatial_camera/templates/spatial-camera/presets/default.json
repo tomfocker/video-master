@@ -1,0 +1,15 @@
+{
+  "eyebrow": "一次生成的内部旅程",
+  "title": "模型如何从输入走向回答",
+  "node1Title": "上下文",
+  "node1Body": "把输入切成可计算的 token",
+  "node2Title": "概率",
+  "node2Body": "预测下一个 token 的分布",
+  "node3Title": "输出",
+  "node3Body": "逐步采样，拼成完整回答",
+  "outro": "它在预测，不是在查阅事实",
+  "accent": "#FF6B45",
+  "secondary": "#5EEAD4",
+  "foreground": "#F7F4ED",
+  "exportMode": "mp4"
+}

@@ -35,9 +35,14 @@ Current module status:
 
 - `typography`: ready, with 12 curated Chinese-safe finite-duration WAAPI effects.
 - `motion-templates`: ready, with 20 parameterized GSAP/HyperFrames compositions for data visualization, knowledge explanation, and transparent overlays.
-- `spatial-camera`, `transitions`, `ui-demonstration`, and `particles-and-shaders`: planned.
+- `spatial-camera`: ready, with an original oversized-canvas concept-map composition and smooth deterministic camera movement.
+- `transitions`, `ui-demonstration`, and `particles-and-shaders`: planned.
 
 Do not claim a planned module exists. Implement or explicitly mark it `Needs-Implementation` before assigning it to a production composition.
+
+For a multi-scene concept or science explainer, read `references/ai-animation-composer.md`. Use `scripts/ai_animation/compose_explainer.py` to route structured beats to registered templates, then use `scripts/ai_animation/render_composer.py` to batch-render and assemble the final timeline. This is the normal path for reusable AI-animation videos; use the single-template initializers only for isolated scenes or overlays.
+
+For concept, science, tutorial, and knowledge animation, also read `references/ai-animation-motion-grammar.md`. Treat its two-second motion cadence, linked transitions, point-to-point camera, depth-of-field, no-flat-slide, and continuous-interpolation rules as defaults unless the user explicitly overrides them.
 
 ## Motion template selection
 

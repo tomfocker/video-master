@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render a project-local registered motion template with its saved variables."""
+"""Render a project-local registered motion or spatial template with saved variables."""
 
 from __future__ import annotations
 
@@ -77,7 +77,19 @@ def main(argv: list[str] | None = None) -> int:
                 None,
             )
         if not isinstance(template, dict):
-            raise ValueError(f"composition is not a registered motion template: {args.composition_id}")
+            spatial = plan.get("spatial_camera")
+            spatial_selected = spatial.get("templates") if isinstance(spatial, dict) else None
+            if isinstance(spatial_selected, list):
+                template = next(
+                    (
+                        item
+                        for item in spatial_selected
+                        if isinstance(item, dict) and item.get("composition_id") == args.composition_id
+                    ),
+                    None,
+                )
+        if not isinstance(template, dict):
+            raise ValueError(f"composition is not a registered motion or spatial template: {args.composition_id}")
         source = project_path(project, composition.get("source"), "composition source")
         variables_path = project_path(project, template.get("variables_file"), "variables file")
         variables = read_object(variables_path)

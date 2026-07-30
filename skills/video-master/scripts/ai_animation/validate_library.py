@@ -24,6 +24,8 @@ MOTION_DIR = MODULE_DIR / "motion_templates"
 MOTION_CATALOG = MOTION_DIR / "catalog.json"
 MOTION_SOURCE = MOTION_DIR / "source.json"
 MOTION_NOTICE = MOTION_DIR / "UPSTREAM_NOTICE.md"
+SPATIAL_DIR = MODULE_DIR / "spatial_camera"
+SPATIAL_CATALOG = SPATIAL_DIR / "catalog.json"
 
 
 def read_json(path: Path, errors: list[str]) -> dict:
@@ -191,6 +193,79 @@ def validate_motion_templates(errors: list[str]) -> int:
     return len(templates)
 
 
+def validate_spatial_camera(errors: list[str]) -> int:
+    catalog = read_json(SPATIAL_CATALOG, errors)
+    templates = catalog.get("templates")
+    if not isinstance(templates, list) or not templates:
+        errors.append("spatial-camera catalog requires a non-empty templates list")
+        return 0
+    seen: set[str] = set()
+    for index, item in enumerate(templates, start=1):
+        if not isinstance(item, dict):
+            errors.append(f"spatial-camera template[{index}] must be an object")
+            continue
+        template_id = str(item.get("id", ""))
+        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", template_id):
+            errors.append(f"spatial-camera template[{index}] has invalid id: {template_id or '<missing>'}")
+            continue
+        if template_id in seen:
+            errors.append(f"duplicate spatial-camera template id: {template_id}")
+        seen.add(template_id)
+        if item.get("status") != "ready":
+            errors.append(f"{template_id}: spatial-camera status must be ready")
+        if not isinstance(item.get("duration"), (int, float)) or item["duration"] <= 0:
+            errors.append(f"{template_id}: spatial-camera duration must be positive")
+        template_dir = SPATIAL_DIR / str(item.get("path", ""))
+        for name in ["index.html", "design.md", "meta.json", "package.json", "presets/default.json"]:
+            path = template_dir / name
+            if not path.is_file() or path.stat().st_size == 0:
+                errors.append(f"{template_id}: missing or empty {name}")
+        index_path = template_dir / "index.html"
+        if not index_path.is_file():
+            continue
+        html_text = index_path.read_text(encoding="utf-8")
+        match = re.search(r"data-composition-variables='([^']+)'", html_text)
+        if not match:
+            errors.append(f"{template_id}: missing data-composition-variables")
+            variable_ids: set[str] = set()
+        else:
+            try:
+                schema = json.loads(html_lib.unescape(match.group(1)))
+                variable_ids = {str(value.get("id")) for value in schema if isinstance(value, dict) and value.get("id")}
+            except json.JSONDecodeError as exc:
+                errors.append(f"{template_id}: invalid variable schema: {exc}")
+                variable_ids = set()
+        if "exportMode" not in variable_ids:
+            errors.append(f"{template_id}: variable schema must include exportMode")
+        preset = read_json(template_dir / "presets" / "default.json", errors)
+        unknown = sorted(set(preset) - variable_ids)
+        if unknown:
+            errors.append(f"{template_id}: preset contains unknown variables: {', '.join(unknown)}")
+        meta = read_json(template_dir / "meta.json", errors)
+        if meta.get("id") != template_id or meta.get("source") != "video-master-original":
+            errors.append(f"{template_id}: meta.json must identify the original video-master source")
+        for marker in ["window.__timelines", "data-composition-id=\"main\"", "paused:true"]:
+            if marker not in html_text:
+                errors.append(f"{template_id}: missing deterministic HyperFrames marker: {marker}")
+        if "3840px" not in html_text or "Math.random" in html_text or "Infinity" in html_text:
+            errors.append(f"{template_id}: spatial canvas must be oversized and deterministic")
+        event_match = re.search(r'data-motion-events="([0-9.,\s]+)"', html_text)
+        duration_match = re.search(r'data-duration="([0-9.]+)"', html_text)
+        if not event_match or not duration_match:
+            errors.append(f"{template_id}: spatial template must declare motion events and duration")
+        else:
+            events = [float(value.strip()) for value in event_match.group(1).split(",") if value.strip()]
+            duration = float(duration_match.group(1))
+            if events != sorted(set(events)) or not events or events[0] != 0 or events[-1] != duration:
+                errors.append(f"{template_id}: motion events must be ordered, unique, and cover 0..duration")
+            elif max((right - left for left, right in zip(events, events[1:])), default=duration) > 2.0:
+                errors.append(f"{template_id}: motion event gap exceeds 2 seconds")
+        for marker in ['data-transition-grammar="spatial-linked"', 'data-depth-of-field="near-sharp-far-soft"', 'filter:"blur', 'scale:']:
+            if marker not in html_text:
+                errors.append(f"{template_id}: missing motion grammar evidence: {marker}")
+    return len(templates)
+
+
 def main() -> int:
     errors: list[str] = []
     registry = read_json(REGISTRY, errors)
@@ -203,7 +278,7 @@ def main() -> int:
         errors.append("registry module_id must be ai-animation")
     modules = registry.get("modules")
     module_ids = {str(item.get("id")) for item in modules if isinstance(item, dict)} if isinstance(modules, list) else set()
-    for required_module in ["typography", "motion-templates"]:
+    for required_module in ["typography", "motion-templates", "spatial-camera"]:
         if required_module not in module_ids:
             errors.append(f"registry must declare the {required_module} module")
 
@@ -248,12 +323,13 @@ def main() -> int:
                 errors.append(f"runtime missing deterministic WAAPI marker: {marker}")
 
     motion_template_count = validate_motion_templates(errors)
+    spatial_template_count = validate_spatial_camera(errors)
 
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print(f"OK: {len(effects)} curated typography effects; {motion_template_count} motion templates")
+    print(f"OK: {len(effects)} curated typography effects; {motion_template_count} motion templates; {spatial_template_count} spatial-camera templates")
     return 0
 
 

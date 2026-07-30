@@ -33,10 +33,25 @@
       "initializer": "../scripts/ai_animation/init_motion_template.py",
       "renderer": "../scripts/ai_animation/render_motion_template.py",
       "validator": "../scripts/ai_animation/validate_library.py"
+    },
+    {
+      "id": "spatial-camera",
+      "status": "ready",
+      "catalog": "spatial_camera/catalog.json",
+      "templates": "spatial_camera/templates",
+      "capabilities": [
+        "oversized-canvas",
+        "smooth-camera",
+        "concept-map",
+        "depth-of-field",
+        "two-second-motion-cadence"
+      ],
+      "composer": "../scripts/ai_animation/compose_explainer.py",
+      "renderer": "../scripts/ai_animation/render_composer.py",
+      "validator": "../scripts/ai_animation/validate_library.py"
     }
   ],
   "planned_modules": [
-    "spatial-camera",
     "transitions",
     "ui-demonstration",
     "particles-and-shaders"

@@ -21,6 +21,9 @@ PROJECT_VALIDATOR = SKILL / "scripts" / "validate_video_project.py"
 INITIALIZER = SKILL / "scripts" / "ai_animation" / "init_project.py"
 MOTION_INITIALIZER = SKILL / "scripts" / "ai_animation" / "init_motion_template.py"
 MOTION_RENDERER = SKILL / "scripts" / "ai_animation" / "render_motion_template.py"
+SPATIAL_CATALOG = SKILL / "ai_animation" / "spatial_camera" / "catalog.json"
+COMPOSER = SKILL / "scripts" / "ai_animation" / "compose_explainer.py"
+COMPOSER_RENDERER = SKILL / "scripts" / "ai_animation" / "render_composer.py"
 
 
 def load_project_validator():
@@ -87,6 +90,54 @@ class AiAnimationLibraryTest(unittest.TestCase):
             template = SKILL / "ai_animation" / "motion_templates" / item["path"]
             self.assertTrue((template / "index.html").is_file())
             self.assertTrue((template / "presets" / "default.json").is_file())
+
+    def test_spatial_camera_is_original_registered_and_deterministic(self):
+        catalog = json.loads(SPATIAL_CATALOG.read_text(encoding="utf-8"))
+        self.assertEqual([item["id"] for item in catalog["templates"]], ["spatial-camera"])
+        template = SKILL / "ai_animation" / "spatial_camera" / "templates" / "spatial-camera"
+        html = (template / "index.html").read_text(encoding="utf-8")
+        meta = json.loads((template / "meta.json").read_text(encoding="utf-8"))
+        self.assertEqual(meta["source"], "video-master-original")
+        self.assertIn("3840px", html)
+        self.assertIn("paused:true", html)
+        self.assertIn('data-motion-events="0,0.4,0.95,1.15,2.48,3.82,5.08,6.15,6.62,7"', html)
+        self.assertIn('data-depth-of-field="near-sharp-far-soft"', html)
+        self.assertIn('filter:"blur', html)
+        self.assertNotIn("Math.random", html)
+
+    def test_composer_routes_beats_and_writes_audio_contract(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            project = root / "demo"
+            brief = root / "beats.json"
+            brief.write_text(json.dumps({
+                "schema_version": 1,
+                "title": "Demo",
+                "aspect_ratio": "16:9",
+                "beats": [
+                    {"id": "term", "intent": "definition", "duration_seconds": 4, "voiceover": "这是概念。", "on_screen_copy": "幻觉|生成了不可靠的信息"},
+                    {"id": "map", "intent": "spatial", "duration_seconds": 7, "voiceover": "这是机制。"},
+                ],
+            }, ensure_ascii=False), encoding="utf-8")
+            result = subprocess.run([sys.executable, str(COMPOSER), str(project), str(brief)], cwd=ROOT, text=True, capture_output=True, check=False)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            plan = json.loads((project / "animation" / "ai_animation_plan.json").read_text(encoding="utf-8"))
+            self.assertEqual([item["template_id"] for item in plan["timeline"]], ["concept-spotlight", "spatial-camera"])
+            self.assertEqual(plan["total_duration_seconds"], 11)
+            self.assertIn("spatial-camera", plan["modules"])
+            self.assertEqual(plan["motion_standard"]["max_static_interval_seconds"], 2.0)
+            self.assertTrue(plan["motion_standard"]["flat_slide_forbidden"])
+            self.assertEqual(plan["motion_standard"]["depth_of_field"], "near-sharp-far-soft")
+            self.assertTrue((project / "audio" / "tts_lines.json").is_file())
+            self.assertIn("00:00:04,000", (project / "audio" / "captions.srt").read_text(encoding="utf-8"))
+            dry = subprocess.run([sys.executable, str(COMPOSER_RENDERER), str(project), "--dry-run"], cwd=ROOT, text=True, capture_output=True, check=False)
+            self.assertEqual(dry.returncode, 0, dry.stdout + dry.stderr)
+            self.assertIn("hyperframes@0.6.115", dry.stdout)
+            spatial_render = subprocess.run(
+                [sys.executable, str(MOTION_RENDERER), str(project), "--composition-id", "map", "--format", "mp4", "--dry-run"],
+                cwd=ROOT, text=True, capture_output=True, check=False,
+            )
+            self.assertEqual(spatial_render.returncode, 0, spatial_render.stdout + spatial_render.stderr)
 
     def test_motion_initializer_registers_selected_template(self):
         with tempfile.TemporaryDirectory() as directory:

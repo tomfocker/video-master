@@ -736,6 +736,25 @@ def validate_ai_animation(project: Path, spec: dict[str, str], errors: list[str]
         errors.append("AI animation plan engine must be hyperframes")
     if plan.get("execution_mode") not in {"hyperframes", "hybrid"}:
         errors.append("AI animation execution_mode must be hyperframes or hybrid")
+    if plan.get("composer") == "ai-animation-composer-v1":
+        motion_standard = plan.get("motion_standard")
+        if not isinstance(motion_standard, dict):
+            errors.append("AI animation composer plan requires motion_standard")
+        else:
+            cadence = motion_standard.get("max_static_interval_seconds")
+            if not isinstance(cadence, (int, float)) or cadence <= 0 or cadence > 2:
+                errors.append("AI animation max_static_interval_seconds must be within 0..2")
+            required_motion_values = {
+                "camera_movement": "point-to-point",
+                "depth_of_field": "near-sharp-far-soft",
+                "transition_continuity": "spatial-or-semantic-linked",
+                "ambient_float": "subtle-only",
+                "flat_slide_forbidden": True,
+                "element_jump_forbidden": True,
+            }
+            for field, expected in required_motion_values.items():
+                if motion_standard.get(field) != expected:
+                    errors.append(f"AI animation motion_standard.{field} must be {expected}")
 
     modules = plan.get("modules")
     if not isinstance(modules, list) or not modules:
