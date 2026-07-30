@@ -166,6 +166,7 @@ python3 skills/video-master/scripts/make_storyboard_overview.py video_projects/<
 python3 skills/video-master/scripts/export_production_workbook.py video_projects/<project>
 python3 skills/video-master/scripts/generate_voiceover_tts.py video_projects/<project>
 python3 skills/video-master/scripts/generate_voiceover_tts.py video_projects/<project> --engine voxcpm2 --tts-base-url http://100.64.0.3:8808/ui/ --persona 小潮院长
+python3 skills/video-master/scripts/generate_voiceover_tts.py video_projects/<project> --engine open-tts-desktop --list-open-tts-voices
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project>
 python3 skills/video-master/scripts/render_title_packaging.py video_projects/<project>
 python3 skills/video-master/scripts/project_state.py video_projects/<project> --write
@@ -199,6 +200,32 @@ python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --background-music path/to/bgm.mp3
 python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --eagle-background-music-id <Eagle素材ID>
 ```
+
+## Eagle → HyperFrames 素材接入
+
+Eagle 官方 MCP 插件开启后，在 Eagle 中选定素材即可只读登记到视频项目；不会改动 Eagle 的标签、文件夹或素材内容：
+
+```bash
+python3 skills/video-master/scripts/eagle_asset_intake.py video_projects/<project> --selected --role visual_asset
+python3 skills/video-master/scripts/ai_animation/init_eagle_media_stage.py video_projects/<project> --asset-id <Eagle素材ID> --title "标题" --caption "素材说明"
+python3 skills/video-master/scripts/ai_animation/render_motion_template.py video_projects/<project> --composition-id eagle-media-<item-id-lowercase> --format mp4
+```
+
+如果这个项目已经由 AI Animation Composer 生成了 HyperFrames 时间线，可以直接把已确认的 Eagle 图片/视频加入最终成片：
+
+```bash
+python3 skills/video-master/scripts/ai_animation/init_eagle_media_stage.py video_projects/<project> --asset-id <Eagle素材ID> --append-to-composer --insert-after <既有composition-id>
+python3 skills/video-master/scripts/ai_animation/render_composer.py video_projects/<project>
+```
+
+将 Eagle 中确认的音乐登记为 `background_music` 后，可以直接混入 HyperFrames 成片：
+
+```bash
+python3 skills/video-master/scripts/eagle_asset_intake.py video_projects/<project> --selected --role background_music --copy
+python3 skills/video-master/scripts/ai_animation/render_composer.py video_projects/<project> --eagle-background-music-id <Eagle音乐素材ID>
+```
+
+第一步写入 `sources/eagle_assets_manifest.json`，默认只保存原文件的可追溯引用；第二步会将已经确认的图片或视频复制到 HyperFrames composition 内，生成稳定的本地动画素材舞台。详见 `skills/video-master/references/eagle-assets.md`。
 
 如果项目里已经有 `最终交付/03_口播与字幕/背景音乐.mp3`、`audio/background_music.mp3` 或 `audio/bgm.mp3`，脚本会自动混入预览。也可以直接传 Eagle item id，脚本会从 Eagle 当前/历史素材库中只读定位原始音频文件；这只影响 `分镜预览.mp4`，不会改变最终视频提示词里的“不要生成背景音乐”策略。
 

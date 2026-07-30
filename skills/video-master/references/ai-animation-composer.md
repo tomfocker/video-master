@@ -71,3 +71,13 @@ Run `scripts/ai_animation/render_composer.py` to batch-render, normalize scene d
 - `qa/metadata/ai_animation_manifest.json`
 
 Keep subtitles separate by default. Do not burn captions unless the production lock explicitly allows it.
+
+For a confirmed Eagle image or video, add its project-local `eagle-media` composition to a generated Composer plan with `init_eagle_media_stage.py --append-to-composer`. The stage is rendered and normalized like every other Composer beat.
+
+For a whole-film audio bed, `render_composer.py` uses an explicit `--background-music` file first, then a project `audio/background_music.*` or `audio/bgm.*`, then the first approved Eagle `background_music` asset in `sources/eagle_assets_manifest.json`. Select a particular approved Eagle track with:
+
+```bash
+python3 ${SKILL_DIR}/scripts/ai_animation/render_composer.py <project_path> --eagle-background-music-id <EAGLE_BGM_ID>
+```
+
+The renderer loops and fades the BGM to the timeline length, mixes it below voiceover, and records provenance in `qa/metadata/ai_animation_manifest.json`. It only reads the project manifest and source file; it does not call or alter Eagle during rendering.

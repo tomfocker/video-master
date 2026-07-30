@@ -21,6 +21,10 @@ if str(SCRIPT_DIR) not in sys.path:
 from project_state import ProjectStateError, build_project_state, write_project_state
 from generate_voiceover_tts import (
     DEFAULT_VOICE,
+    DEFAULT_OPEN_TTS_BASE_URL,
+    DEFAULT_OPEN_TTS_MODEL,
+    DEFAULT_OPEN_TTS_VOICE,
+    DEFAULT_OPEN_TTS_VOICE_PROMPT,
     DEFAULT_VOXCPM2_BASE_URL,
     DEFAULT_VOXCPM2_CONTROL_INSTRUCTION,
     DEFAULT_VOXCPM2_PERSONA,
@@ -94,9 +98,9 @@ def file_api_url(project: Path, path: Path) -> str:
 
 def project_file_payload(project: Path, path: Path) -> dict[str, object]:
     try:
-        relative = str(path.resolve().relative_to(project.resolve()))
+        relative = path.resolve().relative_to(project.resolve()).as_posix()
     except ValueError:
-        relative = str(path)
+        relative = path.as_posix()
     return {
         "path": relative,
         "exists": path.exists(),
@@ -145,8 +149,9 @@ def resolve_project_output_path(project: Path, value: object) -> Path | None:
 
 def generate_voiceover_for_webui(project: Path, payload: dict[str, object]) -> dict[str, object]:
     engine = str(payload.get("engine") or "voxcpm2").strip() or "voxcpm2"
-    if engine not in {"edge-tts", "voxcpm2"}:
-        raise ValueError("engine must be edge-tts or voxcpm2")
+    if engine not in {"edge-tts", "voxcpm2", "open-tts-desktop"}:
+        raise ValueError("engine must be edge-tts, voxcpm2, or open-tts-desktop")
+    default_base_url = DEFAULT_OPEN_TTS_BASE_URL if engine == "open-tts-desktop" else DEFAULT_VOXCPM2_BASE_URL
     result = generate_voiceover_track(
         project,
         engine=engine,
@@ -154,7 +159,7 @@ def generate_voiceover_for_webui(project: Path, payload: dict[str, object]) -> d
         rate=str(payload.get("rate") or "+0%").strip() or "+0%",
         volume=str(payload.get("volume") or "+0%").strip() or "+0%",
         pitch=str(payload.get("pitch") or "+0Hz").strip() or "+0Hz",
-        tts_base_url=str(payload.get("tts_base_url") or DEFAULT_VOXCPM2_BASE_URL).strip() or DEFAULT_VOXCPM2_BASE_URL,
+        tts_base_url=str(payload.get("tts_base_url") or default_base_url).strip() or default_base_url,
         persona=str(payload.get("persona") or DEFAULT_VOXCPM2_PERSONA).strip() or DEFAULT_VOXCPM2_PERSONA,
         control_instruction=str(payload.get("control_instruction") or DEFAULT_VOXCPM2_CONTROL_INSTRUCTION).strip()
         or DEFAULT_VOXCPM2_CONTROL_INSTRUCTION,
@@ -166,6 +171,14 @@ def generate_voiceover_for_webui(project: Path, payload: dict[str, object]) -> d
         timeout=coerce_float(payload.get("timeout"), 300.0),
         dry_run=coerce_bool(payload.get("dry_run"), False),
         output=resolve_project_output_path(project, payload.get("output")),
+        tts_model=str(payload.get("tts_model") or DEFAULT_OPEN_TTS_MODEL).strip() or DEFAULT_OPEN_TTS_MODEL,
+        tts_voice=str(payload.get("tts_voice") or payload.get("persona") or DEFAULT_OPEN_TTS_VOICE).strip() or DEFAULT_OPEN_TTS_VOICE,
+        voice_prompt=str(payload.get("voice_prompt") or payload.get("control_instruction") or DEFAULT_OPEN_TTS_VOICE_PROMPT).strip()
+        or DEFAULT_OPEN_TTS_VOICE_PROMPT,
+        tts_language=str(payload.get("tts_language") or "zh").strip() or "zh",
+        response_format=str(payload.get("response_format") or "wav").strip() or "wav",
+        tts_speed=coerce_float(payload.get("tts_speed"), 1.0),
+        tts_pitch=coerce_int(payload.get("tts_pitch"), 0),
     )
     return {
         "ok": True,

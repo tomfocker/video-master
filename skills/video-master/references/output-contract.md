@@ -7,6 +7,7 @@ Use this reference when creating project files for `video-master`.
 ```text
 video_projects/<project_slug>_<YYYYMMDD_HHMM>/
   sources/
+    eagle_assets_manifest.json  # optional: approved, read-only Eagle source records
   brief/
     creative_brief.md
     spec_lock.md
@@ -732,6 +733,8 @@ python3 ${SKILL_DIR}/scripts/generate_voiceover_tts.py <project_path>
 python3 ${SKILL_DIR}/scripts/generate_voiceover_tts.py <project_path> --engine voxcpm2 --tts-base-url http://100.64.0.3:8808/ui/ --persona 小潮院长
 ```
 
+For a stable Open TTS Desktop narrator or character role, add the optional `audio/voice_profile.json` with the approved voice ID, model, and synthesis direction, then run the same script without repeating parameters. See `references/open-tts-desktop.md`. The resulting `qa/metadata/tts_manifest.json` must identify the selected voice and its authorization status; do not place source reference-audio paths or secrets in the project profile or manifest.
+
 This also writes `最终交付/03_口播与字幕/口播文本.txt` and `qa/metadata/tts_manifest.json`. Use `--dry-run` to prepare the text/manifest without calling a TTS service.
 
 `最终交付/03_口播与字幕/背景音乐.mp3`, `audio/background_music.mp3`, or `audio/bgm.mp3` is optional but recommended for less dry animatic previews when the user has a rights-cleared or otherwise approved local BGM track. You can also pass a specific file or Eagle item ID:
@@ -741,7 +744,7 @@ python3 ${SKILL_DIR}/scripts/make_animatic.py <project_path> --background-music 
 python3 ${SKILL_DIR}/scripts/make_animatic.py <project_path> --eagle-background-music-id <item_id>
 ```
 
-Use `--eagle-library-path <path>` when the target Eagle library is not the current or recent Eagle library. Use `--background-music-volume 0.18` to adjust the bed level. This only affects `分镜预览.mp4`; final video-generation prompts must still keep per-clip background music off. When an Eagle item is used, `qa/metadata/preview_manifest.json` records `background_music_source.type: eagle`, the item ID, name, extension, original path, library path, and thumbnail path when available.
+When `sources/eagle_assets_manifest.json` contains an approved `background_music` item, `make_animatic.py` resolves that manifest item before using the legacy direct-Eagle lookup. Use `--eagle-background-music-id <item_id>` to select one manifest item explicitly; the manifest records `background_music_source.type: eagle_manifest`, its item ID, materialization, and resolved source path. Use `--eagle-library-path <path>` only for the legacy direct-Eagle route when the target library is not current or recent. Use `--background-music-volume 0.18` to adjust the bed level. This only affects `分镜预览.mp4`; final video-generation prompts must still keep per-clip background music off.
 
 ## Optional Title Packaging Sidecar
 

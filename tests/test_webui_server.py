@@ -11,7 +11,7 @@ from urllib.error import HTTPError
 from urllib.request import ProxyHandler, Request, build_opener
 
 from tests.test_validate_video_project import make_project, write
-from tests.test_generate_voiceover_tts import WAV_BYTES, voxcpm_server
+from tests.test_generate_voiceover_tts import WAV_BYTES, open_tts_server, voxcpm_server
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -323,6 +323,7 @@ class WebUIServerTest(unittest.TestCase):
         self.assertIn("显示项目栏", html)
         self.assertIn("隐藏项目栏", html)
         self.assertIn("canvasModeSelect", html)
+        self.assertIn('value="open-tts-desktop"', html)
         self.assertNotIn('id="toggleFrameworkButton"', html)
         self.assertNotIn('id="toggleSideButton"', html)
         self.assertNotIn('id="toggleInspectorButton"', html)
@@ -392,6 +393,41 @@ class WebUIServerTest(unittest.TestCase):
                 )
                 self.assertEqual(error["status"], 502)
                 self.assertIn("VoxCPM2 TTS", error["payload"]["error"])
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=10)
+
+    def test_server_generates_open_tts_desktop_character_voice(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp, open_tts_server() as (tts_server, tts_base_url):
+            root = Path(tmp)
+            project = make_project(root, durations=[3])
+            server = ThreadingHTTPServer(("127.0.0.1", 0), module.VideoMasterHandler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base_url = f"http://127.0.0.1:{server.server_address[1]}"
+            try:
+                generated = post_json(
+                    f"{base_url}/api/voiceover/generate",
+                    {
+                        "project": str(project),
+                        "engine": "open-tts-desktop",
+                        "tts_base_url": tts_base_url,
+                        "tts_model": "voxcpm2",
+                        "tts_voice": "voice-a",
+                        "voice_prompt": "清晰自然的角色旁白。",
+                    },
+                )
+                self.assertTrue(generated["ok"])
+                self.assertEqual(generated["engine"], "open-tts-desktop")
+                self.assertEqual(tts_server.requests[0]["path"], "/v1/audio/speech")
+                self.assertNotIn("voice", tts_server.requests[0]["body"])
+                self.assertEqual(tts_server.requests[0]["body"]["reference_audio"], "C:/managed/voice-a.wav")
+                manifest = json.loads((project / "qa" / "metadata" / "tts_manifest.json").read_text(encoding="utf-8"))
+                self.assertEqual(manifest["voice_authorization_status"], "authorized")
+                self.assertEqual(manifest["voice"], "voice-a")
+                self.assertEqual(manifest["voice_routing"], "managed_reference")
             finally:
                 server.shutdown()
                 server.server_close()

@@ -2088,6 +2088,7 @@
           <label>语音入口
             <select id="voiceoverEngine" aria-label="口播语音入口">
               <option value="voxcpm2" selected>VoxCPM2 本地服务</option>
+              <option value="open-tts-desktop">Open TTS Desktop 人物配音</option>
               <option value="edge-tts">edge-tts</option>
             </select>
           </label>
@@ -2641,6 +2642,13 @@
         payload.tts_base_url = els.voiceoverBaseUrl.value.trim();
         payload.persona = personaOrVoice || "小潮院长";
         payload.control_instruction = els.voiceoverControlInstruction.value.trim();
+      } else if (engine === "open-tts-desktop") {
+        payload.tts_base_url = els.voiceoverBaseUrl.value.trim() || "http://h3c:8765";
+        payload.tts_model = "voxcpm2";
+        payload.tts_voice = personaOrVoice || "default";
+        payload.voice_prompt = els.voiceoverControlInstruction.value.trim();
+        payload.tts_language = "zh";
+        payload.response_format = "wav";
       } else {
         payload.voice = personaOrVoice || "zh-CN-XiaoxiaoNeural";
       }
@@ -5835,6 +5843,11 @@
     });
     els.generateVoiceoverButton.addEventListener("click", () => generateVoiceover(false).catch(showError));
     els.dryRunVoiceoverButton.addEventListener("click", () => generateVoiceover(true).catch(showError));
+    els.voiceoverEngine.addEventListener("change", () => {
+      if (els.voiceoverEngine.value === "open-tts-desktop" && els.voiceoverBaseUrl.value.includes("100.64.0.3:8808")) {
+        els.voiceoverBaseUrl.value = "http://h3c:8765";
+      }
+    });
     els.canvasContextMenu.addEventListener("click", (event) => {
       event.stopPropagation();
       const addButton = event.target.closest("[data-context-add-idea]");

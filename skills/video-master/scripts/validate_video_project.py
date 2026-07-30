@@ -47,6 +47,9 @@ AI_ANIMATION_CATALOG = SCRIPT_DIR.parent / "ai_animation" / "typography" / "cata
 AI_MOTION_TEMPLATE_CATALOG = SCRIPT_DIR.parent / "ai_animation" / "motion_templates" / "catalog.json"
 AI_ANIMATION_PLAN = Path("animation") / "ai_animation_plan.json"
 AI_ANIMATION_MANIFEST = Path("qa") / "metadata" / "ai_animation_manifest.json"
+EAGLE_ASSET_MANIFEST = Path("sources") / "eagle_assets_manifest.json"
+EAGLE_ASSET_ROLES = {"visual_asset", "reference_style", "video_clip", "background_music", "sound_effect"}
+EAGLE_ASSET_KINDS = {"image", "video", "audio", "other"}
 FINAL_AI_ANIMATION_DIR = Path("最终交付") / "08_ai_animation"
 
 
@@ -655,6 +658,54 @@ def validate_preview_manifest(project: Path, errors: list[str]) -> None:
             errors.append(f"preview manifest missing field: {field}")
 
 
+def validate_eagle_assets(project: Path, errors: list[str]) -> None:
+    manifest_path = project / EAGLE_ASSET_MANIFEST
+    if not manifest_path.is_file():
+        return
+    try:
+        manifest = json.loads(read_text(manifest_path))
+    except json.JSONDecodeError as exc:
+        errors.append(f"invalid JSON in {EAGLE_ASSET_MANIFEST.as_posix()}: {exc}")
+        return
+    if not isinstance(manifest, dict) or manifest.get("source") != "official-eagle-mcp":
+        errors.append("Eagle asset manifest must identify official-eagle-mcp as its source")
+        return
+    assets = manifest.get("assets")
+    if not isinstance(assets, list) or not assets:
+        errors.append("Eagle asset manifest requires a non-empty assets list")
+        return
+    seen: set[str] = set()
+    for index, asset in enumerate(assets, start=1):
+        if not isinstance(asset, dict):
+            errors.append(f"Eagle asset {index} must be an object")
+            continue
+        item_id = str(asset.get("id") or "")
+        if not item_id or item_id in seen:
+            errors.append(f"Eagle asset {index} requires a unique id")
+        seen.add(item_id)
+        original = asset.get("original_path")
+        if not original or not Path(str(original)).is_file():
+            errors.append(f"Eagle asset {item_id or index} original source is unavailable")
+        kind = str(asset.get("kind") or "").lower()
+        if kind not in EAGLE_ASSET_KINDS:
+            errors.append(f"Eagle asset {item_id or index} has invalid kind: {kind or '<missing>'}")
+        roles = asset.get("roles")
+        if not isinstance(roles, list) or not roles or any(str(role) not in EAGLE_ASSET_ROLES for role in roles):
+            errors.append(f"Eagle asset {item_id or index} requires valid roles")
+        elif "background_music" in roles and kind != "audio":
+            errors.append(f"Eagle asset {item_id or index} background_music role requires an audio file")
+        elif "sound_effect" in roles and kind != "audio":
+            errors.append(f"Eagle asset {item_id or index} sound_effect role requires an audio file")
+        project_path = asset.get("project_path")
+        if project_path:
+            copied = (project / str(project_path)).resolve()
+            if not copied.is_relative_to(project) or not copied.is_file():
+                errors.append(f"Eagle asset {item_id or index} copied project file is unavailable: {project_path}")
+        stages = asset.get("hyperframes_stages")
+        if stages is not None and not isinstance(stages, list):
+            errors.append(f"Eagle asset {item_id or index} hyperframes_stages must be a list")
+
+
 def validate_title_packaging(project: Path, spec: dict[str, str], errors: list[str]) -> None:
     plan_path = project / "packaging" / "title_packaging_plan.json"
     manifest_path = title_packaging_manifest_path(project)
@@ -756,6 +807,39 @@ def validate_ai_animation(project: Path, spec: dict[str, str], errors: list[str]
                 if motion_standard.get(field) != expected:
                     errors.append(f"AI animation motion_standard.{field} must be {expected}")
 
+        timeline = plan.get("timeline")
+        if not isinstance(timeline, list) or not timeline:
+            errors.append("AI animation composer plan requires a non-empty timeline")
+        else:
+            timeline_composition_ids: set[str] = set()
+            prior_end = 0.0
+            for index, item in enumerate(timeline, start=1):
+                if not isinstance(item, dict):
+                    errors.append(f"AI animation composer timeline item {index} must be an object")
+                    continue
+                composition_id = str(item.get("composition_id") or "")
+                if not composition_id:
+                    errors.append(f"AI animation composer timeline item {index} requires composition_id")
+                elif composition_id in timeline_composition_ids:
+                    errors.append(f"AI animation composer timeline repeats composition: {composition_id}")
+                else:
+                    timeline_composition_ids.add(composition_id)
+                duration = item.get("duration_seconds")
+                start = item.get("start_seconds")
+                end = item.get("end_seconds")
+                if not isinstance(duration, (int, float)) or duration <= 0:
+                    errors.append(f"AI animation composer timeline item {index} requires positive duration_seconds")
+                    continue
+                if not isinstance(start, (int, float)) or not isinstance(end, (int, float)):
+                    errors.append(f"AI animation composer timeline item {index} requires numeric start_seconds and end_seconds")
+                    continue
+                if abs(float(start) - prior_end) > 0.001 or abs(float(end) - (float(start) + float(duration))) > 0.001:
+                    errors.append(f"AI animation composer timeline item {index} timing is not continuous")
+                prior_end = float(end)
+            total_duration = plan.get("total_duration_seconds")
+            if isinstance(total_duration, (int, float)) and abs(float(total_duration) - prior_end) > 0.001:
+                errors.append("AI animation composer total_duration_seconds does not match its timeline")
+
     modules = plan.get("modules")
     if not isinstance(modules, list) or not modules:
         errors.append("AI animation plan requires a non-empty modules list")
@@ -825,6 +909,29 @@ def validate_ai_animation(project: Path, spec: dict[str, str], errors: list[str]
                     except json.JSONDecodeError as exc:
                         errors.append(f"invalid AI animation motion template variables {variables_file}: {exc}")
 
+    eagle_media_composition_ids: set[str] = set()
+    if "eagle-media" in modules:
+        eagle_media = plan.get("eagle_media")
+        stages = eagle_media.get("stages") if isinstance(eagle_media, dict) else None
+        if not isinstance(stages, list) or not stages:
+            errors.append("AI animation eagle-media module requires a non-empty stages list")
+        else:
+            for index, stage in enumerate(stages, start=1):
+                if not isinstance(stage, dict):
+                    errors.append(f"AI animation Eagle media stage {index} must be an object")
+                    continue
+                composition_id = str(stage.get("composition_id", ""))
+                asset_id = str(stage.get("asset_id", ""))
+                if not composition_id or not asset_id:
+                    errors.append(f"AI animation Eagle media stage {index} requires composition_id and asset_id")
+                else:
+                    eagle_media_composition_ids.add(composition_id)
+                for field in ["variables_file", "asset_file"]:
+                    relative = stage.get(field)
+                    path = (project / str(relative)).resolve() if relative else None
+                    if path is None or not path.is_relative_to(project) or not path.is_file():
+                        errors.append(f"AI animation Eagle media stage {index} missing {field}: {relative or '<missing>'}")
+
     compositions = plan.get("compositions")
     if not isinstance(compositions, list) or not compositions:
         errors.append("AI animation plan requires a non-empty compositions list")
@@ -847,6 +954,11 @@ def validate_ai_animation(project: Path, spec: dict[str, str], errors: list[str]
         if missing_motion_compositions:
             errors.append(
                 "AI animation motion templates missing compositions: " + ", ".join(missing_motion_compositions)
+            )
+        missing_eagle_compositions = sorted(eagle_media_composition_ids - composition_ids)
+        if missing_eagle_compositions:
+            errors.append(
+                "AI animation Eagle media stages missing compositions: " + ", ".join(missing_eagle_compositions)
             )
 
     if not manifest_path.is_file():
@@ -903,6 +1015,7 @@ def main(argv: list[str] | None = None) -> int:
     validate_style_template(project, spec, errors)
     validate_storyboard_overview(project, errors)
     validate_preview_manifest(project, errors)
+    validate_eagle_assets(project, errors)
     validate_title_packaging(project, spec, errors)
     validate_ai_animation(project, spec, errors)
 

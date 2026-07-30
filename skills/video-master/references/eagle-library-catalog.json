@@ -1,0 +1,277 @@
+{
+  "schema_version": 1,
+  "source": "official-eagle-mcp",
+  "mcp_url": "http://127.0.0.1:41596/mcp",
+  "read_only_source": true,
+  "generated_at": "2026-07-30T15:11:40Z",
+  "privacy": "No original paths, thumbnails, URLs, annotations, or voice references are stored.",
+  "catalog_scope": "video-relevant",
+  "summary": {
+    "asset_count": 5,
+    "kind_counts": {
+      "audio": 5
+    }
+  },
+  "assets": [
+    {
+      "id": "MS7EQSH4CBQFX",
+      "name": "BGM_FutureFunk_NuDisco_Neon_MidHighEnergy_4x4",
+      "kind": "audio",
+      "ext": "mp3",
+      "tags": [
+        "energy/medium-high",
+        "genre/future-funk",
+        "genre/nu-disco",
+        "genre/synthwave",
+        "instrument/synth-bass",
+        "instrument/synth-pluck",
+        "mood/danceable",
+        "mood/neon-retro",
+        "rhythm/4-4",
+        "rights/unreviewed",
+        "status/reviewed",
+        "type/bgm"
+      ],
+      "folders": [
+        "MS7NHPSR4IOSY"
+      ],
+      "width": 280,
+      "height": 140
+    },
+    {
+      "id": "MS7EQSH490YQI",
+      "name": "BGM_LoFiHipHop_Chill_Study_LowEnergy_Vinyl",
+      "kind": "audio",
+      "ext": "mp3",
+      "tags": [
+        "energy/low",
+        "genre/chillhop",
+        "genre/lo-fi-hip-hop",
+        "instrument/electric-piano",
+        "instrument/jazz-guitar",
+        "mood/relaxed",
+        "mood/warm",
+        "rights/unreviewed",
+        "status/reviewed",
+        "texture/vinyl",
+        "type/bgm",
+        "usage/sleep",
+        "usage/study",
+        "usage/work-background"
+      ],
+      "folders": [
+        "MS7NHPSR4IOSY"
+      ],
+      "width": 280,
+      "height": 140
+    },
+    {
+      "id": "MS7EQSH4IHQU9",
+      "name": "BGM_NuDisco_DancePop_Bright_HighEnergy_Vocals_4x4",
+      "kind": "audio",
+      "ext": "mp3",
+      "tags": [
+        "energy/high",
+        "genre/dance-pop",
+        "genre/nu-disco",
+        "instrument/bright-synth",
+        "instrument/disco-bassline",
+        "mood/bright",
+        "mood/danceable",
+        "mood/retro-pop",
+        "rhythm/4-4",
+        "rights/unreviewed",
+        "status/reviewed",
+        "type/bgm",
+        "vocal/lead-and-harmonies"
+      ],
+      "folders": [
+        "MS7NHPSR4IOSY"
+      ],
+      "width": 280,
+      "height": 140
+    },
+    {
+      "id": "MS7EQSH3KMU1E",
+      "name": "BGM_Synthwave_Retrowave_NightDrive_MidEnergy_Guitar",
+      "kind": "audio",
+      "ext": "mp3",
+      "tags": [
+        "energy/medium",
+        "genre/retrowave",
+        "genre/synthwave",
+        "instrument/electric-guitar",
+        "instrument/synth-pad",
+        "mood/cinematic",
+        "mood/cyberpunk",
+        "mood/night-drive",
+        "rights/unreviewed",
+        "status/reviewed",
+        "type/bgm",
+        "usage/cinematic-montage"
+      ],
+      "folders": [
+        "MS7NHPSR4IOSY"
+      ],
+      "width": 280,
+      "height": 140
+    },
+    {
+      "id": "MS7EQSH3BT17F",
+      "name": "BGM_ThrashMetal_Combat_ExtremeEnergy_DoubleKick",
+      "kind": "audio",
+      "ext": "mp3",
+      "tags": [
+        "energy/extreme",
+        "genre/heavy-metal",
+        "genre/thrash-metal",
+        "instrument/high-gain-guitar",
+        "mood/aggressive",
+        "mood/impactful",
+        "rhythm/double-kick",
+        "rights/unreviewed",
+        "status/reviewed",
+        "type/bgm",
+        "usage/extreme-sports",
+        "usage/game-combat"
+      ],
+      "folders": [
+        "MS7NHPSR4IOSY"
+      ],
+      "width": 280,
+      "height": 140
+    }
+  ],
+  "curation_by_id": {
+    "MS7EQSH490YQI": {
+      "source": "user-verified",
+      "review_status": "described",
+      "primary_style": [
+        "lo-fi hip-hop",
+        "chillhop"
+      ],
+      "mood": [
+        "relaxed",
+        "warm",
+        "chill"
+      ],
+      "energy": "low",
+      "rhythm": "slow vinyl-sampled hip-hop beat",
+      "instrumentation": [
+        "Rhodes/Wurlitzer-style electric piano",
+        "jazz electric guitar",
+        "soft kick and snare",
+        "vinyl crackle"
+      ],
+      "suggested_usage": [
+        "study",
+        "work background",
+        "sleep",
+        "chill ambience"
+      ],
+      "suggested_name": "BGM_LoFiHipHop_Chill_Study_LowEnergy_Vinyl",
+      "rights_status": "unreviewed"
+    },
+    "MS7EQSH4CBQFX": {
+      "source": "user-verified",
+      "review_status": "described",
+      "primary_style": [
+        "future funk",
+        "nu-disco",
+        "synthwave"
+      ],
+      "mood": [
+        "neon-retro",
+        "danceable",
+        "energetic"
+      ],
+      "energy": "medium-high",
+      "meter": "4/4 four-on-the-floor",
+      "instrumentation": [
+        "sidechained synth bassline",
+        "bright synth plucks",
+        "funk-style synth guitar"
+      ],
+      "suggested_name": "BGM_FutureFunk_NuDisco_Neon_MidHighEnergy_4x4",
+      "rights_status": "unreviewed"
+    },
+    "MS7EQSH3KMU1E": {
+      "source": "user-verified",
+      "review_status": "described",
+      "primary_style": [
+        "synthwave",
+        "retrowave"
+      ],
+      "mood": [
+        "cyberpunk",
+        "night-drive",
+        "cinematic"
+      ],
+      "energy": "medium",
+      "rhythm": "mid-tempo synthpop beat",
+      "instrumentation": [
+        "retro electric guitar solo",
+        "sustained distorted guitar",
+        "synth pad"
+      ],
+      "suggested_usage": [
+        "cyberpunk visual",
+        "night driving",
+        "cinematic montage"
+      ],
+      "suggested_name": "BGM_Synthwave_Retrowave_NightDrive_MidEnergy_Guitar",
+      "rights_status": "unreviewed"
+    },
+    "MS7EQSH3BT17F": {
+      "source": "user-verified",
+      "review_status": "described",
+      "primary_style": [
+        "thrash metal",
+        "heavy metal"
+      ],
+      "mood": [
+        "aggressive",
+        "impactful",
+        "extreme"
+      ],
+      "energy": "extreme",
+      "rhythm": "fast double-bass-drum metal beat",
+      "instrumentation": [
+        "high-gain electric guitar riff",
+        "bass guitar",
+        "double bass drum",
+        "fast hi-hat"
+      ],
+      "suggested_usage": [
+        "game combat",
+        "extreme sports"
+      ],
+      "suggested_name": "BGM_ThrashMetal_Combat_ExtremeEnergy_DoubleKick",
+      "rights_status": "unreviewed"
+    },
+    "MS7EQSH4IHQU9": {
+      "source": "user-verified",
+      "review_status": "described",
+      "primary_style": [
+        "nu-disco",
+        "dance-pop"
+      ],
+      "mood": [
+        "bright",
+        "danceable",
+        "retro-pop"
+      ],
+      "energy": "high",
+      "meter": "4/4 four-on-the-floor",
+      "vocal": "modern pop lead vocal with layered harmonies",
+      "instrumentation": [
+        "disco bassline",
+        "bright synth chords",
+        "rhythmic synth stabs",
+        "claps"
+      ],
+      "suggested_name": "BGM_NuDisco_DancePop_Bright_HighEnergy_Vocals_4x4",
+      "rights_status": "unreviewed"
+    }
+  }
+}

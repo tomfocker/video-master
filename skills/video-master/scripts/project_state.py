@@ -54,9 +54,9 @@ class ProjectStateError(ValueError):
 
 def rel(project: Path, path: Path) -> str:
     try:
-        return str(path.resolve().relative_to(project.resolve()))
+        return path.resolve().relative_to(project.resolve()).as_posix()
     except ValueError:
-        return str(path)
+        return path.as_posix()
 
 
 def read_text(path: Path) -> str:

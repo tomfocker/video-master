@@ -55,6 +55,7 @@ Run this checklist before final delivery.
 - `spec_lock.md` records `copy_language`, `voiceover_language`, `caption_language`, `localized_caption_languages`, `subtitle_rendering_policy`, `burned_subtitles_allowed`, and `sync_sound_policy`.
 - VO, captions, and video prompt dialogue all come from the same source copy.
 - `tts_lines.json` is valid JSON and has non-empty text per line.
+- When TTS is generated, `qa/metadata/tts_manifest.json` records measured `audio_duration_seconds`; the final visual timeline accommodates that duration. Word- or phrase-synced scenes use a reviewed `audio/voice_alignment.json`, not planned cue timing.
 - Captions are readable and platform-safe.
 - Captions are treated as `post-production only` unless the user explicitly approved generated on-screen subtitles.
 - For domestic Chinese workflows, a Chinese SRT is included even when the VO is English; English VO projects should package both `captions_en.srt` and `captions_zh.srt`.

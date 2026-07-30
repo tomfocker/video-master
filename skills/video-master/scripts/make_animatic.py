@@ -20,6 +20,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from delivery_paths import PREVIEW_MANIFEST, PREVIEW_MP4, read_voiceover_audio_path, storyboard_frame_path
 from eagle_client import EagleClient, resolve_item_file_from_eagle
+from eagle_project_assets import resolve_eagle_audio_asset
 
 
 FONT_CANDIDATES = [
@@ -610,20 +611,35 @@ def main(argv: list[str] | None = None) -> int:
         background_music = args.background_music
         if args.eagle_background_music_id:
             try:
-                resolved_eagle_item = resolve_item_file_from_eagle(
-                    args.eagle_background_music_id,
-                    library_path=args.eagle_library_path,
-                    client=EagleClient(args.eagle_base_url),
+                resolved_manifest_item = resolve_eagle_audio_asset(
+                    project,
+                    item_id=args.eagle_background_music_id,
                 )
+                if resolved_manifest_item is not None:
+                    background_music, background_music_source = resolved_manifest_item
+                else:
+                    resolved_eagle_item = resolve_item_file_from_eagle(
+                        args.eagle_background_music_id,
+                        library_path=args.eagle_library_path,
+                        client=EagleClient(args.eagle_base_url),
+                    )
+                    background_music = resolved_eagle_item.path
+                    background_music_source = resolved_eagle_item.source_manifest()
             except Exception as exc:
                 print(f"ERROR: {exc}")
                 return 2
-            background_music = resolved_eagle_item.path
-            background_music_source = resolved_eagle_item.source_manifest()
         elif background_music is None:
             candidate = read_background_music_path(project)
             if candidate.is_file():
                 background_music = candidate
+            else:
+                try:
+                    resolved_manifest_item = resolve_eagle_audio_asset(project)
+                except ValueError as exc:
+                    print(f"ERROR: {exc}")
+                    return 2
+                if resolved_manifest_item is not None:
+                    background_music, background_music_source = resolved_manifest_item
         if background_music is not None:
             background_music = resolve_project_path(project, background_music)
             if not background_music.is_file():

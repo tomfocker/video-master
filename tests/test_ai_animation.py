@@ -130,9 +130,13 @@ class AiAnimationLibraryTest(unittest.TestCase):
             self.assertEqual(plan["motion_standard"]["depth_of_field"], "near-sharp-far-soft")
             self.assertTrue((project / "audio" / "tts_lines.json").is_file())
             self.assertIn("00:00:04,000", (project / "audio" / "captions.srt").read_text(encoding="utf-8"))
+            voiceover = project / "最终交付" / "03_口播与字幕" / "口播音频.wav"
+            voiceover.parent.mkdir(parents=True, exist_ok=True)
+            voiceover.write_bytes(b"wav-placeholder")
             dry = subprocess.run([sys.executable, str(COMPOSER_RENDERER), str(project), "--dry-run"], cwd=ROOT, text=True, capture_output=True, check=False)
             self.assertEqual(dry.returncode, 0, dry.stdout + dry.stderr)
             self.assertIn("hyperframes@0.6.115", dry.stdout)
+            self.assertIn("口播音频.wav", dry.stdout)
             spatial_render = subprocess.run(
                 [sys.executable, str(MOTION_RENDERER), str(project), "--composition-id", "map", "--format", "mp4", "--dry-run"],
                 cwd=ROOT, text=True, capture_output=True, check=False,

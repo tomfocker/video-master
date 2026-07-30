@@ -84,6 +84,14 @@ When dependencies are installed and the user wants a voiced preview, generate na
 python3 ${SKILL_DIR}/scripts/generate_voiceover_tts.py <project_path>
 ```
 
+For a persistent narrator or approved character voice, use Open TTS Desktop through the project profile described in `references/open-tts-desktop.md`. The service is reachable on the shared Tailnet at `http://h3c:8765`; the profile holds only the selected authorized voice ID and rendering direction, never a reference-audio path or API key. With `audio/voice_profile.json` present, the same command reuses it automatically:
+
+```bash
+python3 ${SKILL_DIR}/scripts/generate_voiceover_tts.py <project_path>
+```
+
+Use `--engine open-tts-desktop --list-open-tts-voices` to inspect only voice IDs, names, and authorization status before selecting a profile. The renderer checks that the chosen voice remains `authorized` or `built_in` before synthesis.
+
 Use local VoxCPM2 when the user has a reachable service such as `http://100.64.0.3:8808/ui/`:
 
 ```bash

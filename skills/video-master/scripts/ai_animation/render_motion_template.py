@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Render a project-local registered motion or spatial template with saved variables."""
+"""Render a project-local registered motion, spatial, or Eagle-media stage."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -39,14 +41,23 @@ def find_by_id(items: object, item_id: str, label: str) -> dict[str, Any]:
 
 
 def npx_prefix() -> list[str]:
+    configured_cache = os.environ.get("VIDEO_MASTER_NPM_CACHE") or os.environ.get("npm_config_cache")
+    if configured_cache:
+        cache = Path(configured_cache).expanduser()
+    elif os.name == "nt" and os.environ.get("LOCALAPPDATA"):
+        cache = Path(os.environ["LOCALAPPDATA"]) / "CodexRuntime" / "hyperframes-npm-cache"
+    else:
+        cache = Path(tempfile.gettempdir()) / "video-master-hyperframes-npm-cache"
+    cache.mkdir(parents=True, exist_ok=True)
+    cache_args = ["--cache", str(cache)]
     node = shutil.which("node")
     if node:
         npx_cli = Path(node).resolve().parent / "node_modules" / "npm" / "bin" / "npx-cli.js"
         if npx_cli.is_file():
-            return [node, str(npx_cli)]
+            return [node, str(npx_cli), *cache_args]
     npx = shutil.which("npx")
     if npx:
-        return [npx]
+        return [npx, *cache_args]
     raise ValueError("npx is required to render HyperFrames compositions")
 
 
@@ -86,10 +97,22 @@ def main(argv: list[str] | None = None) -> int:
                         for item in spatial_selected
                         if isinstance(item, dict) and item.get("composition_id") == args.composition_id
                     ),
+                        None,
+                    )
+        if not isinstance(template, dict):
+            eagle_media = plan.get("eagle_media")
+            eagle_stages = eagle_media.get("stages") if isinstance(eagle_media, dict) else None
+            if isinstance(eagle_stages, list):
+                template = next(
+                    (
+                        item
+                        for item in eagle_stages
+                        if isinstance(item, dict) and item.get("composition_id") == args.composition_id
+                    ),
                     None,
                 )
         if not isinstance(template, dict):
-            raise ValueError(f"composition is not a registered motion or spatial template: {args.composition_id}")
+            raise ValueError(f"composition is not a registered motion, spatial, or Eagle-media stage: {args.composition_id}")
         source = project_path(project, composition.get("source"), "composition source")
         variables_path = project_path(project, template.get("variables_file"), "variables file")
         variables = read_object(variables_path)

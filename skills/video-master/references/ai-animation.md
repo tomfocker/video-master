@@ -36,6 +36,7 @@ Current module status:
 - `typography`: ready, with 12 curated Chinese-safe finite-duration WAAPI effects.
 - `motion-templates`: ready, with 20 parameterized GSAP/HyperFrames compositions for data visualization, knowledge explanation, and transparent overlays.
 - `spatial-camera`: ready, with an original oversized-canvas concept-map composition and smooth deterministic camera movement.
+- `eagle-media`: ready, with project-local full-frame HyperFrames stages created from approved Eagle images or videos.
 - `transitions`, `ui-demonstration`, and `particles-and-shaders`: planned.
 
 Do not claim a planned module exists. Implement or explicitly mark it `Needs-Implementation` before assigning it to a production composition.
@@ -70,6 +71,27 @@ python3 ${SKILL_DIR}/scripts/ai_animation/render_motion_template.py <project_pat
 ```
 
 Use `mp4` for a full-frame dark background, `webm` for a compact transparent overlay, or `mov` for a ProRes 4444 transparent editing asset. MOV conversion requires FFmpeg.
+
+## Eagle media stages
+
+When a user has confirmed an Eagle image or video for the project, read `references/eagle-assets.md`, register it through the official Eagle MCP plugin, then create a self-contained full-frame stage:
+
+```bash
+python3 ${SKILL_DIR}/scripts/eagle_asset_intake.py <project_path> --selected --role visual_asset
+python3 ${SKILL_DIR}/scripts/ai_animation/init_eagle_media_stage.py <project_path> --asset-id <EAGLE_ITEM_ID>
+python3 ${SKILL_DIR}/scripts/ai_animation/render_motion_template.py <project_path> --composition-id eagle-media-<item-id-lowercase> --format mp4
+```
+
+The stage is a new `eagle-media` module in the project plan. It copies only the confirmed source into `animation/compositions/<composition>/assets/`, keeps source attribution in `sources/eagle_assets_manifest.json`, and never writes to Eagle. Use an image stage by default; verify full renders that use local video files before delivery.
+
+For a Composer project, include the stage in the final HyperFrames timeline after generating the Composer plan:
+
+```bash
+python3 ${SKILL_DIR}/scripts/ai_animation/init_eagle_media_stage.py <project_path> --asset-id <EAGLE_ITEM_ID> --append-to-composer --insert-after <existing-composition-id>
+python3 ${SKILL_DIR}/scripts/ai_animation/render_composer.py <project_path>
+```
+
+Approved Eagle audio registered with role `background_music` is also available to `render_composer.py` and `make_animatic.py` through `sources/eagle_assets_manifest.json`. This is a project-local read of the already confirmed manifest; the render step never modifies Eagle.
 
 The imported library is pinned to `nutllwhy/hyperframes-motion-library` commit `01c393f9f26b5b0d8432fa02682ceb36f6cc3e0f`. Preserve `motion_templates/UPSTREAM_NOTICE.md` and `motion_templates/source.json`. The upstream repository called the project open source and explicitly invited cloning, customization, and extension, but did not contain a standard license file at import time; do not relabel it as MIT or another standard license.
 
