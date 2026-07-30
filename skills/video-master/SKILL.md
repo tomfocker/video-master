@@ -1,6 +1,6 @@
 ---
 name: video-master
-description: Use when a user wants to turn a video idea, campaign brief, existing assets, story, product concept, or rough requirement into a video production package with creative strategy, script/copy/audio, character narration or TTS voiceover, shot list/storyboard, native image-generated frames, model-specific prompts, or deterministic AI animation assembled from reusable HyperFrames typography and motion modules. Triggers include video-master, 视频脚本, 分镜, storyboard, 配音, 角色配音, 人物配音, TTS, 短视频, 广告片, TVC, 产品宣传片, AI视频提示词, AI动画, 概念动画, 科普动画, HyperFrames, or video prompt.
+description: Use when a user wants to turn a video idea, campaign brief, existing assets, story, product concept, or rough requirement into a video production package with creative strategy, script/copy/audio, character narration or TTS voiceover, shot list/storyboard, native image-generated frames, model-specific prompts, Eagle asset intake, or deterministic AI animation assembled from reusable HyperFrames typography and motion modules. Triggers include video-master, 视频脚本, 分镜, storyboard, Eagle素材, Eagle BGM, 配音, 角色配音, 人物配音, TTS, 短视频, 广告片, TVC, 产品宣传片, AI视频提示词, AI动画, 概念动画, 科普动画, HyperFrames, or video prompt.
 ---
 
 # Video Master
@@ -74,7 +74,7 @@ The user ideas override template defaults. Do not use a draft style template for
 
 Select a visual-style route: `preset`, `custom`, or `reference-derived`. Select `scene_director_pattern` when a repeatable scene grammar applies.
 
-For AI-built explainers, concept motion, exact animated text, charts, diagrams, UI motion, spatial-camera work, or HyperFrames, read `references/ai-animation.md` and select `animation_execution_mode: generative-video | hyperframes | hybrid`. When the user selects Eagle material for the video, also read `references/eagle-assets.md`; for repeatable catalog-first discovery, read `references/eagle-catalog.md`. Eagle is read-only input and the video project owns its own manifest and rendered copies.
+For AI-built explainers, concept motion, exact animated text, charts, diagrams, UI motion, spatial-camera work, or HyperFrames, read `references/ai-animation.md` and select `animation_execution_mode: generative-video | hyperframes | hybrid`. When a task mentions Eagle material, an Eagle library, Eagle BGM, or Eagle catalog discovery, first read `skills/eagle-assets/SKILL.md` and run its preflight. Then read `references/eagle-assets.md`; for repeatable catalog-first discovery, read `references/eagle-catalog.md`. Eagle is read-only input by default and the video project owns its own manifest and rendered copies.
 
 ### 2. Confirm Video Mode
 
@@ -197,7 +197,7 @@ Do not paste external VO lines, subtitle paths, packaging paths, or post-product
 
 Gate: `ai_animation_enabled` and mode is `hyperframes` or `hybrid`.
 
-Read `references/ai-animation.md`, `references/ai-animation-motion-grammar.md`, `ai_animation/registry.json`, and the relevant catalog. For a multi-scene concept or science explainer, also read `references/ai-animation-composer.md`, create a structured beat brief, run `scripts/ai_animation/compose_explainer.py`, and assemble it with `scripts/ai_animation/render_composer.py`. Use `scripts/ai_animation/init_project.py` for isolated typography compositions and `scripts/ai_animation/init_motion_template.py` for isolated registered charts, comparisons, explainers, evidence cards, process diagrams, and transparent overlays. For a confirmed Eagle image or video, first use `scripts/eagle_asset_intake.py` and then `scripts/ai_animation/init_eagle_media_stage.py`; after `compose_explainer.py`, pass `--append-to-composer` (and, when needed, `--insert-after <composition-id>`) to include the stage in the actual HyperFrames timeline. For approved Eagle BGM, register it as `background_music` and let `render_composer.py` read the project manifest, selecting an item explicitly with `--eagle-background-music-id` when more than one track is available. Do not ask the animation branch to alter Eagle. Write `animation/ai_animation_plan.json`, author finite deterministic compositions under `animation/compositions/`, and render work files under `animation/renders/`.
+Read `references/ai-animation.md`, `references/ai-animation-motion-grammar.md`, `ai_animation/registry.json`, and the relevant catalog. For a multi-scene concept or science explainer, also read `references/ai-animation-composer.md`, create a structured beat brief, run `scripts/ai_animation/compose_explainer.py`, and assemble it with `scripts/ai_animation/render_composer.py`. Use `scripts/ai_animation/init_project.py` for isolated typography compositions and `scripts/ai_animation/init_motion_template.py` for isolated registered charts, comparisons, explainers, evidence cards, process diagrams, and transparent overlays. For a confirmed Eagle image or video, complete the Eagle asset module preflight, then use `scripts/eagle_asset_intake.py` and `scripts/ai_animation/init_eagle_media_stage.py`; after `compose_explainer.py`, pass `--append-to-composer` (and, when needed, `--insert-after <composition-id>`) to include the stage in the actual HyperFrames timeline. For approved Eagle BGM, register it as `background_music` and let `render_composer.py` read the project manifest, selecting an item explicitly with `--eagle-background-music-id` when more than one track is available. Do not ask the animation branch to alter Eagle. Write `animation/ai_animation_plan.json`, author finite deterministic compositions under `animation/compositions/`, and render work files under `animation/renders/`.
 
 Copy approved outputs to `最终交付/08_ai_animation/` and write `qa/metadata/ai_animation_manifest.json`. Validate the library with `scripts/ai_animation/validate_library.py`; lint/check every composition before final render. Never claim an unregistered or only-planned module is available.
 
@@ -255,6 +255,7 @@ Fix failures before finishing. Report the project folder, user-facing delivery f
 - Eagle BGM + Open TTS Desktop + HyperFrames end-to-end workflow and pitfalls: `references/eagle-vom-hyperframes.md`
 - Visual preset selection: `references/visual-style-presets.md` and `references/visual_style_presets.json`
 - HyperFrames and reusable code animation: `references/ai-animation.md`
+- Eagle preflight, official-Skill bootstrap, safety, and project routing: `skills/eagle-assets/SKILL.md`
 - Official Eagle selection and HyperFrames media stages: `references/eagle-assets.md`
 - Eagle catalog-first discovery and curation: `references/eagle-catalog.md`
 - Final checks: `references/quality-check.md`

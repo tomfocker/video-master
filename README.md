@@ -203,6 +203,14 @@ python3 skills/video-master/scripts/make_animatic.py video_projects/<project> --
 
 ## Eagle → HyperFrames 素材接入
 
+`video-master` 将 Eagle 作为标准素材能力：先自检官方 Eagle MCP 和原厂 Skill，再进行只读检索与项目登记。新环境在 Eagle 已安装并启用 **Eagle MCP** 插件后运行：
+
+```bash
+python3 skills/video-master/scripts/eagle_mcp_status.py --install-official-skill
+```
+
+该命令只复制 Eagle MCP 插件随附的原厂 `eagle-skill` 到 Codex 的 Skills 目录；重开一个 Codex 对话后即可独立处理 Eagle 库任务。视频主流程仍默认不改动 Eagle 的标签、文件夹、评分、评论或素材内容。
+
 Eagle 官方 MCP 插件开启后，在 Eagle 中选定素材即可只读登记到视频项目；不会改动 Eagle 的标签、文件夹或素材内容：
 
 ```bash

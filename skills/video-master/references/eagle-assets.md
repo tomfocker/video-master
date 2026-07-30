@@ -7,7 +7,8 @@ For recurring production, refresh and search the local catalog described in `eag
 ## Preconditions
 
 - Eagle is running and its official **Eagle MCP** plugin is enabled on `http://127.0.0.1:41596/mcp`.
-- Use the official Eagle Skill to search for candidates or select assets manually in Eagle.
+- First follow the preflight and bootstrap route in `../skills/eagle-assets/SKILL.md`; do not ask whether the official Skill is installed before checking.
+- Use the official Eagle Skill to search for candidates or select assets manually in Eagle. Its plugin-bundled package is installed into Codex by `scripts/eagle_mcp_status.py --install-official-skill` when needed.
 - For every write to the video project, the user has confirmed the selected Eagle items and their intended use.
 
 ## Intake
