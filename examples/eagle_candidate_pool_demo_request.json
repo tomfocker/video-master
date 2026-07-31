@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "pools": [
+    {
+      "id": "orbital-tech",
+      "terms": ["卫星", "火箭", "机器人"],
+      "categories": ["科学技术", "交通工具", "电子设备"],
+      "extensions": ["png"],
+      "limit": 18
+    },
+    {
+      "id": "medical-evidence",
+      "terms": ["医生", "显微镜", "心脏"],
+      "categories": ["医疗健康", "科学技术"],
+      "extensions": ["png"],
+      "limit": 18
+    }
+  ],
+  "shots": [
+    {
+      "id": "S01",
+      "intent": "卫星进入轨道，建立宏观科技空间",
+      "pool_ids": ["orbital-tech"],
+      "terms": ["卫星", "火箭"],
+      "limit": 5
+    },
+    {
+      "id": "S02",
+      "intent": "机器人接收并处理数据",
+      "pool_ids": ["orbital-tech"],
+      "terms": ["机器人"],
+      "limit": 5
+    },
+    {
+      "id": "S03",
+      "intent": "医生和显微镜将宏观数据转化为证据",
+      "pool_ids": ["medical-evidence"],
+      "terms": ["医生", "显微镜"],
+      "limit": 5
+    }
+  ]
+}

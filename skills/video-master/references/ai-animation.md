@@ -22,6 +22,13 @@ Choose one execution mode:
 
 Record `ai_animation_enabled`, `animation_execution_mode`, `animation_engine`, and `ai_animation_modules` in `brief/spec_lock.md`. Do not treat every stylized or animated video as code animation; enable this branch only when deterministic reusable motion is wanted.
 
+Choose the production scope separately:
+
+- `ai-animation-preview`: a user asks to test an effect, make a sample, or see a direct result. Read `ai-animation-preview.md`. It produces only the audio/alignment artifacts that the animation needs, the project-local animation files, a QA manifest, and one preview MP4. It must not wait for storyboard images, prompt packs, workbooks, an animatic, or the full project validator.
+- `production-package`: the user asks for a complete handoff, storyboard, model-facing prompt package, or production table. Follow the main Video Master pipeline and output contract.
+
+An approved preview can become input to a later production package; never manufacture the package merely because a preview was requested.
+
 ## Library layers
 
 - Keep director methods in `style_templates/`.

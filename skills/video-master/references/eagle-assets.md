@@ -2,7 +2,7 @@
 
 Use the official Eagle MCP plugin only to discover and read assets for a video project. Keep Eagle as the source library: this workflow never changes tags, folders, ratings, comments, or library files.
 
-For recurring production, refresh and search the local catalog described in `eagle-catalog.md` before doing a live Eagle search. The catalog narrows candidates; live Eagle confirmation and project intake remain mandatory.
+Use the small catalog in `eagle-catalog.md` only for curated BGM. Do not generate a local copy of a large icon library. For icon-heavy work at the current stage, use `eagle-icon-library-profile.json` only to understand the category map, then have the agent query Eagle MCP directly per concrete shot or asset need. Retain `eagle-candidate-pools.md` as an experimental helper; do not make it the main workflow until real projects repeatedly show the same query-orchestration work.
 
 ## Preconditions
 
@@ -65,6 +65,6 @@ The project-manifest route is preferred. It reads no Eagle data during rendering
 
 1. Search or select first; do not ask an agent to reorganize Eagle as part of video production.
 2. Present selected asset IDs, names, paths, and intended roles before intake when the user has not already explicitly confirmed them.
-3. Keep exact source attribution in `sources/eagle_assets_manifest.json`.
+3. Keep exact source attribution in `sources/eagle_assets_manifest.json`. It must contain only confirmed assets, never an unapproved candidate pool.
 4. Treat linked original files as non-portable. Use `--copy` or the media-stage initializer when the project needs an independent local copy.
 5. Preserve rights constraints: a file being in Eagle does not by itself grant permission to reuse it in a generated or delivered video.

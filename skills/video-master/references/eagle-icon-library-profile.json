@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "source": "official-eagle-mcp",
+  "read_only_source": true,
+  "generated_at": "2026-07-31T05:18:39Z",
+  "scope": "compact-icon-category-profile",
+  "root": {
+    "id": "MS7YVMW235IIK",
+    "name": "original"
+  },
+  "filter": {
+    "extension": "png"
+  },
+  "summary": {
+    "category_count": 24,
+    "item_count": 8880,
+    "note": "Category map only; individual icon records remain exclusively in Eagle."
+  },
+  "categories": [
+    {
+      "id": "MS7YVMW27FKES",
+      "name": "交通工具",
+      "item_count": 405
+    },
+    {
+      "id": "MS7YVMW46S2OD",
+      "name": "人物角色",
+      "item_count": 242
+    },
+    {
+      "id": "MS7YVMW48FETC",
+      "name": "其他杂项",
+      "item_count": 977
+    },
+    {
+      "id": "MS7YVMW76EL6H",
+      "name": "办公文具",
+      "item_count": 207
+    },
+    {
+      "id": "MS7YVMW7TTKIF",
+      "name": "动物生物",
+      "item_count": 1017
+    },
+    {
+      "id": "MS7YVMWB1V6V7",
+      "name": "医疗健康",
+      "item_count": 256
+    },
+    {
+      "id": "MS7YVMWB2GKWF",
+      "name": "历史名人",
+      "item_count": 168
+    },
+    {
+      "id": "MS7YVMWCO6AA2",
+      "name": "厨房用品",
+      "item_count": 230
+    },
+    {
+      "id": "MS7YVMWDPR68O",
+      "name": "国家地区",
+      "item_count": 160
+    },
+    {
+      "id": "MS7YVMWDD4P97",
+      "name": "娱乐休闲",
+      "item_count": 296
+    },
+    {
+      "id": "MS7YVMWE1BBBQ",
+      "name": "宗教神话",
+      "item_count": 166
+    },
+    {
+      "id": "MS7YVMWE3X2BN",
+      "name": "家具家居",
+      "item_count": 314
+    },
+    {
+      "id": "MS7YVMWE4AYM4",
+      "name": "工具器械",
+      "item_count": 450
+    },
+    {
+      "id": "MS7YVMWFO6C7Q",
+      "name": "建筑地点",
+      "item_count": 508
+    },
+    {
+      "id": "MS7YVMWGTKZZT",
+      "name": "数字符号",
+      "item_count": 55
+    },
+    {
+      "id": "MS7YVMWGPORGI",
+      "name": "旗帜标志",
+      "item_count": 64
+    },
+    {
+      "id": "MS7YVMWG08AKS",
+      "name": "服装配饰",
+      "item_count": 516
+    },
+    {
+      "id": "MS7YVMWH8IUE8",
+      "name": "植物花卉",
+      "item_count": 303
+    },
+    {
+      "id": "MS7YVMWIO56L8",
+      "name": "电子设备",
+      "item_count": 345
+    },
+    {
+      "id": "MS7YVMWJDNWOT",
+      "name": "科学技术",
+      "item_count": 293
+    },
+    {
+      "id": "MS7YVMWKL5P32",
+      "name": "自然地理",
+      "item_count": 253
+    },
+    {
+      "id": "MS7YVMWK9LY0T",
+      "name": "艺术文化",
+      "item_count": 348
+    },
+    {
+      "id": "MS7YVMWLBH455",
+      "name": "运动健身",
+      "item_count": 413
+    },
+    {
+      "id": "MS7YVMWMVSNJR",
+      "name": "食物饮品",
+      "item_count": 894
+    }
+  ]
+}

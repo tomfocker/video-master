@@ -1,11 +1,11 @@
 ---
 name: video-master
-description: Use when a user wants to turn a video idea, campaign brief, existing assets, story, product concept, or rough requirement into a video production package with creative strategy, script/copy/audio, character narration or TTS voiceover, shot list/storyboard, native image-generated frames, model-specific prompts, Eagle asset intake, or deterministic AI animation assembled from reusable HyperFrames typography and motion modules. Triggers include video-master, 视频脚本, 分镜, storyboard, Eagle素材, Eagle BGM, 配音, 角色配音, 人物配音, TTS, 短视频, 广告片, TVC, 产品宣传片, AI视频提示词, AI动画, 概念动画, 科普动画, HyperFrames, or video prompt.
+description: Use when a user wants to turn a video idea, campaign brief, existing assets, story, product concept, or rough requirement into a video production package or a direct AI-animation preview, with creative strategy, script/copy/audio, character narration or TTS voiceover, shot list/storyboard, native image-generated frames, model-specific prompts, Eagle asset intake, or deterministic HyperFrames typography and motion modules. Triggers include video-master, 视频脚本, 分镜, storyboard, Eagle素材, Eagle BGM, 配音, 角色配音, 人物配音, TTS, 短视频, 广告片, TVC, 产品宣传片, AI视频提示词, AI动画, AI一站动画, 动画样片, 概念动画, 科普动画, HyperFrames, or video prompt.
 ---
 
 # Video Master
 
-Turn a video requirement into a traceable production package. Work as the main producer: lock requirements, route specialist work, maintain canonical project files, validate outputs, and package user-facing deliverables.
+Turn a video requirement into either a traceable production package or a direct AI-animation preview. Work as the main producer: select the right scope first, then lock requirements, route specialist work, validate the output, and package only when that is actually requested.
 
 ## Operating Rules
 
@@ -24,6 +24,7 @@ Turn a video requirement into a traceable production package. Work as the main p
 - Do not include a `负面提示词` section in final video prompts. Express constraints positively under generation requirements.
 - Do not reproduce protected characters, unlicensed likenesses, brand marks, source plots, watermarks, or creator-specific style. Distill references into transferable palette, light, framing, material, camera, rhythm, and packaging rules.
 - Keep `title_packaging` and deterministic `ai_animation` as sidecar execution branches. They must not silently rewrite script, storyboard, or model prompts.
+- Default an explicit AI-animation test, “做个样片”, “试试看”, or “直接看效果” to the `ai-animation-preview` route. Do not create storyboards, prompt packs, workbooks, animatics, or a full delivery tree unless the user asks for them.
 
 ## Dependencies
 
@@ -52,6 +53,12 @@ At project creation or a major restart, select:
 
 Record `workflow_mode`, `confirmation_policy`, and `assumption_policy` in `brief/spec_lock.md`. Default to `autopilot` for “直接做/快速推进” and `guided` for brainstorming or comparison requests.
 
+### 0.5 Route One-Shot AI-Animation Previews
+
+For a direct AI-animation preview, choose `workflow_profile: ai-animation-preview` unless the user explicitly asks for a production package, storyboard, copy-ready generative-video prompts, an animatic, or a workbook. Read `references/ai-animation-preview.md` and `references/ai-animation.md`.
+
+This is a first-class fast branch, not a late sidecar after the main production flow. Create only the minimal preview contract, render the MP4, run the preview checks, and show the MP4 immediately. Skip main-flow steps 1–7, full packaging step 9, and `validate_video_project.py`. If the user later asks to turn an approved preview into a production package, start the main flow then; retain the preview's audio, alignment, animation plan, and render as source material.
+
 ### 1. Classify Inputs And Routes
 
 Classify the input as `idea-only`, `asset-assisted`, or `material-locked`. Write `strategy/input_readiness.md` with available assets, missing assets, invention boundaries, preserved wording, and source paths.
@@ -74,7 +81,7 @@ The user ideas override template defaults. Do not use a draft style template for
 
 Select a visual-style route: `preset`, `custom`, or `reference-derived`. Select `scene_director_pattern` when a repeatable scene grammar applies.
 
-For AI-built explainers, concept motion, exact animated text, charts, diagrams, UI motion, spatial-camera work, or HyperFrames, read `references/ai-animation.md` and select `animation_execution_mode: generative-video | hyperframes | hybrid`. When a task mentions Eagle material, an Eagle library, Eagle BGM, or Eagle catalog discovery, first read `skills/eagle-assets/SKILL.md` and run its preflight. Then read `references/eagle-assets.md`; for repeatable catalog-first discovery, read `references/eagle-catalog.md`. Eagle is read-only input by default and the video project owns its own manifest and rendered copies.
+For AI-built explainers, concept motion, exact animated text, charts, diagrams, UI motion, spatial-camera work, or HyperFrames, read `references/ai-animation.md` and select `animation_execution_mode: generative-video | hyperframes | hybrid`. When a task mentions Eagle material, an Eagle library, Eagle BGM, or Eagle catalog discovery, first read `skills/eagle-assets/SKILL.md` and run its preflight. Then read `references/eagle-assets.md`. Use `references/eagle-catalog.md` only for the small curated BGM catalog; for high-volume icon discovery, use the compact category profile for orientation, then query Eagle MCP directly. The optional candidate-pool helper in `references/eagle-candidate-pools.md` is not a default workflow: improve or enable it only after real projects show repeated query-orchestration work. Eagle is read-only input by default and the video project owns only confirmed selections and rendered copies.
 
 ### 2. Confirm Video Mode
 
@@ -199,7 +206,7 @@ Gate: `ai_animation_enabled` and mode is `hyperframes` or `hybrid`.
 
 Read `references/ai-animation.md`, `references/ai-animation-motion-grammar.md`, `ai_animation/registry.json`, and the relevant catalog. For a multi-scene concept or science explainer, also read `references/ai-animation-composer.md`, create a structured beat brief, run `scripts/ai_animation/compose_explainer.py`, and assemble it with `scripts/ai_animation/render_composer.py`. Use `scripts/ai_animation/init_project.py` for isolated typography compositions and `scripts/ai_animation/init_motion_template.py` for isolated registered charts, comparisons, explainers, evidence cards, process diagrams, and transparent overlays. For a confirmed Eagle image or video, complete the Eagle asset module preflight, then use `scripts/eagle_asset_intake.py` and `scripts/ai_animation/init_eagle_media_stage.py`; after `compose_explainer.py`, pass `--append-to-composer` (and, when needed, `--insert-after <composition-id>`) to include the stage in the actual HyperFrames timeline. For approved Eagle BGM, register it as `background_music` and let `render_composer.py` read the project manifest, selecting an item explicitly with `--eagle-background-music-id` when more than one track is available. Do not ask the animation branch to alter Eagle. Write `animation/ai_animation_plan.json`, author finite deterministic compositions under `animation/compositions/`, and render work files under `animation/renders/`.
 
-Copy approved outputs to `最终交付/08_ai_animation/` and write `qa/metadata/ai_animation_manifest.json`. Validate the library with `scripts/ai_animation/validate_library.py`; lint/check every composition before final render. Never claim an unregistered or only-planned module is available.
+For the main production flow, copy approved outputs to `最终交付/08_ai_animation/` and write `qa/metadata/ai_animation_manifest.json`. For `ai-animation-preview`, follow `references/ai-animation-preview.md` instead and keep the rendered MP4 under `animation/renders/`. Validate the library with `scripts/ai_animation/validate_library.py`; lint/check every composition before final render. Never claim an unregistered or only-planned module is available.
 
 ### 8.5. Execute Optional Title Packaging
 
@@ -242,6 +249,8 @@ python3 ${SKILL_DIR}/scripts/validate_video_project.py <project_path>
 
 Fix failures before finishing. Report the project folder, user-facing delivery folder, generated image count/status, animation/title sidecar status, validator result, and remaining manual actions.
 
+For `ai-animation-preview`, run `scripts/ai_animation/validate_preview.py <project_path>` instead. Report only the final MP4, measured duration, audio/alignment state, and validator result; do not block on package artifacts that the route intentionally does not create.
+
 ## Resource Router
 
 - Project tree and schemas: `references/output-contract.md`
@@ -255,9 +264,11 @@ Fix failures before finishing. Report the project folder, user-facing delivery f
 - Eagle BGM + Open TTS Desktop + HyperFrames end-to-end workflow and pitfalls: `references/eagle-vom-hyperframes.md`
 - Visual preset selection: `references/visual-style-presets.md` and `references/visual_style_presets.json`
 - HyperFrames and reusable code animation: `references/ai-animation.md`
+- Direct AI-animation preview contract: `references/ai-animation-preview.md`
 - Eagle preflight, official-Skill bootstrap, safety, and project routing: `skills/eagle-assets/SKILL.md`
 - Official Eagle selection and HyperFrames media stages: `references/eagle-assets.md`
-- Eagle catalog-first discovery and curation: `references/eagle-catalog.md`
+- Curated BGM catalog: `references/eagle-catalog.md`
+- Eagle icon categories and experimental candidate pools: `references/eagle-icon-library-profile.json` and `references/eagle-candidate-pools.md`
 - Final checks: `references/quality-check.md`
 - Director templates: `style_templates/<template_id>/`
 - Registered animation assets: `ai_animation/registry.json`

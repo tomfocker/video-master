@@ -7,7 +7,7 @@ Use this reference when creating project files for `video-master`.
 ```text
 video_projects/<project_slug>_<YYYYMMDD_HHMM>/
   sources/
-    eagle_assets_manifest.json  # optional: approved, read-only Eagle source records
+    eagle_assets_manifest.json  # optional: confirmed, read-only Eagle source records and shot assignments
   brief/
     creative_brief.md
     spec_lock.md

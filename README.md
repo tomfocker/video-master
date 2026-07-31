@@ -235,6 +235,24 @@ python3 skills/video-master/scripts/ai_animation/render_composer.py video_projec
 
 第一步写入 `sources/eagle_assets_manifest.json`，默认只保存原文件的可追溯引用；第二步会将已经确认的图片或视频复制到 HyperFrames composition 内，生成稳定的本地动画素材舞台。详见 `skills/video-master/references/eagle-assets.md`。
 
+### 大型图标库：先直连 Eagle MCP，不复制全量索引
+
+8,880 张图标仍只保存在 Eagle。Skill 内只保留 24 类的轻量目录概览（类别名、文件夹 ID、数量），让 Agent 理解素材库边界；当前主流程由 Agent 直接查询 Eagle MCP，并在确认后将已选素材写入项目 manifest。
+
+```bash
+# 仅在图标分类或导入发生变化后刷新一次概览，不在每个视频任务中刷新
+python3 skills/video-master/scripts/eagle_icon_library_profile.py
+
+# 候选池工具保留为实验性辅助，不作为当前默认流程
+# 仅在真实项目反复出现“合并关键词—目录过滤—去重—分镜映射”时再启用或改造
+python3 skills/video-master/scripts/eagle_candidate_pool.py plan examples/eagle_candidate_pool_demo_request.json --output candidate_pool.json
+
+# 人工/Agent 审阅 candidate_pool.json 并生成 selection.json 后，批量验证并登记已选素材
+python3 skills/video-master/scripts/eagle_candidate_pool.py confirm candidate_pool.json selection.json --project video_projects/<project>
+```
+
+`references/eagle-library-catalog.json` 专门保留少量人工策展的 BGM；运行 `eagle_library_index.py` 只会刷新这些既有或明确指定的音乐 ID，绝不再枚举整个图标库。
+
 如果项目里已经有 `最终交付/03_口播与字幕/背景音乐.mp3`、`audio/background_music.mp3` 或 `audio/bgm.mp3`，脚本会自动混入预览。也可以直接传 Eagle item id，脚本会从 Eagle 当前/历史素材库中只读定位原始音频文件；这只影响 `分镜预览.mp4`，不会改变最终视频提示词里的“不要生成背景音乐”策略。
 
 预览视频运动方式：

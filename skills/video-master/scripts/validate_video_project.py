@@ -705,6 +705,36 @@ def validate_eagle_assets(project: Path, errors: list[str]) -> None:
         if stages is not None and not isinstance(stages, list):
             errors.append(f"Eagle asset {item_id or index} hyperframes_stages must be a list")
 
+    assignments = manifest.get("shot_asset_assignments")
+    if assignments is not None:
+        if not isinstance(assignments, list):
+            errors.append("Eagle shot_asset_assignments must be a list")
+            return
+        asset_roles = {
+            str(asset.get("id") or ""): {str(role) for role in asset.get("roles", [])}
+            for asset in assets
+            if isinstance(asset, dict)
+        }
+        seen_assignments: set[tuple[str, str, str]] = set()
+        for index, assignment in enumerate(assignments, start=1):
+            if not isinstance(assignment, dict):
+                errors.append(f"Eagle shot assignment {index} must be an object")
+                continue
+            shot_id = str(assignment.get("shot_id") or "").strip()
+            item_id = str(assignment.get("item_id") or "").strip()
+            role = str(assignment.get("role") or "").strip()
+            key = (shot_id, item_id, role)
+            if not shot_id or not item_id or not role:
+                errors.append(f"Eagle shot assignment {index} requires shot_id, item_id, and role")
+                continue
+            if key in seen_assignments:
+                errors.append(f"Eagle shot assignment {index} duplicates {shot_id}/{item_id}/{role}")
+            seen_assignments.add(key)
+            if role not in EAGLE_ASSET_ROLES:
+                errors.append(f"Eagle shot assignment {index} has invalid role: {role}")
+            elif role not in asset_roles.get(item_id, set()):
+                errors.append(f"Eagle shot assignment {index} refers to an unapproved asset role: {item_id}/{role}")
+
 
 def validate_title_packaging(project: Path, spec: dict[str, str], errors: list[str]) -> None:
     plan_path = project / "packaging" / "title_packaging_plan.json"

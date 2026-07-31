@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Refresh a safe, read-only Eagle inventory for Video Master asset discovery."""
+"""Refresh Video Master's explicit, curated Eagle BGM catalog.
+
+This deliberately does *not* enumerate the whole Eagle library.  Icons and
+other high-cardinality asset sets stay in Eagle and are discovered through the
+batch candidate-pool route instead.
+"""
 
 from __future__ import annotations
 
@@ -16,7 +21,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from eagle_asset_intake import classify_extension
-from eagle_mcp_client import DEFAULT_EAGLE_MCP_URL, EagleMcpClient, EagleMcpError, coerce_item_list
+from eagle_mcp_client import DEFAULT_EAGLE_MCP_URL, EagleMcpClient, EagleMcpError
 
 
 SKILL_DIR = SCRIPT_DIR.parent
@@ -53,24 +58,10 @@ def catalog_record(item: dict[str, Any]) -> dict[str, Any] | None:
     return record
 
 
-def fetch_all_items(client: EagleMcpClient, *, limit: int) -> list[dict[str, Any]]:
-    items: list[dict[str, Any]] = []
-    offset = 0
-    while True:
-        batch = coerce_item_list(
-            client.call_tool("item_get", {"fullDetails": False, "limit": limit, "offset": offset})
-        )
-        items.extend(batch)
-        if len(batch) < limit:
-            break
-        offset += len(batch)
-    return items
+def build_catalog(items: list[dict[str, Any]], *, mcp_url: str) -> dict[str, Any]:
+    """Build the small, hand-curated BGM catalog from explicit Eagle items."""
 
-
-def build_catalog(items: list[dict[str, Any]], *, include_other: bool, mcp_url: str) -> dict[str, Any]:
-    assets = [record for item in items if (record := catalog_record(item)) is not None]
-    if not include_other:
-        assets = [asset for asset in assets if asset["kind"] in {"image", "video", "audio"}]
+    assets = [record for item in items if (record := catalog_record(item)) is not None and record["kind"] == "audio"]
     assets.sort(key=lambda asset: (asset["kind"], asset["name"].casefold(), asset["id"]))
     counts: dict[str, int] = {}
     for asset in assets:
@@ -83,7 +74,7 @@ def build_catalog(items: list[dict[str, Any]], *, include_other: bool, mcp_url: 
         "read_only_source": True,
         "generated_at": utc_now(),
         "privacy": "No original paths, thumbnails, URLs, annotations, or voice references are stored.",
-        "catalog_scope": "video-relevant" if not include_other else "all-items",
+        "catalog_scope": "curated-bgm",
         "summary": {"asset_count": len(assets), "kind_counts": counts},
         "assets": assets,
     }
@@ -106,26 +97,64 @@ def read_existing_curation(path: Path, asset_ids: set[str]) -> dict[str, dict[st
     }
 
 
+def read_existing_asset_ids(path: Path) -> list[str]:
+    """Return the existing curated IDs without copying their metadata forward."""
+
+    if not path.is_file():
+        return []
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    assets = value.get("assets") if isinstance(value, dict) else None
+    if not isinstance(assets, list):
+        return []
+    return [str(asset.get("id")) for asset in assets if isinstance(asset, dict) and str(asset.get("id") or "").strip()]
+
+
+def unique_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in items:
+        item_id = str(item.get("id") or "").strip()
+        if item_id and item_id not in seen:
+            result.append(item)
+            seen.add(item_id)
+    return result
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--mcp-url", default=DEFAULT_EAGLE_MCP_URL)
-    parser.add_argument("--limit", type=int, default=1000, help="MCP page size, 1..1000")
-    parser.add_argument("--include-other", action="store_true", help="Include non-image/video/audio records")
+    parser.add_argument("--item-id", action="append", default=[], help="Explicit BGM ID to add or refresh; may be repeated")
+    parser.add_argument("--selected", action="store_true", help="Refresh the BGM items currently selected in Eagle")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
-    if not 1 <= args.limit <= 1000:
-        parser.error("--limit must be within 1..1000")
     try:
-        catalog = build_catalog(
-            fetch_all_items(EagleMcpClient(args.mcp_url), limit=args.limit),
-            include_other=args.include_other,
-            mcp_url=args.mcp_url,
-        )
+        output = args.output.resolve()
+        client = EagleMcpClient(args.mcp_url)
+        items: list[dict[str, Any]] = []
+        existing_ids = read_existing_asset_ids(output)
+        if existing_ids:
+            items.extend(client.items_by_id(existing_ids))
+        if args.item_id:
+            items.extend(client.items_by_id(args.item_id))
+        if args.selected:
+            items.extend(client.selected_items())
+        if not items:
+            raise ValueError(
+                "no curated BGM IDs are available; pass --item-id <EAGLE_ID> or select approved BGM in Eagle"
+            )
+        catalog = build_catalog(unique_items(items), mcp_url=args.mcp_url)
+        if not catalog["assets"]:
+            raise ValueError("the explicit Eagle selection contained no audio items for the BGM catalog")
     except EagleMcpError as exc:
         print(f"ERROR: {exc}")
         return 1
-    output = args.output.resolve()
+    except ValueError as exc:
+        print(f"ERROR: {exc}")
+        return 2
     catalog["curation_by_id"] = read_existing_curation(
         output,
         {str(asset["id"]) for asset in catalog["assets"]},

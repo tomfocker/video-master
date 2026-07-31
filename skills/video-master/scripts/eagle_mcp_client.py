@@ -114,5 +114,7 @@ class EagleMcpClient:
     def items_by_id(self, item_ids: list[str]) -> list[dict[str, Any]]:
         return coerce_item_list(self.call_tool("item_get", {"ids": item_ids, "fullDetails": True, "limit": len(item_ids)}))
 
-    def query_items(self, query: str) -> list[dict[str, Any]]:
-        return coerce_item_list(self.call_tool("item_query", {"query": query, "fullDetails": True}))
+    def query_items(self, query: str, *, full_details: bool = True) -> list[dict[str, Any]]:
+        """Run Eagle's text query without implying any library mutation."""
+
+        return coerce_item_list(self.call_tool("item_query", {"query": query, "fullDetails": full_details}))
